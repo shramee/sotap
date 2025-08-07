@@ -47,6 +47,11 @@ Our target use case involves zero-knowledge statements for moderately sized prob
 We introduce each technique, explain its motivation and implementation, and directly compare its performance against the previous generation, highlighting measurable improvements at every stage. Our roadmap provides insight for future applications and paves the way towards efficient, sound, and scalable ZK-SNARK verification for real-world use cases.
 \end{abstract}
 
+\section{Introduction}
+
+Elliptic curve pairings represent fundamental building blocks in modern cryptographic protocols, serving as the mathematical foundation for SNARK-based zero-knowledge proof systems. The efficiency of pairing computations directly impacts the practicality of widely-deployed systems including Groth16 and PLONK SNARKs, BLS signature schemes, and KZG polynomial commitment schemes.
+
+At their core, elliptic curve pairings provide a bilinear map $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ that enables a form of "encrypted multiplication" over elliptic curve groups. This bilinearity property—where $e(aP, Q) = e(P, aQ) = e(P, Q)^a$ for scalar $a$ and points $P \in \mathbb{G}_1$, $Q \in \mathbb{G}_2$—has enabled breakthrough advances across cryptographic applications, from identity-based encryption to the zero-knowledge systems securing modern blockchain infrastructure.
 
 \bibliographystyle{plain}
 \bibliography{references}
