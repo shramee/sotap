@@ -61,6 +61,9 @@ Our work provides a comprehensive examination and implementation of these state-
 
 The original implementation of these techniques was developed in our Pairing library written in Cairo \cite{cp23}, which subsequently served as the foundation for the Garaga project \cite{grg} on Starknet. Through continued development by Feltroidprime, Rodrigo Ferreira, Liam Eagen, and other contributors, Garaga has evolved into the most performant solution for zero-knowledge proof verification on Starknet. For the purposes of this analysis, however, we present all discussed optimizations implemented within the Consensys gnark framework \cite{gnark}, enabling direct comparison of constraint counts and providing clear quantitative evidence of algorithmic efficiency improvements in terms of operation complexity.
 
+\subsection{Our Contribution}
+Building upon Feltroidprime's foundational work on extension field arithmetic using polynomial verification \cite{FXFM23}, we present a significant advancement that integrates the entire Miller loop bit operations directly into the Schwartz-Zippel verification framework. While the original approach focused on optimizing individual $\mathbb{F}_{q^{12}}$ multiplications through polynomial representation, our contribution expands this methodology to encompass complete Miller loop iterations, achieving substantial performance improvements while simultaneously reducing auxiliary input overhead.
+
 \bibliographystyle{plain}
 \bibliography{references}
 
