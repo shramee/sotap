@@ -1,0 +1,54 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Custom theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+% Custom commands for common notation
+\newcommand{\Fq}{\ensuremath{\mathbb{F}_q}}
+\newcommand{\Fqk}{\ensuremath{\mathbb{F}_{q^k}}}
+\newcommand{\FqTwelve}{\ensuremath{\mathbb{F}_{q^{12}}}}
+\newcommand{\E}{\ensuremath{\mathcal{E}}}
+\newcommand{\G}{\ensuremath{\mathbb{G}}}
+\newcommand{\GT}{\ensuremath{\mathbb{G}_T}}
+\newcommand{\pairing}[2]{\ensuremath{e(#1, #2)}}
+
+\title{Efficient Verification of Pairing Computation: \\ Schwartz-Zippel Lemma for Miller Loop}
+
+\author{Shramee Srivastav \\ 
+MIST.cash | FOCBB \\ 
+Email: shramee@duck.com}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+In this paper, we examine recent advances in the efficient proof of correctness for elliptic curve pairing computations. Rather than focusing on the raw computation of pairings themselves, our work centers on practical, sound, and high-performance techniques for proving that a pairing computation has been performed correctly—an essential step in modern zero-knowledge proof (ZKP) systems. These techniques are foundational for SNARK-based proof verification, especially in applications where succinctness and scalability matter, such as public blockchains.
+
+Our target use case involves zero-knowledge statements for moderately sized problems (around one million constraints). So we focus our benchmarks on the Groth16 proof system \cite{Gro16} instantiated with the BN254 curve as used in Ethereum. The theoretical advances presented in this work are, however, broadly applicable to any pairing-based cryptographic system. Throughout this paper, we systematically present and benchmark a series of advances in proof strategies: from recent state-of-the-art pairings, to new field extension arithmetic, to optimized proof verification techniques including refined Miller loop and final exponentiation steps.
+
+We introduce each technique, explain its motivation and implementation, and directly compare its performance against the previous generation, highlighting measurable improvements at every stage. Our roadmap provides insight for future applications and paves the way towards efficient, sound, and scalable ZK-SNARK verification for real-world use cases.
+\end{abstract}
+
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
