@@ -30,3 +30,38 @@ We introduce each technique, explain its motivation and implementation, and dire
 compare its performance against the previous generation, highlighting measurable improve-
 ments at every stage. Our roadmap provides insight for future applications and paves the
 way towards efficient, sound, and scalable ZK-SNARK verification for real-world use cases.
+
+## Structure
+
+- `code/` - Code for implementations and benchmarks
+- `paper/` - LaTeX source files for the research paper
+- `results/` - Experimental results and data
+
+## Building the Paper
+
+Multiple passes required 
+
+```bash
+cd paper
+pdflatex main.tex
+bibtex main
+pdflatex main.tex
+pdflatex main.tex
+```
+
+## Running Experiments
+
+```bash
+cd experiments
+go run main.go
+```
+
+## Results
+
+Results are available in [results/](./results) directory.
+
+## Dependencies
+
+- LaTeX distribution (TeXLive, MiKTeX, etc.)
+- Go 1.19+ 
+- gnark library
