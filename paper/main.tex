@@ -116,6 +116,34 @@ El Housni's seminal work \cite{PR1CS22} represents the first systematic explorat
 In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\mathbb{F}_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
 
 The paper's section 6 provides a comprehensive toolkit of Miller loop and final exponentiation optimizations, featuring handcrafted formulas and algorithmic insights specifically designed for constraint system efficiency. These optimizations form the foundation upon which we layer the subsequent advances discussed in this paper.
+
+% R1CS constraint count
+% SCS constraint count
+
+\section{Faster Extension Field multiplications}
+
+Feltroidprime \cite{FXFM23} showcases a novel way of looking at extension field multiplications. Instead of traditional towered extension approach, he proposes moving back to direct extensions.
+Feltroid walks through the construction of mapping functions to go back and forth between direct and towered extensions. In the process we also obtain irreducible polynomials $P_{12}(x)$ and $P_6(x)$.
+
+He then proposes using Euclidean division of polynomials to multiply $A, B\in \mathbb F_{p^{12}}$ or  $A, B\in \mathbb F_{p^{6}}$. The computation happens as follows,
+\begin{enumerate}
+    \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\mathbb F_{p^{12}}$ or $\mathbb F_{p^6}$ elements, with coefficients in $\mathbb F_p$.
+    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\mathbb F_{p^{12}}$ or 10 for $\mathbb F_{p^6}$.
+    \item Perform Euclidean division of $C$ by the irreducible polynomial $P_{12}(x)$ or $P_{6}(x)$ to obtain the quotient $Q$ and remainder $R$.
+    $$\boxed{A(x)*B(x) = Q(x)*P_{12}(x) + R(x)}\text{ or }\boxed{A(x)*B(x) = Q(x)*P_{6}(x) + R(x)}$$
+    \item $R \in \mathbb F_{p^{12}}$ (or $R \in \mathbb F_{p^{6}}$)  is used as the result of the multiplication between $A, B$
+\end{enumerate}
+
+Inside the circuit, this computation can be provided as hint and verified with Schwartz Zippel lemma. Fiat Shamir heuristic can be used to generate the challenge with the transcript.
+
+Finally a polynomial commitment scheme can be added to batch the verifications.
+
+The gnark zk-SNARK library \cite{gnark} has made an impressive implementation of this direct extension technique.
+gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{For numerous curves} that use a polynomial evaluation routine. The routine, \texttt{Eval(...)}, via implementations of \texttt{deferredChecker}, allows for highly flexible framework for commiting variables and building challenges for deferred, batch verifications in line with section 4 in Feltroid Prime's recommendation \cite{FXFM23}.
+
+% R1CS constraint count
+% SCS constraint count
+
 \bibliography{references}
 
 \end{document}
