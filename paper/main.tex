@@ -111,13 +111,11 @@ Each section provides theoretical background, implementation details, and quanti
 
 \section{Pairings in Rank-1 Constraint Systems}
 
-El Housni's contributions, as detailed in \cite{PR1CS22}, provides a foundational understanding of how to optimize pairing computations within the context of Rank-1 Constraint Systems (R1CS). His techniques can be adapted to provide similar benefits to pretty much any constraints based computation model, including Starknet's Cairo VM.
+El Housni's seminal work \cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starknet's Cairo VM.
 
-In section 5, he talks about Rubin and Silverberg's torus based arithmetic \cite{Trs03} which allows compressing field extension to half their size, but each operation requires an inversion. While inversions are about two orders of magnitude more expensive than multiplications typically, in constraint systems inversions can be computed outside the main context and can be verified with just one multiplication constraint. Thus Torus based arithmetic helps reduce the overall field extension operations considerably.
+In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\mathbb{F}_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
 
-Section 6 is a treasure trove of optimization techniques that can be applied to the Miller loop and final exponentiation. El Housni has shared handcrafted formulas and deep insights on curve operations, Miller loop steps and final exponentiation.
-
-\bibliographystyle{plain}
+The paper's section 6 provides a comprehensive toolkit of Miller loop and final exponentiation optimizations, featuring handcrafted formulas and algorithmic insights specifically designed for constraint system efficiency. These optimizations form the foundation upon which we layer the subsequent advances discussed in this paper.
 \bibliography{references}
 
 \end{document}
