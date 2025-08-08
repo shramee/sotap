@@ -79,9 +79,25 @@ This integrated approach achieves substantial performance improvements in Miller
 
 We provide a comprehensive examination and systematic integration of these complementary state-of-the-art techniques, offering a consolidated analysis that quantifies their individual and cumulative performance benefits. Our methodology centers on implementing each optimization within a unified framework to measure the raw constraint savings and percentage improvements contributed by each technique when applied to a complete pairing verification pipeline.
 
-These optimizations target different components of the pairing computation and can be implemented simultaneously: \textbf{El Housni's} techniques optimize the overall constraint system structure and provide handcrafted optimised formulae for operations throughout the pairing computation, \textbf{Feltroidprime's} methods improve extension field arithmetic efficiency, and \textbf{Novakovic and Eagen's} approach eliminates final exponentiation overhead. Our systematic integration demonstrates how these techniques combine to achieve substantial overall performance gains, with each contributing measurable improvements to the total constraint count.
+These optimizations target different components of the pairing computation and can be implemented simultaneously: \textbf{El Housni's} \cite{PR1CS22} techniques optimize the overall constraint system structure and provide handcrafted, optimised formulae for operations throughout the pairing computation, \textbf{Feltroidprime's} \cite{FXFM23} methods improve extension field arithmetic efficiency, and \textbf{Novakovic and Eagen's} \cite{OPP24} approach eliminates final exponentiation overhead. Our systematic integration demonstrates how these techniques combine to achieve substantial overall performance gains, with each contributing measurable improvements to the total constraint count.
 
 The original implementation of these techniques was developed in our Pairing library written in Cairo \cite{cp23}. The Garaga project \cite{grg} on Starknet subsequently implemented these optimizations on top of Feltroidprime's enhanced field multiplication techniques. Our contributions enabled Garaga to fit verifier's auxiliary input within the transaction calldata constraints, while also making the Miller loop 50\% more efficient. Through continued development by Feltroidprime, Rodrigo Ferreira, Liam Eagen, and other contributors, Garaga has evolved into one of the most performant solutions for zero-knowledge proof verification.
+
+\section{Background and Paper Structure}
+
+\subsection{Elliptic Curve Pairing Computation}
+
+An elliptic curve pairing is a non-degenerate bilinear map $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ where $\mathbb{G}_1$ and $\mathbb{G}_2$ are groups of points on elliptic curves over finite fields, and $\mathbb{G}_T$ is a multiplicative group in an extension field. An admissible pairing must be efficiently computable. This paper focuses on the computability part. \textbf{A pairing computation is comprised of two parts,}
+\begin{enumerate}
+    \item Miller Loop: This is the core computation that iteratively computes and applies the line functions to pairs of points from $\mathbb{G}_1$ and $\mathbb{G}_2$, producing a value in $\mathbb{F}_{q^{12}}$.
+    \item Final Exponentiation: This step raises the result of the Miller loop to a specific power, typically $(p^k-1)/r$, to put the output in the correct subgroup of $\mathbb{G}_T$.
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+In the next three sections, we will cover the optimisation ideas brought forward by El Housni \cite{PR1CS22}, Feltroidprime \cite{FXFM23}, and Novakovic and Eagen \cite{OPP24}. Each section will present the theoretical background, implementation details, and performance analysis of the respective techniques.
+
+We will then jump into our contribution, describing in detail our contribution, implementation details along with security analysis, and, of course, performance benchmarks.
 
 
 \bibliographystyle{plain}
