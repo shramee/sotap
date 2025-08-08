@@ -105,6 +105,13 @@ The following three sections systematically examine the optimization techniques 
 
 Each section provides theoretical background, implementation details, and quantitative performance analysis, building toward our novel contribution presented in Section 6. Our approach extends these foundations with optimized Miller loop operations that simultaneously reduce both computational complexity and verification calldata requirements.
 
+\section{Pairings in Rank-1 Constraint Systems}
+
+El Housni's contributions, as detailed in \cite{PR1CS22}, provides a foundational understanding of how to optimize pairing computations within the context of Rank-1 Constraint Systems (R1CS). His techniques can be adapted to provide similar benefits to pretty much any constraints based computation model, including Starknet's Cairo VM.
+
+In section 5, he talks about Rubin and Silverberg's torus based arithmetic \cite{Trs03} which allows compressing field extension to half their size, but each operation requires an inversion. While inversions are about two orders of magnitude more expensive than multiplications typically, in constraint systems inversions can be computed outside the main context and can be verified with just one multiplication constraint. Thus Torus based arithmetic helps reduce the overall field extension operations considerably.
+
+Section 6 is a treasure trove of optimization techniques that can be applied to the Miller loop and final exponentiation. El Housni has shared handcrafted formulas and deep insights on curve operations, Miller loop steps and final exponentiation.
 
 \bibliographystyle{plain}
 \bibliography{references}
