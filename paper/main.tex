@@ -83,21 +83,27 @@ These optimizations target different components of the pairing computation and c
 
 The original implementation of these techniques was developed in our Pairing library written in Cairo \cite{cp23}. The Garaga project \cite{grg} on Starknet subsequently implemented these optimizations on top of Feltroidprime's enhanced field multiplication techniques. Our contributions enabled Garaga to fit verifier's auxiliary input within the transaction calldata constraints, while also making the Miller loop 50\% more efficient. Through continued development by Feltroidprime, Rodrigo Ferreira, Liam Eagen, and other contributors, Garaga has evolved into one of the most performant solutions for zero-knowledge proof verification.
 
-\section{Background and Paper Structure}
+\section{Background and Technical Roadmap}
 
-\subsection{Elliptic Curve Pairing Computation}
+\subsection{Pairing Computation}
 
-An elliptic curve pairing is a non-degenerate bilinear map $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ where $\mathbb{G}_1$ and $\mathbb{G}_2$ are groups of points on elliptic curves over finite fields, and $\mathbb{G}_T$ is a multiplicative group in an extension field. An admissible pairing must be efficiently computable. This paper focuses on the computability part. \textbf{A pairing computation is comprised of two parts,}
+An elliptic curve pairing is a non-degenerate bilinear map $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$, where $\mathbb{G}_1$ and $\mathbb{G}_2$ are groups of points on elliptic curves over finite fields, and $\mathbb{G}_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable.
+
+The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
+
 \begin{enumerate}
-    \item Miller Loop: This is the core computation that iteratively computes and applies the line functions to pairs of points from $\mathbb{G}_1$ and $\mathbb{G}_2$, producing a value in $\mathbb{F}_{q^{12}}$.
-    \item Final Exponentiation: This step raises the result of the Miller loop to a specific power, typically $(p^k-1)/r$, to put the output in the correct subgroup of $\mathbb{G}_T$.
+    \item \textbf{Miller Loop}: The core iterative computation that evaluates line functions at pairs of points from $\mathbb{G}_1$ and $\mathbb{G}_2$, accumulating intermediate results to produce a value in $\mathbb{F}_{q^{12}}$.
+    
+    \item \textbf{Final Exponentiation}: This step raises the Miller loop output to the power $(q^{12}-1)/r$, where $r$ is the order of the groups, ensuring the result lies in the correct subgroup $\mathbb{G}_T$.
 \end{enumerate}
 
-\subsection{Paper Structure}
+While both phases present optimization opportunities, the constraint-based verification of these computations introduces unique challenges and possibilities that differ significantly from native implementations.
 
-In the next three sections, we will cover the optimisation ideas brought forward by El Housni \cite{PR1CS22}, Feltroidprime \cite{FXFM23}, and Novakovic and Eagen \cite{OPP24}. Each section will present the theoretical background, implementation details, and performance analysis of the respective techniques.
+\subsection{Roadmap}
 
-We will then jump into our contribution, describing in detail our contribution, implementation details along with security analysis, and, of course, performance benchmarks.
+The following three sections systematically examine the optimization techniques that form the foundation of our work. Section 3 presents El Housni's pioneering approach to pairings in rank-1 constraint systems \cite{PR1CS22}, establishing the theoretical framework for efficient pairing verification. Section 4 explores Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, which significantly improves field extension operation performance through polynomial commitment techniques. Section 5 details the residue witness approach of Novakovic and Eagen \cite{OPP24}, which enables the elimination of final exponentiation overhead.
+
+Each section provides theoretical background, implementation details, and quantitative performance analysis, building toward our novel contribution presented in Section 6. Our approach extends these foundations with optimized Miller loop operations that simultaneously reduce both computational complexity and verification calldata requirements.
 
 
 \bibliographystyle{plain}
