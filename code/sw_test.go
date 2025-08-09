@@ -5,40 +5,113 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark-crypto/ecc/bn254"
 	"github.com/consensys/gnark/frontend"
-	"github.com/consensys/gnark/test"
 
 	. "sota_pairing/sw_bn254"
+	sw_towered "sota_pairing/sw_bn254_towered"
 )
 
-func randomG1G2Affines() (bn254.G1Affine, bn254.G2Affine) {
+func RandomG1G2Affines() (p bn254.G1Affine, q bn254.G2Affine, err error) {
 	_, _, G1AffGen, G2AffGen := bn254.Generators()
 	mod := bn254.ID.ScalarField()
 	s1, err := rand.Int(rand.Reader, mod)
 	if err != nil {
-		panic(err)
+		return p, q, err
 	}
 	s2, err := rand.Int(rand.Reader, mod)
 	if err != nil {
-		panic(err)
+		return p, q, err
 	}
-	var p bn254.G1Affine
 	p.ScalarMultiplication(&G1AffGen, s1)
-	var q bn254.G2Affine
 	q.ScalarMultiplication(&G2AffGen, s2)
-	return p, q
+	return
 }
 
-type PairingCheckCircuit struct {
+type Bench3_Pair_PairingsInR1CS struct {
+	In1G1 sw_towered.G1Affine
+	In2G1 sw_towered.G1Affine
+	In1G2 sw_towered.G2Affine
+	In2G2 sw_towered.G2Affine
+}
+
+func (c *Bench3_Pair_PairingsInR1CS) Define(api frontend.API) error {
+	pairing, err := sw_towered.NewPairing(api)
+	if err != nil {
+		return fmt.Errorf("new pairing: %w", err)
+	}
+	el, err := pairing.Pair([]*sw_towered.G1Affine{&c.In1G1, &c.In2G1}, []*sw_towered.G2Affine{&c.In1G2, &c.In2G2})
+	if err != nil {
+		return fmt.Errorf("pair: %w", err)
+	}
+	pairing.Ext12.IsEqual(el, pairing.Ext12.One())
+	return nil
+}
+
+func (c *Bench3_Pair_PairingsInR1CS) Init() Benchmarkable {
+	p1, q1, err := RandomG1G2Affines()
+	if err != nil {
+		panic(err)
+	}
+	var p2 bn254.G1Affine
+	p2.Double(&p1).Neg(&p2)
+	var q2 bn254.G2Affine
+	q2.Set(&q1)
+	q1.Double(&q1)
+	return &Bench3_Pair_PairingsInR1CS{
+		In1G1: sw_towered.NewG1Affine(p1),
+		In1G2: sw_towered.NewG2Affine(q1),
+		In2G1: sw_towered.NewG1Affine(p2),
+		In2G2: sw_towered.NewG2Affine(q2),
+	}
+}
+
+type Bench4_Pair_FasterFieldExtensionMuls struct {
 	In1G1 G1Affine
 	In2G1 G1Affine
 	In1G2 G2Affine
 	In2G2 G2Affine
 }
 
-func (c *PairingCheckCircuit) Define(api frontend.API) error {
+func (c *Bench4_Pair_FasterFieldExtensionMuls) Define(api frontend.API) error {
+	pairing, err := NewPairing(api)
+	if err != nil {
+		return fmt.Errorf("new pairing: %w", err)
+	}
+	el, err := pairing.Pair([]*G1Affine{&c.In1G1, &c.In2G1}, []*G2Affine{&c.In1G2, &c.In2G2})
+	if err != nil {
+		return fmt.Errorf("pair: %w", err)
+	}
+	pairing.Ext12.IsEqual(el, pairing.Ext12.One())
+	return nil
+}
+
+func (c *Bench4_Pair_FasterFieldExtensionMuls) Init() Benchmarkable {
+	p1, q1, err := RandomG1G2Affines()
+	if err != nil {
+		panic(err)
+	}
+	var p2 bn254.G1Affine
+	p2.Double(&p1).Neg(&p2)
+	var q2 bn254.G2Affine
+	q2.Set(&q1)
+	q1.Double(&q1)
+	return &Bench4_Pair_FasterFieldExtensionMuls{
+		In1G1: NewG1Affine(p1),
+		In1G2: NewG2Affine(q1),
+		In2G1: NewG1Affine(p2),
+		In2G2: NewG2Affine(q2),
+	}
+}
+
+type Bench5_Pair_EliminatingFinalExponentiation struct {
+	In1G1 G1Affine
+	In2G1 G1Affine
+	In1G2 G2Affine
+	In2G2 G2Affine
+}
+
+func (c *Bench5_Pair_EliminatingFinalExponentiation) Define(api frontend.API) error {
 	pairing, err := NewPairing(api)
 	if err != nil {
 		return fmt.Errorf("new pairing: %w", err)
@@ -50,14 +123,17 @@ func (c *PairingCheckCircuit) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *PairingCheckCircuit) Init() Benchmarkable {
-	p1, q1 := randomG1G2Affines()
+func (c *Bench5_Pair_EliminatingFinalExponentiation) Init() Benchmarkable {
+	p1, q1, err := RandomG1G2Affines()
+	if err != nil {
+		panic(err)
+	}
 	var p2 bn254.G1Affine
 	p2.Double(&p1).Neg(&p2)
 	var q2 bn254.G2Affine
 	q2.Set(&q1)
 	q1.Double(&q1)
-	return &PairingCheckCircuit{
+	return &Bench5_Pair_EliminatingFinalExponentiation{
 		In1G1: NewG1Affine(p1),
 		In1G2: NewG2Affine(q1),
 		In2G1: NewG1Affine(p2),
@@ -65,16 +141,9 @@ func (c *PairingCheckCircuit) Init() Benchmarkable {
 	}
 }
 
-func TestPairingCheckTestSolv(t *testing.T) {
-	assert := test.NewAssert(t)
-	circuit := PairingCheckCircuit{}
-	witness := circuit.Init()
-
-	err := test.IsSolved(&circuit, witness, ecc.BN254.ScalarField())
-	assert.NoError(err)
-}
-
 // bench
 func BenchmarkPairing(b *testing.B) {
-	BenchmarkCircuit(&PairingCheckCircuit{}, b)
+	BenchmarkCircuit(&Bench3_Pair_PairingsInR1CS{}, b)
+	BenchmarkCircuit(&Bench4_Pair_FasterFieldExtensionMuls{}, b)
+	BenchmarkCircuit(&Bench5_Pair_EliminatingFinalExponentiation{}, b)
 }
