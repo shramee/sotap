@@ -10,11 +10,11 @@ import (
 	sw_towered "sota_pairing/sw_bn254_towered"
 )
 
-type Bench3_Pair_PiR1 struct {
+type Bench3_Pairing_PiR1 struct {
 	Pairs TwoPairs[sw_towered.G1Affine, sw_towered.G2Affine]
 }
 
-func (c *Bench3_Pair_PiR1) Define(api frontend.API) error {
+func (c *Bench3_Pairing_PiR1) Define(api frontend.API) error {
 	pairing, err := sw_towered.NewPairing(api)
 	if err != nil {
 		return fmt.Errorf("new pairing: %w", err)
@@ -27,17 +27,17 @@ func (c *Bench3_Pair_PiR1) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench3_Pair_PiR1) Init() Benchmarkable {
-	return &Bench3_Pair_PiR1{
+func (c *Bench3_Pairing_PiR1) Init() Benchmarkable {
+	return &Bench3_Pairing_PiR1{
 		Pairs: RandomToweredPairs(),
 	}
 }
 
-type Bench4_Pair_FXFM struct {
+type Bench4_Pairing_FXFM struct {
 	Pairs TwoPairs[G1Affine, G2Affine]
 }
 
-func (c *Bench4_Pair_FXFM) Define(api frontend.API) error {
+func (c *Bench4_Pairing_FXFM) Define(api frontend.API) error {
 	pairing, err := NewPairing(api)
 	if err != nil {
 		return fmt.Errorf("new pairing: %w", err)
@@ -50,17 +50,17 @@ func (c *Bench4_Pair_FXFM) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench4_Pair_FXFM) Init() Benchmarkable {
-	return &Bench4_Pair_FXFM{
+func (c *Bench4_Pairing_FXFM) Init() Benchmarkable {
+	return &Bench4_Pairing_FXFM{
 		Pairs: RandomPairs(),
 	}
 }
 
-type Bench5_Pair_ElFX struct {
+type Bench5_Pairing_ElFX struct {
 	Pairs TwoPairs[G1Affine, G2Affine]
 }
 
-func (c *Bench5_Pair_ElFX) Define(api frontend.API) error {
+func (c *Bench5_Pairing_ElFX) Define(api frontend.API) error {
 	pairing, err := NewPairing(api)
 	if err != nil {
 		return fmt.Errorf("new pairing: %w", err)
@@ -72,15 +72,15 @@ func (c *Bench5_Pair_ElFX) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench5_Pair_ElFX) Init() Benchmarkable {
-	return &Bench5_Pair_ElFX{
+func (c *Bench5_Pairing_ElFX) Init() Benchmarkable {
+	return &Bench5_Pairing_ElFX{
 		Pairs: RandomPairs(),
 	}
 }
 
 // bench
 func BenchmarkPairing(b *testing.B) {
-	BenchmarkCircuit(&Bench3_Pair_PiR1{}, b)
-	BenchmarkCircuit(&Bench4_Pair_FXFM{}, b)
-	BenchmarkCircuit(&Bench5_Pair_ElFX{}, b)
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench3_Pairing_PiR1{}, b))
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench4_Pairing_FXFM{}, b))
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench5_Pairing_ElFX{}, b))
 }

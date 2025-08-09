@@ -3,8 +3,6 @@ package sota_pairing
 import (
 	"bytes"
 	"fmt"
-	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
@@ -24,15 +22,9 @@ func checkErr(err error, what string, b *testing.B) {
 	}
 }
 
-func BenchmarkCircuit(circuit Benchmarkable, b *testing.B) {
+func BenchmarkCircuit(circuit Benchmarkable, b *testing.B) (int, int) {
 	var buf bytes.Buffer
 	witness := circuit.Init()
-
-	// Get the type name
-	typeName := reflect.TypeOf(circuit).Elem().Name()
-	fmt.Printf("%s\n", strings.Repeat("-", len(typeName)+10))
-	fmt.Printf("%s Benchmark\n", typeName)
-	fmt.Printf("%s\n", strings.Repeat("-", len(typeName)+10))
 
 	w, err := frontend.NewWitness(witness, ecc.BN254.ScalarField())
 	checkErr(err, "frontend.NewWitness", b)
@@ -48,8 +40,6 @@ func BenchmarkCircuit(circuit Benchmarkable, b *testing.B) {
 	buf.Reset()
 	_, err = scs.WriteTo(&buf)
 	checkErr(err, "scs.WriteTo", b)
-	fmt.Printf("SCS: %d, Instr: %d\n",
-		scs.GetNbConstraints(), scs.GetNbInstructions())
 
 	// Test R1CS compilation and solving
 	r1cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, circuit.Init())
@@ -63,6 +53,10 @@ func BenchmarkCircuit(circuit Benchmarkable, b *testing.B) {
 	_, err = r1cs.WriteTo(&buf)
 	checkErr(err, "r1cs.WriteTo", b)
 
-	fmt.Printf("R1CS: %d, Instr: %d\n",
-		r1cs.GetNbConstraints(), r1cs.GetNbInstructions())
+	return scs.GetNbConstraints(), r1cs.GetNbConstraints()
+}
+
+func BenchmarkCircuitStr(circuit Benchmarkable, b *testing.B) string {
+	scs, r1cs := BenchmarkCircuit(circuit, b)
+	return fmt.Sprintf("SCS: %d, R1CS: %d", scs, r1cs)
 }
