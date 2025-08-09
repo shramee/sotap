@@ -120,27 +120,28 @@ The paper's section 6 provides a comprehensive toolkit of Miller loop and final 
 % R1CS constraint count
 % SCS constraint count
 
-\section{Faster Extension Field multiplications}
+\section{Faster Extension Field Multiplications}
 
-Feltroidprime \cite{FXFM23} showcases a novel way of looking at extension field multiplications. Instead of traditional towered extension approach, he proposes moving back to direct extensions.
-Feltroid walks through the construction of mapping functions to go back and forth between direct and towered extensions. In the process we also obtain irreducible polynomials $P_{12}(x)$ and $P_6(x)$.
+Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\mathbb{F}_{p}$ to achieve significant performance improvements.
 
-He then proposes using Euclidean division of polynomials to multiply $A, B\in \mathbb F_{p^{12}}$ or  $A, B\in \mathbb F_{p^{6}}$. The computation happens as follows,
+Feltroidprime walks through the construction of mapping functions to go back and forth between direct and towered extensions. In the process we also obtain irreducible polynomials $P_{12}(x)$ and $P_6(x)$.
+
+He then proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
 \begin{enumerate}
-    \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\mathbb F_{p^{12}}$ or $\mathbb F_{p^6}$ elements, with coefficients in $\mathbb F_p$.
-    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\mathbb F_{p^{12}}$ or 10 for $\mathbb F_{p^6}$.
-    \item Perform Euclidean division of $C$ by the irreducible polynomial $P_{12}(x)$ or $P_{6}(x)$ to obtain the quotient $Q$ and remainder $R$.
-    $$\boxed{A(x)*B(x) = Q(x)*P_{12}(x) + R(x)}\text{ or }\boxed{A(x)*B(x) = Q(x)*P_{6}(x) + R(x)}$$
-    \item $R \in \mathbb F_{p^{12}}$ (or $R \in \mathbb F_{p^{6}}$)  is used as the result of the multiplication between $A, B$
+    \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\mathbb{F}_{p^{12}}$ or $\mathbb{F}_{p^6}$ elements, with coefficients in $\mathbb{F}_p$.
+    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\mathbb{F}_{p^{12}}$ or 10 for $\mathbb{F}_{p^6}$.
+    \item Perform Euclidean division of $C$ by the irreducible polynomial $P_{12}(x)$ or $P_{6}(x)$ to obtain the quotient $Q$ and remainder $R$:
+    \begin{equation}
+    \boxed{A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)} \text{ or } \boxed{A(x) \cdot B(x) = Q(x) \cdot P_{6}(x) + R(x)}
+    \end{equation}
+    \item $R \in \mathbb{F}_{p^{12}}$ (or $R \in \mathbb{F}_{p^{6}}$) is used as the result of the multiplication between $A$ and $B$.
 \end{enumerate}
 
-Inside the circuit, this computation can be provided as hint and verified with Schwartz Zippel lemma. Fiat Shamir heuristic can be used to generate the challenge with the transcript.
+Inside the circuit, this computation can be provided as a hint and verified with the Schwartz--Zippel lemma. The Fiat--Shamir heuristic can be used to generate the challenge with the transcript.
 
-Finally a polynomial commitment scheme can be added to batch the verifications.
+Section 4 discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. It also allows using a single random point, greatly amortizing the costs for Fiat--Shamir hashing.
 
-The gnark zk-SNARK library \cite{gnark} has made an impressive implementation of this direct extension technique.
-gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{For numerous curves} that use a polynomial evaluation routine. The routine, \texttt{Eval(...)}, via implementations of \texttt{deferredChecker}, allows for highly flexible framework for commiting variables and building challenges for deferred, batch verifications in line with section 4 in Feltroid Prime's recommendation \cite{FXFM23}.
-
+The gnark zk-SNARK library \cite{gnark} provides an impressive implementation of this direct extension technique. Gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{Available for numerous curves.} that use a polynomial evaluation routine. The routine, \texttt{Eval(\ldots)}, via implementations of \texttt{deferredChecker}, provides a highly flexible framework for committing variables and building challenges for deferred batch verifications, well in line with Section 4 of Feltroidprime's recommendations \cite{FXFM23}.
 % R1CS constraint count
 % SCS constraint count
 
