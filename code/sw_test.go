@@ -10,6 +10,24 @@ import (
 	sw_towered "sota_pairing/sw_bn254_towered"
 )
 
+// DESCRIPTION
+// ----------------------------------------------------------
+// For each section we find number of constraints used for,
+// 1. Whole Pairing
+// 2. Miller Loop
+// 3. Then Final Exponentiation 1 - 2
+// This is done for both R1CS constraints and SCS constraints
+// ----------------------------------------------------------
+// Tests are included for sections,
+// Section 3: Pairing in R1CS
+// Section 4: Faster Field Extension Multiplication
+// Section 5: Eliminating Final Exponentiation
+// ----------------------------------------------------------
+
+// --------------------------
+// Section 3: Pairing in R1CS
+// --------------------------
+
 type Bench3_Pairing_PiR1 struct {
 	Pairs TwoPairs[sw_towered.G1Affine, sw_towered.G2Affine]
 }
@@ -33,6 +51,9 @@ func (c *Bench3_Pairing_PiR1) Init() Benchmarkable {
 	}
 }
 
+// Section 4: Faster Field Extension Multiplication
+// ------------------------------------------------
+
 type Bench4_Pairing_FXFM struct {
 	Pairs TwoPairs[G1Affine, G2Affine]
 }
@@ -55,6 +76,9 @@ func (c *Bench4_Pairing_FXFM) Init() Benchmarkable {
 		Pairs: RandomPairs(),
 	}
 }
+
+// Section 5: Eliminating Final Exponentiation
+// -------------------------------------------
 
 type Bench5_Pairing_ElFX struct {
 	Pairs TwoPairs[G1Affine, G2Affine]
