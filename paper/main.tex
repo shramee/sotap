@@ -150,21 +150,21 @@ The gnark zk-SNARK library \cite{gnark} provides an impressive implementation of
 
 \section{On Proving Pairings --- Eliminating Final Exponentiation}
 
-Pairing requires the output of the miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation} normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
+Pairing requires the output of the Miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation}, normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
 
-This operation is particularly expensive in extension fields like $\mathbb{F}_{q^{12}}$, because $(q^12-1)/r$ becomes very large.
+This operation is particularly expensive in extension fields like $\mathbb{F}_{q^{12}}$, because $(q^{12}-1)/r$ becomes very large.
 
-Novakovic and Eagen \cite{OPP24} demonstrated that final exponentiation part can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a witness-based approach.
+Novakovic and Eagen \cite{OPP24} demonstrated that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a witness-based approach.
 
-\textbf{Equivalent class representation}, Two elements $A, B \in \mathbb{F}_{q^{12}}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$. This witness $c$ allows us to replace the entire final exponentiation step with the equivalence check. This can be generalised to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
+\textbf{Equivalence class representation}: Two elements $A, B \in \mathbb{F}_{q^{12}}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$. This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
 
 \textbf{For the BN254 curve}, Section 4.3 of \cite{OPP24} demonstrates we can use the optimal parameter:
 
 $$
-\lambda = 6x + 2 + q - q^2 + q^3
+\lambda = 6x + 2 + q - q^2 + q^3 \text{ where } x \text{ is the BN254 curve parameter}
 $$
 
-where also, $\lambda = 3rm'$, allowing us to check:
+where $\lambda = 3rm'$, with $r$ being the order of the pairing groups and $m'$ the corresponding cofactor. This allows us to check:
 
 $$
 A \cdot c^\lambda = B
@@ -173,11 +173,11 @@ $$
 The exponentiation by $\lambda$ decomposes as: $(6x + 2) + (q - q^2 + q^3)$
 
 \begin{enumerate}
-\item $6x + 2$ --- can be computed within the Miller loop using the existing squaring operations
-\item $q - q^2 + q^3$ --- utilizes efficient Frobenius mappings
+\item \textbf{Miller loop component} ($6x + 2$) --- Integrated into existing Miller loop squaring operations
+\item \textbf{Frobenius component} ($q - q^2 + q^3$) --- Computed using efficient Frobenius mappings
 \end{enumerate}
 
-This eliminates the need for an additional final exponentiation step with a few steps in the Miller loop and Frobenius mappings.
+This approach eliminates the computationally expensive final exponentiation entirely, replacing it with a few additional operations in the Miller loop and three efficient Frobenius mappings---a significant computational saving for constraint-based systems.
 
 \bibliographystyle{alpha}
 \bibliography{references}
