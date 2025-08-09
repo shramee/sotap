@@ -1,4 +1,4 @@
-package code
+package sota_pairing
 
 import (
 	"bytes"
