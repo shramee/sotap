@@ -3,7 +3,6 @@ package sota_pairing
 import (
 	"bytes"
 	"fmt"
-	"testing"
 
 	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/frontend"
@@ -16,47 +15,47 @@ type Benchmarkable interface {
 	Init() Benchmarkable
 }
 
-func checkErr(err error, what string, b *testing.B) {
+func checkErr(err error, what string) {
 	if err != nil {
-		b.Fatalf("Failed to %s: %v", what, err)
+		panic(fmt.Sprintf("Failed to %s: %v", what, err))
 	}
 }
 
-func BenchmarkCircuit(circuit Benchmarkable, b *testing.B) (int, int) {
+func BenchmarkCircuit(circuit Benchmarkable) (int, int) {
 	var buf bytes.Buffer
 	witness := circuit.Init()
 
 	w, err := frontend.NewWitness(witness, ecc.BN254.ScalarField())
-	checkErr(err, "frontend.NewWitness", b)
+	checkErr(err, "frontend.NewWitness")
 
 	// Test SCS compilation and solving
 	scs, err := frontend.Compile(ecc.BN254.ScalarField(), scs.NewBuilder, circuit.Init())
-	checkErr(err, "scs compile", b)
+	checkErr(err, "scs compile")
 
 	// Verify SCS solves correctly
 	_, err = scs.Solve(w)
-	checkErr(err, "solve scs", b)
+	checkErr(err, "solve scs")
 
 	buf.Reset()
 	_, err = scs.WriteTo(&buf)
-	checkErr(err, "scs.WriteTo", b)
+	checkErr(err, "scs.WriteTo")
 
 	// Test R1CS compilation and solving
 	r1cs, err := frontend.Compile(ecc.BN254.ScalarField(), r1cs.NewBuilder, circuit.Init())
-	checkErr(err, "r1cs compile", b)
+	checkErr(err, "r1cs compile")
 
 	// Verify R1CS solves correctly
 	_, err = r1cs.Solve(w)
-	checkErr(err, "solve r1cs", b)
+	checkErr(err, "solve r1cs")
 
 	buf.Reset()
 	_, err = r1cs.WriteTo(&buf)
-	checkErr(err, "r1cs.WriteTo", b)
+	checkErr(err, "r1cs.WriteTo")
 
 	return scs.GetNbConstraints(), r1cs.GetNbConstraints()
 }
 
-func BenchmarkCircuitStr(circuit Benchmarkable, b *testing.B) string {
-	scs, r1cs := BenchmarkCircuit(circuit, b)
+func BenchmarkCircuitStr(circuit Benchmarkable) string {
+	scs, r1cs := BenchmarkCircuit(circuit)
 	return fmt.Sprintf("SCS: %d, R1CS: %d", scs, r1cs)
 }
