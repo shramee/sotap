@@ -1,4 +1,4 @@
-package sota_pairing
+package benchmark
 
 import (
 	"bytes"

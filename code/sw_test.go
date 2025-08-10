@@ -6,6 +6,7 @@ import (
 
 	"github.com/consensys/gnark/frontend"
 
+	. "sota_pairing/benchmark"
 	. "sota_pairing/sw_bn254"
 	sw_towered "sota_pairing/sw_bn254_towered"
 )
@@ -104,7 +105,7 @@ func (c *Bench5_Pairing_ElFX) Init() Benchmarkable {
 
 // bench
 func BenchmarkPairing(b *testing.B) {
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench3_Pairing_PiR1{}, b))
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench4_Pairing_FXFM{}, b))
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench5_Pairing_ElFX{}, b))
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench3_Pairing_PiR1{}))
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench4_Pairing_FXFM{}))
+	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench5_Pairing_ElFX{}))
 }
