@@ -204,7 +204,7 @@ Our implementation uses different polynomials for different bits. For each step,
 
 \subsubsection{Zero Bit Equation}
 
-For zero bit operations, the Miller loop just performs doubling. So for each pair we have sparse $\text{Tower}_{034}$ or $\text{Direct}_{01379}$ lines. The verification equation becomes:
+For zero bit operations, the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
 $$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{12}(x)$$
 
@@ -214,15 +214,15 @@ $$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{
 \hline
 \textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
 \hline
-$F \in \mathbb{F}_{q^{12}}$ & Miller loop accumulator & $11 * 2$ & $12$ \\
+$F \in \mathbb{F}_{q^{12}}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
 \hline
-$L_1, L_2 \text{ and } L_3 \in \text{Sparse}_{01379}$  & The line functions & $9 * 3$ & $4 * 3$ \\
+$L_1, L_2, L_3 \in \text{Sparse}_{01379}$  & The line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
 \hline
 $R \in \mathbb{F}_{q^{12}}$ & Remainder, The result & $11$ & $12$ \\
 \hline
-\textbf{Total commitments} & & & \textbf{48} \\
+\textbf{Total multiplications} & & & \textbf{36} \\
 \hline
-Q Ammortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
 \hline
 \end{tabular}
 \caption{Zero bit operation polynomial components}
@@ -230,7 +230,7 @@ Q Ammortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
 
 \subsubsection{Non-Zero Bit Equation}
 
-For non-zero bit operations, the Miller loop performs both doubling and addition steps. So for each pair we have two sparse $\text{Tower}_{034}$ or $\text{Direct}_{01379}$ lines. The verification equation becomes:
+For non-zero bit operations, the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
 $$F(x) \cdot F(x) \cdot W(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot L_{\text{d3}}(x) \cdot L_{\text{a1}}(x) \cdot L_{\text{a2}}(x) \cdot L_{\text{a3}}(x) = R(x) + Q(x) \cdot P_{12}(x)$$
 
@@ -240,19 +240,18 @@ $$F(x) \cdot F(x) \cdot W(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot
 \hline
 \textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
 \hline
-$F \in \mathbb{F}_{q^{12}}$ & Miller loop accumulator & $11 * 2$ & $12$ \\
+$F \in \mathbb{F}_{q^{12}}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
 \hline
-$L_{\text{d1}}, L_{\text{d2}} \text{ and } L_{\text{d3}} \in \text{Sparse}_{01379}$  & The line functions & $9 * 3$ & $4 * 3$ \\
+$L_{\text{d1}}, L_{\text{d2}}, L_{\text{d3}} \in \text{Sparse}_{01379}$ & Doubling line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
 \hline
-$L_{\text{a1}}, L_{\text{a2}} \text{ and } L_{\text{a3}} \in \text{Sparse}_{01379}$  & The line functions & $9 * 3$ & $4 * 3$ \\
-\hline
+$L_{\text{a1}}, L_{\text{a2}}, L_{\text{a3}} \in \text{Sparse}_{01379}$ & Addition line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\\hline
 $W \text{ or } W^{-1} \in \mathbb{F}_{q^{12}}$ & Residue witness & $11$ & $12$ \\
 \hline
 $R \in \mathbb{F}_{q^{12}}$ & Remainder, The result & $11$ & $12$ \\
 \hline
-\textbf{Total commitments} & & & \textbf{72} \\
+\textbf{Total multiplications} & & & \textbf{60} \\
 \hline
-Q Ammortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
 \hline
 \end{tabular}
 \caption{Non-zero bit operation polynomial components}
