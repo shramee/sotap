@@ -60,7 +60,7 @@ Elliptic curve pairings represent fundamental building blocks in modern cryptogr
 
 \subsection{Constraint-Based Computation Models}
 
-In the context of arithmetization protocols and virtual machines (such as Starknet's Cairo VM, R1CS, Plonkish, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
+In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS, Plonkish, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
 
 Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems} \cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
 
@@ -112,7 +112,7 @@ Each section provides theoretical background, implementation details, and quanti
 
 \section{Pairings in Rank-1 Constraint Systems}
 
-El Housni's seminal work \cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starknet's Cairo VM.
+El Housni's seminal work \cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
 
 In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\mathbb{F}_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
 
