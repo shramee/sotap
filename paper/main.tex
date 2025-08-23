@@ -274,18 +274,18 @@ $$\text{LHS} = F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) - R(x)$$
 
 We then prepare an RLC of each equation to prove, for $n$ equations we have,
 
-$$\sum_{i=0}^{n}c_i \cdot \text{LHS}_i = \sum_{i=0}^{n}c_i  \cdot Q_i(x) \cdot P_{12}(x)$$
+$$\sum_{i=1}^{n}c_i \cdot \text{LHS}_i = \sum_{i=1}^{n}c_i  \cdot Q_i(x) \cdot P_{12}(x)$$
 
-Along with the commitments to each $R$ we expect the prover to provide the correct RLC polynomial for $\sum_{i=0}^{n}c_i  \cdot Q_i$. Here, $x$ and all $c_i$ are obtained from Fiat Shamir heuristics over all $R_i$ commitments. This prevents prover from guessing the the randomness before commitment. But allows her to aggregate RLC for all quotients.
+Along with the commitments to each $R$ we expect the prover to provide the correct RLC polynomial for $\sum_{i=1}^{n}c_i  \cdot Q_i$. Here, $x$ and all $c_i$ are obtained from Fiat Shamir heuristics over all $R_i$ commitments. This prevents the prover from guessing the randomness before commitment. But allows her to aggregate RLC for all quotients.
 
 \subsubsection{Prover}
 
-Prover performs the pairing verification herself, and computes and stores all $R_i$ and $Q_i$. After the pairing computation, she uses same hashing method as the verifier to obtains all $c_i$. She then computes the RLC of all $Q_i$ and sends it along with all $R_i$ commitments.
+Prover performs the pairing verification herself, and computes and stores all $R_i$ and $Q_i$. After the pairing computation, she uses same hashing method as the verifier to obtain all $c_i$. She then computes the RLC of all $Q_i$ and sends it along with all $R_i$ commitments.
 
 \subsubsection{Verifier}
 
-Verifier recieves all the remainders, $R_i$, and RLC of quotients - $\sum_{i=0}^{n}c_i  \cdot Q_i$.
-The verifier then prepares all $c_i$ solely from the remainder coefficients. But for $x$ she uses all coefficients of quotients RLC as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{RHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
+Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
+The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
 
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
 
