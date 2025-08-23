@@ -35,7 +35,7 @@
 
 \author{Shramee Srivastav \\ 
 MIST.cash | FOCBB \\ 
-Email: shramee@duck.com}
+Email: shramee@proton.me}
 
 \date{\today}
 
@@ -287,6 +287,10 @@ Prover performs the pairing verification herself, and computes and stores all $R
 Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
 The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
 
+\subsection{Performance}
+
+Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
+Combined with residue witness technique for final exponentiation elimination\cite{OPP24}, these optimizations enabled processing of ZK proofs on Starknet even before the modulo builtin\cite{sn_mod_builtin} became available, which later greatly improved finite field arithmetic operations. These techniques were subsequently integrated into Garaga, which remains the most efficient pairing implementation by operation count on Starknet to date.
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
 
 \bibliographystyle{alpha}
