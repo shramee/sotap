@@ -31,7 +31,7 @@
 \newcommand{\GT}{\ensuremath{\mathbb{G}_T}}
 \newcommand{\pairing}[2]{\ensuremath{e(#1, #2)}}
 
-\title{Efficient Verification of Pairing Computation: \\ Schwartz-Zippel Lemma for Miller Loop}
+\title{Efficient Verification of Pairing Computation: \\ Schwartz-Zippel Lemma for Miller loop}
 
 \author{Shramee Srivastav \\ 
 MIST.cash | FOCBB \\ 
@@ -97,7 +97,7 @@ An elliptic curve pairing is a non-degenerate bilinear map $e: \mathbb{G}_1 \tim
 The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
 
 \begin{enumerate}
-    \item \textbf{Miller Loop}: The core iterative computation that evaluates line functions at pairs of points from $\mathbb{G}_1$ and $\mathbb{G}_2$, accumulating intermediate results to produce a value in $\mathbb{F}_{q^{12}}$.
+    \item \textbf{Miller loop}: The core iterative computation that evaluates line functions at pairs of points from $\mathbb{G}_1$ and $\mathbb{G}_2$, accumulating intermediate results to produce a value in $\mathbb{F}_{q^{12}}$.
     
     \item \textbf{Final Exponentiation}: This step raises the Miller loop output to the power $(q^{12}-1)/r$, where $r$ is the order of the groups, ensuring the result lies in the correct subgroup $\mathbb{G}_T$.
 \end{enumerate}
@@ -179,14 +179,14 @@ The exponentiation by $\lambda$ decomposes as: $(6x + 2) + (q - q^2 + q^3)$
 
 This approach eliminates the computationally expensive final exponentiation entirely, replacing it with a few additional operations in the Miller loop and three efficient Frobenius mappings---a significant computational saving for constraint-based systems.
 
-\section{Miller Loop Step as Polynomial}
+\section{Miller loop Step as Polynomial}
 
-Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
-This approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly commited and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
+Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
+This approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
 
 \subsection{Core Innovation}
 
-The miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form), may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual operation separately, we propose the whole bit operation be viewed as one polynomial.
+The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual operation separately, we propose the whole bit operation be viewed as one polynomial.
 Let's go through Feltroidprime's approach to extension field multiplications once again.
 
 $$\boxed{A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)}$$
@@ -196,7 +196,7 @@ This looks a little like,
 
 $$\boxed{F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = Q(x) \cdot P_{12}(x) + R(x)}$$
 
-This results in a much larger $Q$ compared to Feltroidprime's original approach. However, the savings become obvious when we factor in the deferring of evaluation and combining with polynomial commitment scheme. The whole step can be verified with 3x fewer $R$ evaluations, though we have equivalent increase in the $Q$ coefficients, but these are all summed up to be evaluated at the end. This saves 3 x 12 evaluations (12 for each $R$ avoided) on every miller loop step (66 for Bn254 in NAF), while only adding the removed bit once. So roughly equated to 65 * 3 * 12 fewer evaluations and commitments for BN254. In our original implementation, this made the Miller loop twice as fast.
+This results in a much larger $Q$ compared to Feltroidprime's original approach. However, the computational savings become significant when we consider the deferred evaluation strategy. The whole step can be verified with 3x fewer $R$ evaluations, though we have equivalent increase in the $Q$ coefficients, but these are all summed up to be evaluated at the end. This saves 3 x 12 evaluations (12 for each $R$ avoided) on every Miller loop step (66 for Bn254 in NAF), while only adding the removed bit once. So roughly equated to 65 * 3 * 12 fewer evaluations and commitments for BN254. In our original implementation, this made the Miller loop twice as fast.
 
 \subsection{Bit-Type Polynomials}
 
