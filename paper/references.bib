@@ -1,3 +1,5 @@
+% Essential citations actually used in the paper
+
 @misc{Gro16,
     author = {Jens Groth},
     title = {On the Size of Pairing-based Non-interactive Arguments},
@@ -21,7 +23,6 @@
     publisher = "Springer Berlin Heidelberg",
     address = "Berlin, Heidelberg",
     pages = "349--365",
-    abstract = "We introduce the concept of torus-based cryptography, give a new public key system called CEILIDH, and compare it to other discrete log based systems including Lucas-based systems and XTR. Like those systems, we obtain small key sizes. While Lucas-based systems and XTR are essentially restricted to exponentiation, we are able to perform multiplication as well. We also disprove the open conjectures from [2], and give a new algebro-geometric interpretation of the approach in that paper and of LUC and XTR.",
     isbn = "978-3-540-45146-4"
 }
 
@@ -30,7 +31,7 @@
     title = {Faster Extension Field multiplications for Emulated Pairing Circuits},
     year = {2023},
     howpublished = {\url{https://hackmd.io/@feltroidprime/B1eyHHXNT}},
-    note = {HackMD - 7GclrBxZRli1jtzNo038cQ}
+    note = {HackMD}
 }
 
 @misc{OPP24,
@@ -81,4 +82,92 @@
     author = {Starknet},
     howpublished = {\url{https://www.starknet.io/cairo-book/ch204-02-08-mod-builtin.html}},
     note = {Cairo Book - Chapter 2.4.2.8}
+}
+
+% Foundational references for academic completeness
+
+@InProceedings{Miller86,
+    author = {Victor S. Miller},
+    title = {The Weil pairing, and its efficient calculation},
+    booktitle = {Advances in Cryptology - CRYPTO 1986},
+    year = {1986},
+    publisher = {Springer},
+    pages = {417--426},
+    note = {Foundational algorithm for pairing computation}
+}
+
+@InProceedings{BN06,
+    author = {Paulo S. L. M. Barreto and Michael Naehrig},
+    title = {Pairing-Friendly Elliptic Curves of Prime Order},
+    booktitle = {Selected Areas in Cryptography - SAC 2005},
+    year = {2006},
+    publisher = {Springer},
+    pages = {319--331},
+    note = {Original BN curve construction}
+}
+
+@article{Schwartz80,
+    author = {Jacob T. Schwartz},
+    title = {Fast probabilistic algorithms for verification of polynomial identities},
+    journal = {Journal of the ACM},
+    volume = {27},
+    number = {4},
+    pages = {701--717},
+    year = {1980}
+}
+
+@misc{PLONK19,
+    author = {Ariel Gabizon and Zachary J. Williamson and Oana Ciobotaru},
+    title = {PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of knowledge},
+    year = {2019},
+    howpublished = {\url{https://eprint.iacr.org/2019/953}},
+    note = {Cryptology ePrint Archive, Paper 2019/953}
+}
+
+@techreport{bls05,
+    type =      {Internet-Draft},
+    institution =   {Internet Engineering Task Force},
+    publisher = {Internet Engineering Task Force},
+    note =      {Work in Progress},
+    url =       {https://datatracker.ietf.org/doc/draft-irtf-cfrg-bls-signature/05/},
+    author =    {Dan Boneh and Sergey Gorbunov and Riad S. Wahby and Hoeteck Wee and Christopher A. Wood and Zhenfei Zhang},
+    title =     {{BLS Signatures}},
+    pagetotal = 31,
+    year =      2022,
+    month =     jun,
+    day =       16,
+    abstract =  {BLS is a digital signature scheme with aggregation properties. Given set of signatures (signature\_1, ..., signature\_n) anyone can produce an aggregated signature. Aggregation can also be done on secret keys and public keys. Furthermore, the BLS signature scheme is deterministic, non-malleable, and efficient. Its simplicity and cryptographic properties allows it to be useful in a variety of use- cases, specifically when minimal storage space or bandwidth are required.},
+}
+
+@InProceedings{kzg10,
+author="Kate, Aniket
+and Zaverucha, Gregory M.
+and Goldberg, Ian",
+editor="Abe, Masayuki",
+title="Constant-Size Commitments to Polynomials and Their Applications",
+booktitle="Advances in Cryptology - ASIACRYPT 2010",
+year="2010",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="177--194",
+abstract="We introduce and formally define polynomial commitment schemes, and provide two efficient constructions. A polynomial commitment scheme allows a committer to commit to a polynomial with a short string that can be used by a verifier to confirm claimed evaluations of the committed polynomial. Although the homomorphic commitment schemes in the literature can be used to achieve this goal, the sizes of their commitments are linear in the degree of the committed polynomial. On the other hand, polynomial commitments in our schemes are of constant size (single elements). The overhead of opening a commitment is also constant; even opening multiple evaluations requires only a constant amount of communication overhead. Therefore, our schemes are useful tools to reduce the communication cost in cryptographic protocols. On that front, we apply our polynomial commitment schemes to four problems in cryptography: verifiable secret sharing, zero-knowledge sets, credentials and content extraction signatures.",
+isbn="978-3-642-17373-8"
+}
+
+@InProceedings{r1cs13,
+    author = {Rosario Gennaro and Craig Gentry and Bryan Parno and Mariana Raykova},
+    title = {Quadratic span programs and succinct NIZKs without PCPs},
+    booktitle = {Advances in Cryptology - EUROCRYPT 2013},
+    year = {2013},
+    publisher = {Springer},
+    pages = {626--645},
+    note = {Foundational QAP framework for R1CS}
+}
+
+@misc{Ara13,
+      author = {Diego F.  Aranha and Paulo S.  L.  M.  Barreto and Patrick Longa and Jefferson E.  Ricardini},
+      title = {The Realm of the Pairings},
+      howpublished = {Cryptology {ePrint} Archive, Paper 2013/722},
+      year = {2013},
+      url = {https://eprint.iacr.org/2013/722}
 }
