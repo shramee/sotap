@@ -185,10 +185,25 @@ $\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C \\
 
 Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\mathbb{F}_{p}$ to achieve significant performance improvements.
 
-Feltroidprime walks through the construction of mapping functions to go back and forth between direct and towered extensions. In the process we also obtain irreducible polynomials $P_{12}(x)$ and $P_6(x)$.
+\subsection{Isomorphisms among towered to direct extensions}
 
+Feltroidprime walks through the construction of mapping functions to go back and forth between direct and towered extensions.
 
-He then proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
+He starts with the tower for BN254 (as used in gnark\cite{gnark}):
+
+\begin{flalign}
+\mathbb{F}_{p^2}[u] &= \mathbb{F}_{p}[u]/(u^2+1) \\
+\mathbb{F}_{p^6}[v] &= \mathbb{F}_{p^2}[v]/(v^3-9-u) \\
+\mathbb{F}_{p^{12}}[w] &= \mathbb{F}_{p^6}[w]/(w^2-v)
+\end{flalign}
+
+Obtains irreducible polynomials,
+
+$$P_{12}(x) = x^{12} - 18x^6 + 82 \text{ and } P_6(x) = x^6 - 18v^3 + 82$$
+
+And prepares isomorphisms between tower and direct representations\cite{FELT23ISO} which we will not include in this paper for brevity.
+
+\subsection{Multiplication and Schwartz Zippel lemma}
 
 Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
 \begin{enumerate}
@@ -203,9 +218,15 @@ Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B
 
 Inside the circuit, this computation can be provided as a hint and verified with the Schwartz--Zippel lemma. The Fiat--Shamir heuristic can be used to generate the challenge with the transcript.
 
-Section 4 discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. It also allows using a single random point, greatly amortizing the costs for Fiat--Shamir hashing.
+\subsection{Deferred Evaluation and Batching}
 
+In Section 4, Feltroidprime discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. So they can be checked at a single random point, amortizing the costs for Fiat-Shamir hashing.
 
+The batching process is essentially a random linear combination of all the equations to be verified. For $n$ multiplications, we have:
+
+$$
+\sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z)} = \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)} + \sum_{i=0}^{n-1}{c_i*R_i(x)}
+$$
 
 \subsection{Implementation in Gnark}
 The gnark zk-SNARK library \cite{gnark} provides an impressive implementation of this direct extension technique. Gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{Available for numerous curves.} that use a polynomial evaluation routine. The routine, \texttt{Eval(\ldots)}, via implementations of \texttt{deferredChecker}, provides a highly flexible framework for committing variables and building challenges for deferred batch verifications, well in line with Section 4 of Feltroidprime's recommendations \cite{FXFM23}.
