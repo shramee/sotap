@@ -31,6 +31,10 @@ func NewExt12(api frontend.API) *Ext12 {
 	}
 }
 
+func (e Ext12) FP() *curveF {
+	return e.fp
+}
+
 func (e Ext12) Zero() *E12 {
 	zero := e.fp.Zero()
 	return &E12{
