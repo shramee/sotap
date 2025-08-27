@@ -155,6 +155,29 @@ $$
 Terms $\frac{x_P}{y_P}$ and $\frac{1}{y_P}$ can be precomputed at the cost of 2C, and reused throughout the miller loop. Untwisting isomorphisms for this form are given on pages 15–16 in section 6.1 of \cite{PR1CS22}.
 This representation only \textbf{costs 30C}, that's a \textbf{30\% savings} over 39C for the original representation.
 
+\subsection{Final exponentiation}
+
+In section 6.2 Final exponentiation of \cite{PR1CS22}, Housni presents a lot more tricks and optimizations for the final exponentiation step. Housni walks through easy part of the final exponentiation. And talks about when to apply which one of Granger-Scott algorithm \cite{GS10} or SQR12345/SQR234 \cite{Kar13} for squarings in the hard part.
+We will just walk through the costs of operations for comparison. Interested readers are encouraged to check out section 6.2 of El Housni's paper \cite{PR1CS22} for details on Final exponentiation.
+
+\begin{table}[h]
+\centering
+\caption{$\mathbb{F}_{q^{12}}$ arithmetic in Housni's paper\cite{PR1CS22}}
+\label{tab:fq12_arithmetic_cost}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Mul & Square & Div & sparse\_Mul \\
+\hline
+$\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C \\
+\hline
+\end{tabular}
+\end{table}
+
+% \subsection{Benchmarking and Field emulation costs}
+
+% For our purposes...
+
+
 % R1CS constraint count
 % SCS constraint count
 
