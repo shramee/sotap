@@ -16,13 +16,15 @@ import (
 // For each section we find number of constraints used for,
 // 1. Whole Pairing
 // 2. Miller Loop
-// 3. Then Final Exponentiation 1 - 2
+// 3. Final Exponentiation (Whole Pairing cost - Miller Loop cost)
+// 4. 𝔽p¹² multiplication
 // This is done for both R1CS constraints and SCS constraints
 // ----------------------------------------------------------
 // Tests are included for sections,
 // Section 3: Pairing in R1CS
 // Section 4: Faster Field Extension Multiplication
 // Section 5: Eliminating Final Exponentiation
+// Section 6: Miller loop step polynomial
 // ----------------------------------------------------------
 
 // --------------------------
@@ -52,6 +54,7 @@ func (c *Bench3_Pairing_PiR1) Init() Benchmarkable {
 	}
 }
 
+// ------------------------------------------------
 // Section 4: Faster Field Extension Multiplication
 // ------------------------------------------------
 
@@ -78,6 +81,7 @@ func (c *Bench4_Pairing_FXFM) Init() Benchmarkable {
 	}
 }
 
+// -------------------------------------------
 // Section 5: Eliminating Final Exponentiation
 // -------------------------------------------
 
@@ -103,9 +107,36 @@ func (c *Bench5_Pairing_ElFX) Init() Benchmarkable {
 	}
 }
 
+// --------------------------------------
+// Section 6: Miller loop step polynomial
+// --------------------------------------
+
+type Bench6_Pairing_MLSBatch struct {
+	Pairs TwoPairs[G1Affine, G2Affine]
+}
+
+func (c *Bench6_Pairing_MLSBatch) Define(api frontend.API) error {
+	pairing, err := NewPairing(api)
+	if err != nil {
+		return fmt.Errorf("new pairing: %w", err)
+	}
+	err = pairing.PairingCheckBatched([]*G1Affine{&c.Pairs.In1G1, &c.Pairs.In2G1}, []*G2Affine{&c.Pairs.In1G2, &c.Pairs.In2G2})
+	if err != nil {
+		return fmt.Errorf("pair: %w", err)
+	}
+	return nil
+}
+
+func (c *Bench6_Pairing_MLSBatch) Init() Benchmarkable {
+	return &Bench6_Pairing_MLSBatch{
+		Pairs: RandomPairs(),
+	}
+}
+
 // bench
 func BenchmarkPairing(b *testing.B) {
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench3_Pairing_PiR1{}))
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench4_Pairing_FXFM{}))
-	fmt.Printf("%s\n", BenchmarkCircuitStr(&Bench5_Pairing_ElFX{}))
+	fmt.Printf("3: Pairing in R1CS\n%s\n", BenchmarkCircuitStr(&Bench3_Pairing_PiR1{}))
+	fmt.Printf("4: Faster Field Extension Multiplication\n%s\n", BenchmarkCircuitStr(&Bench4_Pairing_FXFM{}))
+	fmt.Printf("5: Eliminating Final Exponentiation\n%s\n", BenchmarkCircuitStr(&Bench5_Pairing_ElFX{}))
+	fmt.Printf("6: Miller loop step polynomial\n%s\n", BenchmarkCircuitStr(&Bench6_Pairing_MLSBatch{}))
 }
