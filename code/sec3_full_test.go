@@ -87,13 +87,19 @@ func (c *Bench3_Pairing) Define(api frontend.API) error {
 
 // bench
 func TestBench3Full(b *testing.T) {
-	fmt.Printf("\n\n3: Pairing in R1CS\n")
+	println("\n----------------------------------------")
+	println("\n3 Pairings in Rank-1 Constraint Systems")
 
 	p_scs, p_r1cs := BenchmarkCircuit(&Bench3_Pairing{})
 	ml_scs, ml_r1cs := BenchmarkCircuit(&Bench3_MillerLoop{})
-	fmt.Printf("\n\nPairing\nSCS: %d, R1CS: %d", p_scs, p_r1cs)
-	fmt.Printf("\n\nMiller Loop\nSCS: %d, R1CS: %d", ml_scs, ml_r1cs)
-	fmt.Printf("\n\nFinal Exponentiation\nSCS: %d, R1CS: %d", p_scs-ml_scs, p_r1cs-ml_r1cs)
-	scs, r1cs := BenchmarkCircuit(&Bench3_E12Mul{})
-	fmt.Printf("\n\nFp12 Mul\nSCS: %d, R1CS: %d", scs, r1cs)
+	e12_scs, e12_r1cs := BenchmarkCircuit(&Bench3_E12Mul{})
+	println("\n  1. 2-Pair Pairing")
+	println("    SCS: ", p_scs, ", R1CS: ", p_r1cs)
+	println("\n  2. 2-Pair Miller Loop")
+	println("    SCS: ", ml_scs, ", R1CS: ", ml_r1cs)
+	println("\n  3. Final Exponentiation")
+	println("    SCS: ", p_scs-ml_scs, ", R1CS: ", p_r1cs-ml_r1cs)
+	println("\n  4. 𝔽p¹² multiplication")
+	println("    SCS: ", e12_scs, ", R1CS: ", e12_r1cs)
+	println("\n----------------------------------------\n")
 }
