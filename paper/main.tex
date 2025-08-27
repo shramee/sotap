@@ -114,9 +114,46 @@ Each section provides theoretical background, implementation details, and quanti
 
 El Housni's seminal work \cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
 
+\subsection{Algebraic Torii}
+
 In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\mathbb{F}_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
 
-The paper's section 6 provides a comprehensive toolkit of Miller loop and final exponentiation optimizations, featuring handcrafted formulas and algorithmic insights specifically designed for constraint system efficiency. These optimizations form the foundation upon which we layer the subsequent advances discussed in this paper.
+We will not go much deeper into this topic, but interested readers are encouraged to explore section 5 of El Housni's paper \cite{PR1CS22} for details.
+
+\subsection{Cost of inversions}
+
+Housni notes that the cost of inversions is much lower in constraint systems, almost the same as multiplication. Over $\mathbb{F}_p$, inversions cost 2 constraints: one for computing $x \cdot y$ where $y$ is provided from the hint, and one equality check $x \cdot y \stackrel{?}{=} 1$. Division can be similarly reduced to just two constraints. For $c = a/b$ where $c$ is the input from hint, we compute $b \cdot c$ and equality check $b \cdot c \stackrel{?}{=} a$. This is further generalised to field extensions.
+\begin{align*}
+    \text{For } x, y &\in \mathbb{F}_{p^{n}} \\
+    x/y &= z \text{ (}z\text{ as input from hint)} \\
+    \text{Compute } t &= y \cdot z \\
+    \text{Equality check } t &\stackrel{?}{=} x \\
+    \text{Cost} &= 1 \text{ multiplication} + n \text{ (n equality checks)}
+\end{align*}
+
+\subsection{Miller loop}
+
+The paper's section 6 is a comprehensive toolkit of Miller loop and final exponentiation optimizations, featuring handcrafted formulas and algorithmic insights specifically designed for constraint system efficiency. These optimizations form the foundation upon which we layer the subsequent advances discussed in this paper.
+
+\subsubsection{Affine coordinates}
+
+Since division cost about as much as multiplications, we can represent points in affine coordinates for lower operation counts. Point doubling and addition formulas are provided in section 6.1 of \cite{PR1CS22}. Doubling costs 12C and addition costs 10C.
+
+\subsubsection{Avoid doubling}
+
+For double and add operations on non zero bits of the Miller loop, instead of computing [2]S + Q, computing S + Q + S saves 2C per non zero bit.
+Taking this a step further, computation of y coordinate for the intermediate $S + Q$ point can be ommitted and $\lambda_1$ can be directly used in computation of $\lambda_2$. This \textbf{costs 17C}, that's a \textbf{23\% savings} over 22C for [2]S + Q.
+
+\subsubsection{Line evaluations}
+
+Following \cite{Ara13}, the lines are sparse elements in $\mathbb{F}_{p^{12}}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \mathbb{F}_{p^{2}}$. The multiplication of these sparse elements costs 39C.
+Housni proposes representing the lines in the form $1 + \frac{b'x_P}{y_P} \cdot w + \frac{c'}{y_P} \cdot w^3$ which makes it sparser (notice unit first coefficient resulting in free multiplication). This can be rewritten as,
+$$
+1 + b' \cdot \frac{x_P}{y_P} \cdot w + c' \cdot \frac{1}{y_P} \cdot w^3
+$$
+
+Terms $\frac{x_P}{y_P}$ and $\frac{1}{y_P}$ can be precomputed at the cost of 2C, and reused throughout the miller loop. Untwisting isomorphisms for this form are given on pages 15–16 in section 6.1 of \cite{PR1CS22}.
+This representation only \textbf{costs 30C}, that's a \textbf{30\% savings} over 39C for the original representation.
 
 % R1CS constraint count
 % SCS constraint count
@@ -127,7 +164,10 @@ Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multip
 
 Feltroidprime walks through the construction of mapping functions to go back and forth between direct and towered extensions. In the process we also obtain irreducible polynomials $P_{12}(x)$ and $P_6(x)$.
 
+
 He then proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
+
+Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
 \begin{enumerate}
     \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\mathbb{F}_{p^{12}}$ or $\mathbb{F}_{p^6}$ elements, with coefficients in $\mathbb{F}_p$.
     \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\mathbb{F}_{p^{12}}$ or 10 for $\mathbb{F}_{p^6}$.
@@ -142,11 +182,12 @@ Inside the circuit, this computation can be provided as a hint and verified with
 
 Section 4 discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. It also allows using a single random point, greatly amortizing the costs for Fiat--Shamir hashing.
 
+
+
+\subsection{Implementation in Gnark}
 The gnark zk-SNARK library \cite{gnark} provides an impressive implementation of this direct extension technique. Gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{Available for numerous curves.} that use a polynomial evaluation routine. The routine, \texttt{Eval(\ldots)}, via implementations of \texttt{deferredChecker}, provides a highly flexible framework for committing variables and building challenges for deferred batch verifications, well in line with Section 4 of Feltroidprime's recommendations \cite{FXFM23}.
 % R1CS constraint count
 % SCS constraint count
-
-\break
 
 \section{On Proving Pairings --- Eliminating Final Exponentiation}
 
