@@ -54,11 +54,10 @@ func (c *Bench3_MillerLoop) Define(api frontend.API) error {
 	if err != nil {
 		return fmt.Errorf("new pairing: %w", err)
 	}
-	el, err := pairing.MillerLoop([]*sw.G1Affine{&c.Pairs.In1G1, &c.Pairs.In2G1}, []*sw.G2Affine{&c.Pairs.In1G2, &c.Pairs.In2G2})
+	_, err = pairing.MillerLoop([]*sw.G1Affine{&c.Pairs.In1G1, &c.Pairs.In2G1}, []*sw.G2Affine{&c.Pairs.In1G2, &c.Pairs.In2G2})
 	if err != nil {
 		return fmt.Errorf("pair: %w", err)
 	}
-	pairing.Ext12.IsEqual(el, pairing.Ext12.One())
 	return nil
 }
 
@@ -81,7 +80,7 @@ func (c *Bench3_Pairing) Define(api frontend.API) error {
 	if err != nil {
 		return fmt.Errorf("pair: %w", err)
 	}
-	pairing.Ext12.IsEqual(el, pairing.Ext12.One())
+	pairing.Ext12.AssertIsEqual(el, pairing.Ext12.One())
 	return nil
 }
 
