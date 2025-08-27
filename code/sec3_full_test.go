@@ -1,3 +1,14 @@
+// DESCRIPTION
+// ----------------------------------------------------------
+// Section 3: Pairings in Rank-1 Constraint Systems
+// Prints benchmarks for Pairings in Rank-1 Constraint Systems
+// Prints the number of SCS and R1CS constraints required for,
+// 1. 2-Pair Pairing
+// 2. 2-Pair Miller Loop
+// 3. Final Exponentiation (2-Pair Pairing cost - Miller Loop cost)
+// 4. 𝔽p¹² multiplication
+// This is done for both R1CS constraints and SCS constraints
+// ----------------------------------------------------------
 package sota_pairing
 
 import (
