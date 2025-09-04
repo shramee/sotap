@@ -106,6 +106,12 @@ The computation of an optimal ate pairing---the focus of our implementation---co
 
 While both phases present optimization opportunities, the constraint-based verification of these computations introduces unique challenges and possibilities that differ significantly from native implementations.
 
+\subsection{Schwartz--Zippel lemma}
+
+The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zippel lemma \cite{DemLip78,Sch79,Zip79,Sch80}) provides a probabilistic method for testing polynomial identities. The lemma states that for a non-zero polynomial $P(x_1, x_2, \ldots, x_n)$ of total degree $d$ over a finite field $\mathbb{F}$, when evaluated at uniformly random field elements, the probability that $P$ evaluates to zero is at most $d/|\mathbb{F}|$.
+
+This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\mathbb{F}|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
+
 \subsection{Roadmap}
 
 The following three sections systematically examine the optimization techniques that form the foundation of our work. Section 3 presents El Housni's pioneering approach to pairings in rank-1 constraint systems \cite{PR1CS22}, establishing the theoretical framework for efficient pairing verification. Section 4 explores Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, which significantly improves field extension operation performance through polynomial commitment techniques. Section 5 details the residue witness approach of Novakovic and Eagen \cite{OPP24}, which enables the elimination of final exponentiation overhead.
