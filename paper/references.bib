@@ -15,15 +15,15 @@
 }
 
 @InProceedings{Trs03,
-    author = "Rubin, Karl and Silverberg, Alice",
-    editor = "Boneh, Dan",
-    title = "Torus-Based Cryptography",
-    booktitle = "Advances in Cryptology - CRYPTO 2003",
-    year = "2003",
-    publisher = "Springer Berlin Heidelberg",
-    address = "Berlin, Heidelberg",
-    pages = "349--365",
-    isbn = "978-3-540-45146-4"
+    author="Rubin, Karl and Silverberg, Alice",
+    editor="Boneh, Dan",
+    title="Torus-Based Cryptography",
+    booktitle="Advances in Cryptology - CRYPTO 2003",
+    year="2003",
+    publisher="Springer Berlin Heidelberg",
+    address="Berlin, Heidelberg",
+    pages="349--365",
+    isbn="978-3-540-45146-4"
 }
 
 @misc{FXFM23,
@@ -44,13 +44,19 @@
 
 @misc{gnark,
     title = {gnark: A fast zk-SNARK library},
-    author = {Consensys Gnark},
-    howpublished = {\url{https://github.com/ConsenSys/gnark}}
+    author = {Consensys},
+    howpublished = {\url{https://github.com/Consensys/gnark}}
+}
+
+@misc{gnaF,
+    title = {gnark emulated fields},
+    author = {Consensys},
+    howpublished = {\url{https://github.com/Consensys/gnark/tree/master/std/algebra/emulated}}
 }
 
 @misc{grg,
     title = {Garaga: State-of-the-art Elliptic Curve tooling and SNARKS verification for Cairo and Starknet},
-    author = {Feltroidprime and Keep Starknet Strange Exploration Team},
+    author = {Feltroidprime and Keep Starknet Strange Exploration},
     howpublished = {\url{https://github.com/keep-starknet-strange/garaga}}
 }
 
@@ -86,7 +92,7 @@
 @misc{sn_mod_builtin,
     title = {The Mod Builtin},
     author = {Starknet},
-    howpublished = {\url{https://www.starknet.io/cairo-book/ch204-02-08-mod-builtin.html}},
+    howpublished = {\url{https://docs.starknet.io/build/corelib/core-circuit}},
     note = {Cairo Book - Chapter 2.4.2.8}
 }
 
@@ -112,14 +118,64 @@
     note = {Original BN curve construction}
 }
 
-@article{Schwartz80,
-    author = {Jacob T. Schwartz},
-    title = {Fast probabilistic algorithms for verification of polynomial identities},
-    journal = {Journal of the ACM},
-    volume = {27},
-    number = {4},
-    pages = {701--717},
-    year = {1980}
+@article{DemLip78,
+title = {A probabilistic remark on algebraic program testing},
+journal = {Information Processing Letters},
+volume = {7},
+number = {4},
+pages = {193-195},
+year = {1978},
+issn = {0020-0190},
+doi = {https://doi.org/10.1016/0020-0190(78)90067-4},
+url = {https://www.sciencedirect.com/science/article/pii/0020019078900674},
+author = {Richard A. Demillo and Richard J. Lipton},
+keywords = {Software reliability, program testing}
+}
+
+@InProceedings{Sch79,
+author="Schwartz, Jacob T.",
+editor="Ng, Edward W.",
+title="Probabilistic algorithms for verification of polynomial identities",
+booktitle="Symbolic and Algebraic Computation",
+year="1979",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="200--215",
+url="https://link.springer.com/chapter/10.1007/3-540-09519-5_72",
+abstract="The startling success of the Rabin-Strassen-Solovay primality algorithm, togehter with the intriguing foundational possibility that axioms of randomness may constitute a useful fundamental source of mathematical truth independent of the standard axiomatic structure of mathematics, suggests a vigorous search for probabilistic algorithms. In illustration of this observation, we present various fast probabilistic algorithms, with probability of correctness guaranteed a priori, for testing polynomial identities and properties of systems of polynomials. Ancillary fast algorithms for calculating resultants and Sturm sequences are given. Theorems of elementary geometry can be proved much more efficiently by the techniques presented than by any known artificial intelligence approach.",
+isbn="978-3-540-35128-3"
+}
+
+@InProceedings{Zip79,
+author="Zippel, Richard",
+editor="Ng, Edward W.",
+title="Probabilistic algorithms for sparse polynomials",
+booktitle="Symbolic and Algebraic Computation",
+year="1979",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="216--226",
+url="https://link.springer.com/chapter/10.1007/3-540-09519-5_73",
+abstract="In this paper we have tried to demonstrate how sparse techniques can be used to increase the effectiveness of the modular algorithms of Brown and Collins. These techniques can be used for an extremely wide class of problems and can applied to a number of different algorithms including Hensel's lemma. We believe this work has finally laid to rest the bad zero problem.",
+isbn="978-3-540-35128-3"
+}
+
+@article{Sch80,
+author = {Schwartz, J. T.},
+title = {Fast Probabilistic Algorithms for Verification of Polynomial Identities},
+year = {1980},
+issue_date = {Oct. 1980},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {27},
+number = {4},
+issn = {0004-5411},
+url = {https://doi.org/10.1145/322217.322225},
+doi = {10.1145/322217.322225},
+journal = {J. ACM},
+month = oct,
+pages = {701–717},
+numpages = {17}
 }
 
 @misc{PLONK19,
