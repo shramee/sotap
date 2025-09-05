@@ -284,14 +284,16 @@ This requires the output of the Miller loop to be raised to a power of $(q^k-1)/
 
 This operation is particularly expensive in extension fields like $\mathbb{F}_{q^{12}}$, because $(q^{12}-1)/r$ becomes very large.
 
+\subsection{Equivalence class}
 
+Novakovic and Eagen \cite{OPP24} highlight that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a residue--witness based approach.
 
+\textbf{Equivalence class representation}: Two elements $A, B \in \mathbb{F}_{q^{12}}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$.
 
 $$
-\lambda = 6x + 2 + q - q^2 + q^3 \text{ where } x \text{ is the BN254 curve parameter}
+A \equiv B \iff \exists c \in \mathbb{F}_{q^{12}} : A \cdot c^r = B
 $$
 
-where $\lambda = 3rm'$, with $r$ being the order of the pairing groups and $m'$ the corresponding cofactor. This allows us to check:
 
 $$
 A \cdot c^\lambda = B
