@@ -168,15 +168,19 @@ We will not go much deeper into this topic, but interested readers are encourage
 In section 6.2 Final exponentiation of \cite{PR1CS22}, Housni presents a lot more tricks and optimizations for the final exponentiation step. Housni walks through easy part of the final exponentiation. And talks about when to apply which one of Granger-Scott algorithm \cite{GS10} or SQR12345/SQR234 \cite{Kar13} for squarings in the hard part.
 We will just walk through the costs of operations for comparison. Interested readers are encouraged to check out section 6.2 of El Housni's paper \cite{PR1CS22} for details on Final exponentiation.
 
+\subsection{Performance}
+
+Table \ref{tab:fq12_pr1cs} summarizes the arithmetic costs for $\mathbb{F}_{q^{12}}$ as presented in Housni's paper.
+
 \begin{table}[h]
 \centering
 \caption{$\mathbb{F}_{q^{12}}$ arithmetic in Housni's paper\cite{PR1CS22}}
-\label{tab:fq12_arithmetic_cost}
-\begin{tabular}{|c|c|c|c|c|}
+\label{tab:fq12_pr1cs}
+\begin{tabular}{|c|c|c|c|c|c|}
 \hline
- & Mul & Square & Div & sparse\_Mul \\
+ & Mul & Square & Div & sparse\_Mul & Sq + 3 sparse \\
 \hline
-$\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C \\
+$\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C & 126C \\
 \hline
 \end{tabular}
 \end{table}
