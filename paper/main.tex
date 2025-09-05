@@ -277,17 +277,15 @@ $\mathbb{F}_{q^{12}}$ & 39C & 27C & 51C & 31C & 27C \\
 % R1CS constraint count
 % SCS constraint count
 
-\section{On Proving Pairings --- Eliminating Final Exponentiation}
+\section{Eliminating the Final Exponentiation}
 
-Pairing requires the output of the Miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation}, normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
+The mathematical structure underlying pairing based cryptography involves equivalence classes. Tate pairings (as described in \cite{OPP24} and \cite{P4B19}) result in the output in the quotient group $F_{q^k}/(F_{q^k})^r$.
+This requires the output of the Miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation}, normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
 
 This operation is particularly expensive in extension fields like $\mathbb{F}_{q^{12}}$, because $(q^{12}-1)/r$ becomes very large.
 
-Novakovic and Eagen \cite{OPP24} demonstrated that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a witness-based approach.
 
-\textbf{Equivalence class representation}: Two elements $A, B \in \mathbb{F}_{q^{12}}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$. This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
 
-\textbf{For the BN254 curve}, Section 4.3 of \cite{OPP24} demonstrates we can use the optimal parameter:
 
 $$
 \lambda = 6x + 2 + q - q^2 + q^3 \text{ where } x \text{ is the BN254 curve parameter}
