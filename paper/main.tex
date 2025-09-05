@@ -215,7 +215,7 @@ $$P_{12}(x) = x^{12} - 18x^6 + 82 \text{ and } P_6(x) = x^6 - 18v^3 + 82$$
 
 And prepares isomorphisms between tower and direct representations\cite{FELT23ISO} which we will not include in this paper for brevity.
 
-\subsection{Multiplication and Schwartz Zippel lemma}
+\subsection{Multiplication and Schwartz--Zippel lemma}
 
 Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
 \begin{enumerate}
@@ -234,14 +234,46 @@ Inside the circuit, this computation can be provided as a hint and verified with
 
 In Section 4, Feltroidprime discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. So they can be checked at a single random point, amortizing the costs for Fiat-Shamir hashing.
 
-The batching process is essentially a random linear combination of all the equations to be verified. For $n$ multiplications, we have:
+The batching process is a random linear combination of all the equations to be verified. For $n$ multiplications, we have:
 
-$$
-\sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z)} = \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)} + \sum_{i=0}^{n-1}{c_i*R_i(x)}
-$$
+\begin{equation}
+    \label{fxfm_batched}
+    \sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z)} =  \sum_{i=0}^{n-1}{c_i*R_i(x) + \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)}}
+\end{equation}
 
-\subsection{Implementation in Gnark}
-The gnark zk-SNARK library \cite{gnark} provides an impressive implementation of this direct extension technique. Gnark's emulated pairing circuits have \texttt{mulDirect} functions\footnote{Available for numerous curves.} that use a polynomial evaluation routine. The routine, \texttt{Eval(\ldots)}, via implementations of \texttt{deferredChecker}, provides a highly flexible framework for committing variables and building challenges for deferred batch verifications, well in line with Section 4 of Feltroidprime's recommendations \cite{FXFM23}.
+\subsection{Performance}
+
+For performance analysis, we will use the following version of the batched verification outlined in \ref{fxfm_batched}.
+
+$$\sum_{i=0}^{n-1}{c_i*(A_i(z)*B_i(z) - R_i(x))} = \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)}$$
+
+The implementation receives the computed RHS polynomial aggregation $Q_{Agg} = \sum_{i=0}^{n-1}{c_i*Q_i}$ as hint. The LHS aggregation, $\sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z) - R_i(x)}$ is computed within the verifier circuit. While the amortized cost computing the $Q_{Agg}(z)$ and $P_{12}(z)$ once in the circuit approaches zero as the number of batched operations increases, we conservatively account for 1C per multiplication to provide fair cost comparison.
+
+\textbf{Multiplication costs} 12C each for $A$, $B$ and $R$ evaluation, 1C for multiplying $A(z)$ and $B(z)$ evaluations, plus 1C for preparing the RLC $c_i$ multiplication and conservative 1C for RHS aggregation.
+
+For \textbf{squarings}, the evaluation of $A(z)$ is just used again, costing 12C less than multiplication.
+
+\textbf{Division} costs multiplication plus additional 12C for assertion.
+
+\textbf{Sparse element multiplication} costs Evaluations for $A$, $B$ and $R$ where $B$ contains 5 non-zero coefficients, one out of which is unitary free multiplication. The costs comes at 31C which is 4C more than squaring which has free second polynomial because $A = B$ for squarings.
+
+\subsubsection{Queued operations}
+
+When operations are queued consecutively, and evaluated $R_i(z)$ can be used as $A_{i+1}$ for the subsequent operation, we get a free evaluation. So for Squaring and 3 sparse multiplications, we can reuse the evaluation of $R_{i-1}$ as $A_i$ for each of sparse multiplication.
+
+\begin{table}[h]
+\centering
+\caption{$\mathbb{F}_{q^{12}}$ arithmetic in Housni's paper\cite{PR1CS22}}
+\label{tab:fq12_fxfm}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+ & Mul & Square & Div & sparse\_Mul & Sq + 3 sparse \\
+\hline
+$\mathbb{F}_{q^{12}}$ & 39C & 27C & 51C & 31C & 27C \\
+\hline
+\end{tabular}
+\end{table}
+
 % R1CS constraint count
 % SCS constraint count
 
