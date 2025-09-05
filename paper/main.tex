@@ -294,10 +294,24 @@ $$
 A \equiv B \iff \exists c \in \mathbb{F}_{q^{12}} : A \cdot c^r = B
 $$
 
+\subsection{Equivalence via Residue Check}
 
-$$
-A \cdot c^\lambda = B
-$$
+So we have,
+
+\begin{flalign*}
+    A \cdot c^r &\equiv A \\
+    \text{After final exponentiation,} \\
+    (A \cdot c^r)^{(q^{12}-1)/r} &\equiv A^{(q^{k}-1)/r} \\
+    A^{(q^{k}-1)/r} \cdot c^{r*(q^{k}-1)/r} &\equiv A^{(q^{k}-1)/r} \\
+    A^{(q^{k}-1)/r} \cdot c^{q^{k}-1} &\equiv A^{(q^{k}-1)/r} \\
+    \text{With Fermat's Little Theorem,}  \\
+    A^{(q^{k}-1)/r} \cdot 1 &\equiv A^{(q^{k}-1)/r} \\
+\end{flalign*}
+
+If we expect the result of the pairing, $A \in \mathbb{F}_{q^{k}}$, to be equal to some desired output $B \in \mathbb{F}_{q^{k}}$, we can use the equivalence relation to establish there exists some $c \in \mathbb{F}_{q^{k}}$ such that $A \cdot c^r = B$.
+
+This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
+
 
 The exponentiation by $\lambda$ decomposes as: $(6x + 2) + (q - q^2 + q^3)$
 
