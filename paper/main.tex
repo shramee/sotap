@@ -190,9 +190,6 @@ $\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C & 126C \\
 % For our purposes...
 
 
-% R1CS constraint count
-% SCS constraint count
-
 \section{Faster Extension Field Multiplications}
 
 Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\mathbb{F}_{p}$ to achieve significant performance improvements.
@@ -259,7 +256,7 @@ For \textbf{squarings}, the evaluation of $A(z)$ is just used again, costing 12C
 
 \subsubsection{Queued operations}
 
-When operations are queued consecutively, and evaluated $R_i(z)$ can be used as $A_{i+1}$ for the subsequent operation, we get a free evaluation. So for Squaring and 3 sparse multiplications, we can reuse the evaluation of $R_{i-1}$ as $A_i$ for each of sparse multiplication.
+This is a little obvious optimisation, not included in the paper, but when operations are queued consecutively, the evaluated $R_i(z)$ can be used as $A_{i+1}$ for the subsequent operation, and we get a free evaluation. So for Squaring and 3 sparse multiplications, we can reuse the evaluation of $R_{i-1}$ as $A_i$ for sparse multiplications saving 12C on each sparse multiplication.
 
 \begin{table}[h]
 \centering
@@ -269,13 +266,10 @@ When operations are queued consecutively, and evaluated $R_i(z)$ can be used as 
 \hline
  & Mul & Square & Div & sparse\_Mul & Sq + 3 sparse \\
 \hline
-$\mathbb{F}_{q^{12}}$ & 39C & 27C & 51C & 31C & 27C \\
+$\mathbb{F}_{q^{12}}$ & 39C & 27C & 51C & 31C & 84C \\
 \hline
 \end{tabular}
 \end{table}
-
-% R1CS constraint count
-% SCS constraint count
 
 \section{Eliminating the Final Exponentiation}
 
@@ -453,7 +447,7 @@ Prover performs the pairing verification herself, and computes and stores all $R
 \subsubsection{Verifier}
 
 Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
-The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
+The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz--Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
 
 \subsection{Performance}
 
