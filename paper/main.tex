@@ -312,6 +312,31 @@ If we expect the result of the pairing, $A \in \mathbb{F}_{q^{k}}$, to be equal 
 
 This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
 
+\subsection{Finding optimal parameters}
+
+Section 4.2 and 4.3 of \cite{OPP24} dive into finding optimal parameters for the curve to establish:
+
+$$A \cdot c^\lambda = B$$
+
+\subsubsection{Hasse bound and exponentiation by r}
+
+According to Hasse theorem \cite{Sil09}, $q + 1 - r \leq 2\sqrt{q}$ for an elliptic curve over finite field $\mathbb{F}_q$ and  $r$ the order of the curve.
+
+The exponentiation by r can be written as exponentiation by $q + 1 - t$. Where $t \leq 2\sqrt{q}$ is much smaller exponentiation in worst case. And the computation of $c^{q}$ is efficiently computed by exploiting the Frobenius endomorphisms.
+
+\subsubsection{Parameters for BN254 curve}
+
+Section 4.3 of \cite{OPP24} dives into finding optimal $\lambda$ and computation of witness for Ethereum's BN254 of BN\cite{BN05} curve family.
+For brevity, we will not dive into the details of the curve's construction.
+
+$$t(x) = 6x^2 + 1$$
+
+
+$$\lambda = 6x + 2 + q - q^2 + q^3$$
+$$\text{ where } x \text{ is the BN254 curve parameter}$$
+
+
+And also, $\lambda = 3rm'$, with $r$ being the order of the pairing groups and $m'$ the corresponding cofactor.
 
 The exponentiation by $\lambda$ decomposes as: $(6x + 2) + (q - q^2 + q^3)$
 
