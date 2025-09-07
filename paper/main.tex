@@ -347,6 +347,33 @@ This approach eliminates the computationally expensive final exponentiation enti
 Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
 This approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
 
+\begin{algorithm}
+\caption{Miller loop over Barreto--Naehrig curves \cite{OPP24}}
+\label{alg:miller}
+\begin{algorithmic}[1]
+\Require $P \in \mathbb{G}_1, Q \in \mathbb{G}_2$
+\Ensure $f_{\lambda,Q}(P)$
+\State Write $s = 6t + 2 = \sum_{i=0}^L s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+\State $T \leftarrow Q, f \leftarrow 1$
+\For{$i = L - 2$ to $0$}
+    \State $f \leftarrow f^2 \cdot l_{T,T}(P)$
+    \State $T \leftarrow [2]T$
+    \If{$s_i = 1$}
+        \State $f \leftarrow f \cdot l_{T,Q}(P)$
+        \State $T \leftarrow T + Q$
+    \EndIf
+    \If{$s_i = -1$}
+        \State $f \leftarrow f \cdot l_{T,-Q}(P)$
+        \State $T \leftarrow T - Q$
+    \EndIf
+\EndFor
+\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
+\State $f \leftarrow f \cdot l_{T,Q_1}(P), T \leftarrow T + Q_1$
+\State $f \leftarrow f \cdot l_{T,-Q_2}(P), T \leftarrow T - Q_2$
+\State \Return $f$
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Core Innovation}
 
 The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual operation separately, we propose the whole bit operation be viewed as one polynomial.
