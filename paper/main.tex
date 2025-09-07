@@ -10,7 +10,7 @@
 \usepackage[colorlinks=true,allcolors=navyDark,citecolor=navy]{hyperref}
 
 \usepackage{algorithm}
-\usepackage{algorithmic}
+\usepackage{algorithmicx, algpseudocode}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
@@ -21,6 +21,9 @@
 \newtheorem{definition}{Definition}
 \newtheorem{proposition}{Proposition}
 \newtheorem{corollary}{Corollary}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 % Custom commands for common notation
 \newcommand{\Fq}{\ensuremath{\mathbb{F}_q}}
