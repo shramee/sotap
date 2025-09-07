@@ -177,13 +177,13 @@ Table \ref{tab:fq12_pr1cs} summarizes the arithmetic costs for $\mathbb{F}_{q^{1
 
 \begin{table}[h]
 \centering
-\caption{$\mathbb{F}_{q^{12}}$ arithmetic in Housni's paper\cite{PR1CS22}}
+\caption{Arithmetic in Housni's paper\cite{PR1CS22}}
 \label{tab:fq12_pr1cs}
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
- & Mul & Square & Div & sparse\_Mul & Sq + 3 sparse \\
+ & Mul & Square & Div & Sparse Mul \\
 \hline
-$\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C & 126C \\
+$\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C \\
 \hline
 \end{tabular}
 \end{table}
@@ -191,7 +191,6 @@ $\mathbb{F}_{q^{12}}$ & 54C & 36C & 66C & 30C & 126C \\
 % \subsection{Benchmarking and Field emulation costs}
 
 % For our purposes...
-
 
 \section{Faster Extension Field Multiplications}
 
@@ -257,19 +256,18 @@ For \textbf{squarings}, the evaluation of $A(z)$ is just used again, costing 12C
 
 \textbf{Sparse element multiplication} costs Evaluations for $A$, $B$ and $R$ where $B$ contains 5 non-zero coefficients, one out of which is unitary free multiplication. The costs comes at 31C which is 4C more than squaring which has free second polynomial because $A = B$ for squarings.
 
-\subsubsection{Queued operations}
-
-This is a little obvious optimisation, not included in the paper, but when operations are queued consecutively, the evaluated $R_i(z)$ can be used as $A_{i+1}$ for the subsequent operation, and we get a free evaluation. So for Squaring and 3 sparse multiplications, we can reuse the evaluation of $R_{i-1}$ as $A_i$ for sparse multiplications saving 12C on each sparse multiplication.
-
 \begin{table}[h]
 \centering
-\caption{$\mathbb{F}_{q^{12}}$ arithmetic in Housni's paper\cite{PR1CS22}}
+\caption{Arithmetic in Feltroidprime's paper\cite{FXFM23}}
 \label{tab:fq12_fxfm}
-\begin{tabular}{|c|c|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|}
 \hline
- & Mul & Square & Div & sparse\_Mul & Sq + 3 sparse \\
+ & Mul & Square & Div & Sparse Mul \\
 \hline
-$\mathbb{F}_{q^{12}}$ & 39C & 27C & 51C & 31C & 84C \\
+$\mathbb{F}_{q^{12}}$ & 39C* & 27C* & 51C* & 31C* \\
+\hline
+\multicolumn{5}{|c|}{} \\
+\multicolumn{5}{|c|}{*Costs exclude Fiat-Shamir commitment overhead} \\
 \hline
 \end{tabular}
 \end{table}
