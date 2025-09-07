@@ -345,7 +345,7 @@ This approach eliminates the computationally expensive final exponentiation enti
 \section{Miller loop Step as Polynomial}
 
 Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
-This approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
+The approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
 
 \begin{algorithm}
 \caption{Miller loop over Barreto--Naehrig curves \cite{OPP24}}
@@ -376,13 +376,10 @@ This approach consolidates different operations in individual Miller loop steps 
 
 \subsection{Core Innovation}
 
-The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual operation separately, we propose the whole bit operation be viewed as one polynomial.
-Let's go through Feltroidprime's approach to extension field multiplications once again.
+The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
 
-$$\boxed{A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)}$$
+To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
 
-Instead of working with individual operations like an $\mathbb{F}_{q^{12}}$ multiplication, we treat the entire bit operation as a single polynomial.
-This looks a little like,
 
 $$\boxed{F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = Q(x) \cdot P_{12}(x) + R(x)}$$
 
