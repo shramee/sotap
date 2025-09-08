@@ -376,29 +376,61 @@ This approach eliminates the computationally expensive final exponentiation enti
 Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
 The approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
 
+\subsection{Recap of Ate Pairing with equivalence check}
+
+From what we have discussed so far, we have a following Optimal ate pairing algorithm \ref{alg:pairing}.
+This algorithm combines residue witness \cite{OPP24} and Feltroidprime's \FqTwelve arithmetic.
+
 \begin{algorithm}
-\caption{Miller loop over Barreto--Naehrig curves \cite{OPP24}}
-\label{alg:miller}
+\caption{Optimal Ate pairing with Residue witness}
+\label{alg:pairing}
 \begin{algorithmic}[1]
-\Require $P \in \mathbb{G}_1, Q \in \mathbb{G}_2$
-\Ensure $f_{\lambda,Q}(P)$
-\State Write $s = 6t + 2 = \sum_{i=0}^L s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
-\State $T \leftarrow Q, f \leftarrow 1$
+\Require $P \in \G_1, Q \in \G_2, c \in \FqTwelve, w \in \{0,1,2\}$
+\Statex $\text{Internal } W, W^2 \in \FqTwelve$ \Comment{$W$ is 27th root of unity}
+\Ensure $a_{opt}(Q, P)$
+\State Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+\State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
+\State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
+
+\State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
+
+\color{gray}
+\Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
+\color{black}
+
+\Statex
+
 \For{$i = L - 2$ to $0$}
-    \State $f \leftarrow f^2 \cdot l_{T,T}(P)$
-    \State $T \leftarrow [2]T$
+    \State $f \leftarrow f^2$
+    \State $f \leftarrow f \cdot l_{T,T}(P)$ \gComm{Repeat for $T_i, P_i$}
+    \State $T \leftarrow [2]T$ \gComm{Repeat for $T_i$}
     \If{$s_i = 1$}
-        \State $f \leftarrow f \cdot l_{T,Q}(P)$
-        \State $T \leftarrow T + Q$
-    \EndIf
-    \If{$s_i = -1$}
-        \State $f \leftarrow f \cdot l_{T,-Q}(P)$
-        \State $T \leftarrow T - Q$
+        \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness}
+        \State $f \leftarrow f \cdot l_{T,Q}(P)$ \gComm{Repeat for $T_i, Q_i, P_i$}
+        \State $T \leftarrow T + Q$ \gComm{Repeat for $T_i, Q_i$}
+    \ElsIf{$s_i = -1$}
+        \State $f \leftarrow f \cdot c$ \Comment{Residue witness}
+        \State $f \leftarrow f \cdot l_{T,-Q}(P)$ \gComm{Repeat for $T_i, -Q_i, P_i$}
+        \State $T \leftarrow T - Q$ \gComm{Repeat for $T_i, -Q_i$}
     \EndIf
 \EndFor
-\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
-\State $f \leftarrow f \cdot l_{T,Q_1}(P), T \leftarrow T + Q_1$
-\State $f \leftarrow f \cdot l_{T,-Q_2}(P), T \leftarrow T - Q_2$
+\Statex
+\State $Q' \leftarrow \pi_p(Q)$ \gComm{Repeat for $Q'_i, Q_i$}
+\State $f \leftarrow f \cdot l_{T,Q'}(P)$ \gComm{Repeat for $Q'_i, T_i, P_i$}
+\State $T \leftarrow T + Q'$  \gComm{Repeat for $Q'_i, T_i$}
+\State $f \leftarrow f \cdot l_{T,-\pi_p^2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$}
+\Statex \Comment{Skip $T \leftarrow T + -\pi_p^2(Q)$}
+
+\If{$w = 1$}
+    \State $f \leftarrow f \cdot W$
+\ElsIf{$w = 2$}
+    \State $f \leftarrow f \cdot W^2$
+\EndIf
+
+\State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$}
+
+\Statex
+
 \State \Return $f$
 \end{algorithmic}
 \end{algorithm}
