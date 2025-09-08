@@ -26,13 +26,15 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 % Custom commands for common notation
-\newcommand{\Fq}{\ensuremath{\mathbb{F}_q}}
-\newcommand{\Fqk}{\ensuremath{\mathbb{F}_{q^k}}}
-\newcommand{\FqTwelve}{\ensuremath{\mathbb{F}_{q^{12}}}}
-\newcommand{\E}{\ensuremath{\mathcal{E}}}
-\newcommand{\G}{\ensuremath{\mathbb{G}}}
-\newcommand{\GT}{\ensuremath{\mathbb{G}_T}}
-\newcommand{\pairing}[2]{\ensuremath{e(#1, #2)}}
+\newcommand{\Fq}{\ensuremath{\mathbb{F}_q} }
+\newcommand{\Fqk}{\ensuremath{\mathbb{F}_{q^k}} }
+\newcommand{\FqSix}{\ensuremath{\mathbb{F}_{q^6}} }
+\newcommand{\FqTwelve}{\ensuremath{\mathbb{F}_{q^{12}}} }
+\newcommand{\E}{\ensuremath{\mathcal{E}} }
+\newcommand{\G}{\ensuremath{\mathbb{G}} }
+\newcommand{\GT}{\ensuremath{\mathbb{G}_T} }
+\newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
+\newcommand{\pairing}[2]{\ensuremath{e(#1, #2)} }
 
 \title{Efficient Verification of Pairing Computation: \\ Schwartz-Zippel Lemma for Miller loop}
 
@@ -61,11 +63,11 @@ Building upon these foundations, we introduce our novel contribution that extend
 
 \subsection{Elliptic curve pairings}
 
-Elliptic curve pairings represent fundamental building blocks in modern cryptographic protocols, serving as the mathematical foundation for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{PLONK19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}. At their core, elliptic curve pairings provide a bilinear map\cite{Ara13} $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ that enables a form of an encrypted multiplication over elliptic curve groups. This bilinearity property — where $e(aP, Q) = e(P, aQ) = e(P, Q)^a$ for scalar $a$ and points $P \in \mathbb{G}_1$, $Q \in \mathbb{G}_2$ — has enabled breakthrough advances across cryptographic applications, from identity-based encryption to the zero-knowledge systems securing modern blockchain infrastructure.
+Elliptic curve pairings represent fundamental building blocks in modern cryptographic protocols, serving as the mathematical foundation for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}. At their core, elliptic curve pairings provide a bilinear map\cite{Ara13} $e: \mathbb{G}_1 \times \mathbb{G}_2 \rightarrow \mathbb{G}_T$ that enables a form of an encrypted multiplication over elliptic curve groups. This bilinearity property — where $e(aP, Q) = e(P, aQ) = e(P, Q)^a$ for scalar $a$ and points $P \in \mathbb{G}_1$, $Q \in \mathbb{G}_2$ — has enabled breakthrough advances across cryptographic applications, from identity-based encryption to the zero-knowledge systems securing modern blockchain infrastructure.
 
 \subsection{Constraint-Based Computation Models}
 
-In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS\cite{r1cs13}, Plonkish\cite{PLONK19}, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
+In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS\cite{r1cs13}, Plonkish\cite{plnk19}, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
 
 Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems} \cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
 
@@ -329,7 +331,6 @@ $$t(x) = 6x^2 + 1$$
 
 $$\lambda = 6x + 2 + q - q^2 + q^3$$
 $$\text{ where } x \text{ is the BN254 curve parameter}$$
-
 
 And also, $\lambda = 3rm'$, with $r$ being the order of the pairing groups and $m'$ the corresponding cofactor.
 
