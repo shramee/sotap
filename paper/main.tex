@@ -478,11 +478,11 @@ This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savi
 
 \subsection{Bit-Type Polynomials}
 
-Our implementation uses different polynomials for different bits. For each step, the accumulator is squared\footnote{Squaring the accumulator doubles degree, but does not increase commitments.}. We will describe the polynomials for zero bits and non-zero bits.
+Our implementation uses different polynomials for different bits in the Miller loop. Let' walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
 
 \subsubsection{Zero Bit Equation}
 
-For zero bit operations, the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+For zero bit operations (line 6 and 7 with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
 $$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{12}(x)$$
 
@@ -508,7 +508,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
 
 \subsubsection{Non-Zero Bit Equation}
 
-For non-zero bit operations, the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+For non-zero bit operations(line 6, 7 and lines 9 to 17 except 12 and 16, with three pairs of lines in Algorithm \ref{alg:pairing}), the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
 $$F(x) \cdot F(x) \cdot W(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot L_{\text{d3}}(x) \cdot L_{\text{a1}}(x) \cdot L_{\text{a2}}(x) \cdot L_{\text{a3}}(x) = R(x) + Q(x) \cdot P_{12}(x)$$
 
