@@ -441,10 +441,40 @@ The Miller loop is comprised of steps for each individual bit, which in NAF (non
 
 To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
 
+\subsubsection{Comparison setup}
 
-$$\boxed{F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = Q(x) \cdot P_{12}(x) + R(x)}$$
+\begin{enumerate}
+    \item Operate in a 3-pairing Miller loop setting.
+    \item Prepare the polynomial relationships to assert for a 0-bit operation.
+    \item We skip the evaluations and commitments of quotient polynomials \footnote{The evaluation and commitment of quotient polynomials $Q$ is skipped because they are aggregated into a single polynomial commitment at the end of the computation amortised across all operations.}
+    \item Look at the Feltroidprime's implementation \cite{FXFM23}
+    \item Compare it with our approach
+\end{enumerate}
 
-This results in a much larger $Q$ compared to Feltroidprime's original approach. However, the computational savings become significant when we consider the deferred evaluation strategy. The whole step can be verified with 3x fewer $R$ evaluations, though we have equivalent increase in the $Q$ coefficients, but these are all summed up to be evaluated at the end. This saves 3 x 12 evaluations (12 for each $R$ avoided) on every Miller loop step (66 for Bn254 in NAF), while only adding the removed bit once. So roughly equated to 65 * 3 * 12 fewer evaluations and commitments for BN254. In our original implementation, this made the Miller loop twice as fast.
+\subsubsection{Previous scheme}
+
+\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line 4 of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
+
+\begin{align*}
+    F(x) \cdot F(x) &\stackrel{?}{=} Q_1(x) \cdot P_{12}(x) + T_1(x) \\
+    T_1(x) \cdot L_1(x) &\stackrel{?}{=} Q_2(x) \cdot P_{12}(x) + T_2(x) \\
+    T_2(x) \cdot L_2(x) &\stackrel{?}{=} Q_3(x) \cdot P_{12}(x) + T_3(x) \\
+    T_3(x) \cdot L_3(x) &\stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)
+\end{align*}
+
+$F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluaiton. All the remainder hints need to be provided for commitment, so this is 12 calldata commitment for $R$ and intermediate remainder polynomials $T_1$, $T_2$, $T_3$. \textbf{Costs sum up to 76C} ($\text{ } 5 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 48 commitments} in $\Fq$ ($4 * 12$). Resulting remainder polynomial $R \in \FqTwelve$ is the result of the Miller loop step.
+
+\subsubsection{Our scheme}
+
+\textbf{In our approach,} instead of working with individual arithmetic operations, we treat the entire bit operation as a single polynomial. In our scheme line 4 of  3--pair Miller loop (Algorithm \ref{alg:pairing}) looks like this.
+
+$$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
+
+Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation, but we eliminate intermediate ($T_*$ polynomials above) commitments and evaluations. Only the remainder hint needs commitment, so this is 12 calldata commitment for $R$. \textbf{Costs sum up to 40C} ($\text{ } 2 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 12 $\Fq$ commitments}. 
+
+\text{ }
+
+This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savings in the commitments}. When implemented on a blockchains for verfication of ZK proofs, commitment savings become far more critical because of limitations and costs associated with calldata needed for hints.
 
 \subsection{Bit-Type Polynomials}
 
