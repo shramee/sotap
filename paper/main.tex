@@ -371,6 +371,38 @@ The exponentiation by $\lambda$ decomposes as: $(6x + 2) + (q - q^2 + q^3)$
 
 This approach eliminates the computationally expensive final exponentiation entirely, replacing it with a few additional operations in the Miller loop and three efficient Frobenius mappings---a significant computational saving for constraint-based systems.
 
+\subsection{Performance}
+
+Replacing the final exponentiation by residue witness check saves over 85\% of final exponentiation costs for BN254 curve, reducing the constraints required for whole pairing by 32\%.
+
+Table \ref{tab:pairing_performance} summarizes the performance impact of eliminating the final exponentiation step, comparing the original pairing costs with those after applying the residue witness technique.
+
+\begin{table}[h]
+\centering
+\caption{Performance impact of residue witness check \cite{OPP24}}
+\label{tab:pairing_performance}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Computation} & \textbf{Full Pairing} & \textbf{Witness Check \cite{OPP24}} & \textbf{Change} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\textbf{Emulated BN254 pairing}} \\
+\hline
+Final Exponentiation & 295,823C & 38,276C & -87.1\% \\
+\hline
+Total cost & 784,050C & 526,503C & \textbf{-32.8\%} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\textbf{Native BLS12315 \cite{sf2c22} pairing}} \\
+\hline
+Final Exponentiation & 6,130C & 396C & -93.5\% \\
+\hline
+Total cost & 14,536C & 8,802C & \textbf{-39.4\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+
 \section{Miller loop Step as Polynomial}
 
 Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
