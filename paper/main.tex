@@ -36,7 +36,7 @@
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
 \newcommand{\pairing}[2]{\ensuremath{e(#1, #2)} }
 
-\title{Efficient Verification of Pairing Computation: \\ Schwartz-Zippel Lemma for Miller loop}
+\title{Fast Probabilistic Algorithms for Proving Pairings}
 
 \author{Shramee Srivastav \\ 
 MIST.cash | FOCBB \\ 
@@ -485,7 +485,7 @@ To get a closer look into effectiveness of our scheme, we will make a real world
 
 \subsubsection{Previous scheme}
 
-\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line 4 of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
+\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line 6 and 7 of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
 
 \begin{align*}
     F(x) \cdot F(x) &\stackrel{?}{=} Q_1(x) \cdot P_{12}(x) + T_1(x) \\
@@ -498,7 +498,7 @@ $F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multipl
 
 \subsubsection{Our scheme}
 
-\textbf{In our approach,} instead of working with individual arithmetic operations, we treat the entire bit operation as a single polynomial. In our scheme line 4 of  3--pair Miller loop (Algorithm \ref{alg:pairing}) looks like this.
+\textbf{In our approach,} instead of working with individual arithmetic operations, we treat the entire bit operation as a single polynomial. In our scheme line 6 and 7 of  3--pair Miller loop (Algorithm \ref{alg:pairing}) looks like this.
 
 $$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
 
