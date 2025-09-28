@@ -393,7 +393,7 @@ Final Exponentiation & 295,823C & 38,276C & -87.1\% \\
 Total cost & 784,050C & 526,503C & \textbf{-32.8\%} \\
 \hline
 \multicolumn{4}{|c|}{} \\
-\multicolumn{4}{|c|}{\textbf{Native BLS12315 \cite{sf2c22} pairing}} \\
+\multicolumn{4}{|c|}{\textbf{Native BLS12377 \cite{sf2c22} pairing}} \\
 \hline
 Final Exponentiation & 6,130C & 396C & -93.5\% \\
 \hline
@@ -411,7 +411,7 @@ The approach consolidates different operations in individual Miller loop steps i
 \subsection{Recap of Ate Pairing with equivalence check}
 
 From what we have discussed so far, we have a following Optimal ate pairing algorithm \ref{alg:pairing}.
-This algorithm combines residue witness \cite{OPP24} and Feltroidprime's \FqTwelve arithmetic.
+This algorithm combines optimisations from Pairings in R1CS \cite{PR1CS22} and residue witness check replacing final exponentiations \cite{OPP24}.
 
 \begin{algorithm}
 \caption{Optimal Ate pairing with Residue witness}
@@ -467,23 +467,13 @@ This algorithm combines residue witness \cite{OPP24} and Feltroidprime's \FqTwel
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Core Innovation}
+\subsection{Overview of our approach}
 
 The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
 
 To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
 
-\subsubsection{Comparison setup}
-
-\begin{enumerate}
-    \item Operate in a 3-pairing Miller loop setting.
-    \item Prepare the polynomial relationships to assert for a 0-bit operation.
-    \item We skip the evaluations and commitments of quotient polynomials \footnote{The evaluation and commitment of quotient polynomials $Q$ is skipped because they are aggregated into a single polynomial commitment at the end of the computation amortised across all operations.}
-    \item Look at the Feltroidprime's implementation \cite{FXFM23}
-    \item Compare it with our approach
-\end{enumerate}
-
-\subsubsection{Previous scheme}
+\subsubsection{Previous scheme \cite{FXFM23}}
 
 \textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line 6 and 7 of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
 
