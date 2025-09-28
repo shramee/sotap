@@ -1,8 +1,6 @@
 module sota_pairing
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.24.0
 
 require (
 	github.com/consensys/gnark v0.13.0
@@ -29,3 +27,5 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// replace github.com/consensys/gnark => /Users/shramee/www/crypto/gnark
