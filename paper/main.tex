@@ -26,8 +26,9 @@
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
 % Custom commands for common notation
-\newcommand{\Fq}{\ensuremath{\mathbb{F}_q} }
-\newcommand{\Fe}[1]{\ensuremath{\mathbb{F}_{q^{#1}}} } % Field extension
+\newcommand{\F}{\ensuremath{\mathbb{F}} }
+\newcommand{\Fq}{\ensuremath{\mathbb{F}q} }
+\newcommand{\Fe}[1]{\ensuremath{\F_{q^{#1}}} } % Field extension
 \newcommand{\G}{\ensuremath{\mathbb{G}} }
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
 
@@ -117,9 +118,9 @@ El Housni's seminal work \cite{PR1CS22} represents the first systematic explorat
 
 \subsection{Cost of inversions}
 
-Housni notes that the cost of inversions is much lower in constraint systems, almost the same as multiplication. Over $\mathbb{F}_p$, inversions cost 2 constraints: one for computing $x \cdot y$ where $y$ is provided from the hint, and one equality check $x \cdot y \stackrel{?}{=} 1$. Division can be similarly reduced to just two constraints. For $c = a/b$ where $c$ is the input from hint, we compute $b \cdot c$ and equality check $b \cdot c \stackrel{?}{=} a$. This is further generalised to field extensions.
+Housni notes that the cost of inversions is much lower in constraint systems, almost the same as multiplication. Over $\F_p$, inversions cost 2 constraints: one for computing $x \cdot y$ where $y$ is provided from the hint, and one equality check $x \cdot y \stackrel{?}{=} 1$. Division can be similarly reduced to just two constraints. For $c = a/b$ where $c$ is the input from hint, we compute $b \cdot c$ and equality check $b \cdot c \stackrel{?}{=} a$. This is further generalised to field extensions.
 \begin{align*}
-    \text{For } x, y &\in \mathbb{F}_{p^{n}} \\
+    \text{For } x, y &\in \F_{p^{n}} \\
     x/y &= z \text{ (}z\text{ as input from hint)} \\
     \text{Compute } t &= y \cdot z \\
     \text{Equality check } t &\stackrel{?}{=} x \\
@@ -141,7 +142,7 @@ Taking this a step further, computation of y coordinate for the intermediate $S 
 
 \subsubsection{Line evaluations}
 
-Following \cite{Ara13}, the lines are sparse elements in $\mathbb{F}_{p^{12}}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \mathbb{F}_{p^{2}}$. The multiplication of these sparse elements costs 39C.
+Following \cite{Ara13}, the lines are sparse elements in $\Fe{12}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \F_{p^{2}}$. The multiplication of these sparse elements costs 39C.
 Housni proposes representing the lines in the form $1 + \frac{b'x_P}{y_P} \cdot w + \frac{c'}{y_P} \cdot w^3$ which makes it sparser (notice unit first coefficient resulting in free multiplication). This can be rewritten as,
 $$
 1 + b' \cdot \frac{x_P}{y_P} \cdot w + c' \cdot \frac{1}{y_P} \cdot w^3
@@ -152,7 +153,7 @@ This representation only \textbf{costs 30C}, that's a \textbf{30\% savings} over
 
 \subsection{Algebraic Torii}
 
-In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\mathbb{F}_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
+In section 5, El Housni explores Rubin and Silverberg's torus-based arithmetic \cite{Trs03}, which represents elements of $\F_{q^{2n}}$ using only $n$ coordinates instead of $2n$, effectively compressing field extensions to half their size. While this compression necessitates field inversions for arithmetic operations—typically prohibitively expensive at ~100× the cost of multiplication in native implementations—the constraint system environment fundamentally alters this cost model. Inversions can be computed as hints outside the main constraint context and verified within the circuit using only a single multiplication constraint, making torus arithmetic highly attractive for reducing overall extension field operation complexity.
 
 We will not go much deeper into this topic, but interested readers are encouraged to explore section 5 of El Housni's paper \cite{PR1CS22} for details.
 
@@ -184,7 +185,7 @@ $\Fe{12}$ & 54C & 36C & 66C & 30C \\
 
 \section{Faster Extension Field Multiplications}
 
-Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\mathbb{F}_{p}$ to achieve significant performance improvements.
+Feltroidprime \cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\F_{p}$ to achieve significant performance improvements.
 
 \subsection{Isomorphisms among towered to direct extensions}
 
@@ -193,9 +194,9 @@ Feltroidprime walks through the construction of mapping functions to go back and
 He starts with the tower for BN254 (as used in gnark\cite{gnark}):
 
 \begin{flalign}
-\mathbb{F}_{p^2}[u] &= \mathbb{F}_{p}[u]/(u^2+1) \\
-\mathbb{F}_{p^6}[v] &= \mathbb{F}_{p^2}[v]/(v^3-9-u) \\
-\mathbb{F}_{p^{12}}[w] &= \mathbb{F}_{p^6}[w]/(w^2-v)
+\F_{p^2}[u] &= \F_{p}[u]/(u^2+1) \\
+\F_{p^6}[v] &= \F_{p^2}[v]/(v^3-9-u) \\
+\Fe{12}[w] &= \F_{p^6}[w]/(w^2-v)
 \end{flalign}
 
 Obtains irreducible polynomials,
@@ -206,15 +207,15 @@ And prepares isomorphisms between tower and direct representations\cite{FELT23IS
 
 \subsection{Multiplication and Schwartz--Zippel lemma}
 
-Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \mathbb{F}_{p^{12}}$ or $A, B \in \mathbb{F}_{p^{6}}$. The computation happens as follows:
+Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \Fe{12}$ or $A, B \in \F_{p^{6}}$. The computation happens as follows:
 \begin{enumerate}
-    \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\mathbb{F}_{p^{12}}$ or $\mathbb{F}_{p^6}$ elements, with coefficients in $\mathbb{F}_p$.
-    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\mathbb{F}_{p^{12}}$ or 10 for $\mathbb{F}_{p^6}$.
+    \item Treat $A, B$ as polynomials of degree less than 11 or 5 respectively for $\Fe{12}$ or $\F_{p^6}$ elements, with coefficients in $\F_p$.
+    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\Fe{12}$ or 10 for $\F_{p^6}$.
     \item Perform Euclidean division of $C$ by the irreducible polynomial $P_{12}(x)$ or $P_{6}(x)$ to obtain the quotient $Q$ and remainder $R$:
     $$
     \boxed{A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)} \text{ or } \boxed{A(x) \cdot B(x) = Q(x) \cdot P_{6}(x) + R(x)}
     $$
-    \item $R \in \mathbb{F}_{p^{12}}$ (or $R \in \mathbb{F}_{p^{6}}$) is used as the result of the multiplication between $A$ and $B$.
+    \item $R \in \Fe{12}$ (or $R \in \F_{p^{6}}$) is used as the result of the multiplication between $A$ and $B$.
 \end{enumerate}
 
 Inside the circuit, this computation can be provided as a hint and verified with the Schwartz--Zippel lemma. The Fiat--Shamir heuristic can be used to generate the challenge with the transcript.
@@ -293,7 +294,7 @@ So we have,
     A^{(q^{k}-1)/r} \cdot 1 &\equiv A^{(q^{k}-1)/r} \\
 \end{flalign*}
 
-If we expect the result of the pairing, $A \in \mathbb{F}_{q^{k}}$, to be equal to some desired output $B \in \mathbb{F}_{q^{k}}$, we can use the equivalence relation to establish there exists some $c \in \mathbb{F}_{q^{k}}$ such that $A \cdot c^r = B$.
+If we expect the result of the pairing, $A \in \Fe{k}$, to be equal to some desired output $B \in \Fe{k}$, we can use the equivalence relation to establish there exists some $c \in \Fe{k}$ such that $A \cdot c^r = B$.
 
 This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
 
@@ -333,7 +334,7 @@ $$A \cdot c^\lambda = B$$
 
 \subsubsection{Hasse bound and exponentiation by r}
 
-According to Hasse theorem \cite{Sil09}, $q + 1 - r \leq 2\sqrt{q}$ for an elliptic curve over finite field $\mathbb{F}_q$ and  $r$ the order of the curve.
+According to Hasse theorem \cite{Sil09}, $q + 1 - r \leq 2\sqrt{q}$ for an elliptic curve over finite field $\Fq$ and  $r$ the order of the curve.
 
 The exponentiation by r can be written as exponentiation by $q + 1 - t$. Where $t \leq 2\sqrt{q}$ is much smaller exponentiation in worst case. And the computation of $c^{q}$ is efficiently computed by exploiting the Frobenius endomorphisms.
 
@@ -399,7 +400,7 @@ The approach consolidates different operations in individual Miller loop steps i
 \subsection{Recap of Ate Pairing with equivalence check}
 
 From what we have discussed so far, we have a following Optimal ate pairing algorithm \ref{alg:pairing}.
-This algorithm combines optimisations from Pairings in R1CS \cite{PR1CS22} and residue witness check replacing final exponentiations \cite{OPP24}.
+This algorithm combines optimizations from Pairings in R1CS \cite{PR1CS22} and residue witness check replacing final exponentiations \cite{OPP24}.
 
 \begin{algorithm}
 \caption{Optimal Ate pairing with Residue witness}
@@ -573,7 +574,7 @@ Prover performs the pairing verification herself, and computes and stores all $R
 \subsubsection{Verifier}
 
 Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
-The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz--Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\mathbb{F}|}$} probability.
+The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz--Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\F|}$} probability.
 
 \subsection{Performance}
 
