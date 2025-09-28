@@ -48,7 +48,7 @@ func (c *Bench3_Pairing_PiR1) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench3_Pairing_PiR1) Init() Benchmarkable {
+func (c *Bench3_Pairing_PiR1) Init() *Bench3_Pairing_PiR1 {
 	return &Bench3_Pairing_PiR1{
 		Pairs: RandomToweredPairs(),
 	}
@@ -75,7 +75,7 @@ func (c *Bench4_Pairing_FXFM) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench4_Pairing_FXFM) Init() Benchmarkable {
+func (c *Bench4_Pairing_FXFM) Init() *Bench4_Pairing_FXFM {
 	return &Bench4_Pairing_FXFM{
 		Pairs: RandomPairs(),
 	}
@@ -101,7 +101,7 @@ func (c *Bench5_Pairing_ElFX) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench5_Pairing_ElFX) Init() Benchmarkable {
+func (c *Bench5_Pairing_ElFX) Init() *Bench5_Pairing_ElFX {
 	return &Bench5_Pairing_ElFX{
 		Pairs: RandomPairs(),
 	}
@@ -127,7 +127,7 @@ func (c *Bench6_Pairing_MLSBatch) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench6_Pairing_MLSBatch) Init() Benchmarkable {
+func (c *Bench6_Pairing_MLSBatch) Init() *Bench6_Pairing_MLSBatch {
 	return &Bench6_Pairing_MLSBatch{
 		Pairs: RandomPairs(),
 	}

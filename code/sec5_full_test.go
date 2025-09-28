@@ -33,7 +33,7 @@ func (circuit *Bench5_E12Mul) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench5_E12Mul) Init() Benchmarkable {
+func (c *Bench5_E12Mul) Init() *Bench5_E12Mul {
 	return &Bench5_E12Mul{
 		El: RandomE12Mul(),
 	}
@@ -43,7 +43,7 @@ type Bench5_MillerLoop struct {
 	Pairs TwoPairs[sw.G1Affine, sw.G2Affine]
 }
 
-func (c *Bench5_MillerLoop) Init() Benchmarkable {
+func (c *Bench5_MillerLoop) Init() *Bench5_MillerLoop {
 	return &Bench5_MillerLoop{
 		Pairs: RandomPairs(),
 	}
@@ -65,7 +65,7 @@ type Bench5_Pairing struct {
 	Pairs TwoPairs[sw.G1Affine, sw.G2Affine]
 }
 
-func (c *Bench5_Pairing) Init() Benchmarkable {
+func (c *Bench5_Pairing) Init() *Bench5_Pairing {
 	return &Bench5_Pairing{
 		Pairs: RandomPairs(),
 	}
@@ -86,7 +86,7 @@ func (c *Bench5_Pairing) Define(api frontend.API) error {
 // bench
 func TestBench5Full(b *testing.T) {
 	println("\n----------------------------------------")
-	println("\n4 Eliminating Final Exponentiation")
+	println("\n5 Eliminating Final Exponentiation")
 
 	p_scs, p_r1cs := BenchmarkCircuit(&Bench5_Pairing{})
 	ml_scs, ml_r1cs := BenchmarkCircuit(&Bench5_MillerLoop{})

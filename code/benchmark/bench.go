@@ -10,9 +10,9 @@ import (
 	"github.com/consensys/gnark/frontend/cs/scs"
 )
 
-type Benchmarkable interface {
+type Benchmarkable[T any] interface {
 	frontend.Circuit
-	Init() Benchmarkable
+	Init() T
 }
 
 func checkErr(err error, what string) {
@@ -21,7 +21,7 @@ func checkErr(err error, what string) {
 	}
 }
 
-func BenchmarkCircuit(circuit Benchmarkable) (int, int) {
+func BenchmarkCircuit[T Benchmarkable[T]](circuit T) (int, int) {
 	var buf bytes.Buffer
 	witness := circuit.Init()
 
@@ -55,7 +55,7 @@ func BenchmarkCircuit(circuit Benchmarkable) (int, int) {
 	return scs.GetNbConstraints(), r1cs.GetNbConstraints()
 }
 
-func BenchmarkCircuitStr(circuit Benchmarkable) string {
+func BenchmarkCircuitStr[T Benchmarkable[T]](circuit T) string {
 	scs, r1cs := BenchmarkCircuit(circuit)
 	return fmt.Sprintf("SCS: %d, R1CS: %d", scs, r1cs)
 }

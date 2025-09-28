@@ -33,7 +33,7 @@ func (circuit *Bench4_E12Mul) Define(api frontend.API) error {
 	return nil
 }
 
-func (c *Bench4_E12Mul) Init() Benchmarkable {
+func (c *Bench4_E12Mul) Init() *Bench4_E12Mul {
 	return &Bench4_E12Mul{
 		El: RandomE12Mul(),
 	}
@@ -43,7 +43,7 @@ type Bench4_MillerLoop struct {
 	Pairs TwoPairs[sw.G1Affine, sw.G2Affine]
 }
 
-func (c *Bench4_MillerLoop) Init() Benchmarkable {
+func (c *Bench4_MillerLoop) Init() *Bench4_MillerLoop {
 	return &Bench4_MillerLoop{
 		Pairs: RandomPairs(),
 	}
@@ -65,7 +65,7 @@ type Bench4_Pairing struct {
 	Pairs TwoPairs[sw.G1Affine, sw.G2Affine]
 }
 
-func (c *Bench4_Pairing) Init() Benchmarkable {
+func (c *Bench4_Pairing) Init() *Bench4_Pairing {
 	return &Bench4_Pairing{
 		Pairs: RandomPairs(),
 	}
