@@ -102,17 +102,24 @@ While both phases present optimization opportunities, the constraint-based verif
 
 \subsection{Schwartz--Zippel lemma}
 
-The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zippel lemma \cite{DemLip78,Sch79,Zip79,Sch80}) provides a probabilistic method for testing polynomial identities. The lemma states that for a non-zero polynomial $P(x_1, x_2, \ldots, x_n)$ of total degree $d$ over a finite field $\mathbb{F}$, when evaluated at uniformly random field elements, the probability that $P$ evaluates to zero is at most $d/|\mathbb{F}|$.
+The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zippel lemma \cite{DemLip78,Sch79,Zip79,Sch80}) provides a probabilistic method for testing polynomial identities. The lemma states that for a non-zero polynomial $P(x_1, x_2, \ldots, x_n)$ of total degree $d$ over a finite field $\F$, when evaluated at uniformly random field elements, the probability that $P$ evaluates to zero is at most $d/|\F|$.
 
-This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\mathbb{F}|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
+This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\F|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
 
-\subsection{Roadmap}
 
-The following three sections systematically examine the optimization techniques that form the foundation of our work. Section 3 presents El Housni's pioneering approach to pairings in rank-1 constraint systems \cite{PR1CS22}, establishing the theoretical framework for efficient pairing verification. Section 4 explores Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, which significantly improves field extension operation performance through polynomial commitment techniques. Section 5 details the residue witness approach of Novakovic and Eagen \cite{OPP24}, which enables the elimination of final exponentiation overhead.
+\subsection{Constraint-Based Computation Models}
 
-Each section provides theoretical background, implementation details, and quantitative performance analysis, building toward our novel contribution presented in Section 6. Our approach extends these foundations with optimized Miller loop operations that simultaneously reduce both computational complexity and verification calldata requirements.
+In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS\cite{r1cs13}, Plonkish\cite{plnk19}, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
 
-\section{Pairings in Rank-1 Constraint Systems}
+Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems} \cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
+
+\subsection{Related Work}
+
+The landscape of efficient pairing verification in constraint systems has evolved through several key contributions. El Housni's \textbf{Pairings in Rank-1 Constraint Systems} \cite{PR1CS22} established the theoretical framework for optimizing pairings in Rank-1 Constraint Systems, introducing techniques for efficient Miller loop implementation and final exponentiation that exploit the unique properties of constraint-based computation models. This work demonstrated that operations traditionally considered expensive in native implementations could be restructured to achieve remarkable efficiency gains in arithmetized environments.
+
+Feltroidprime's subsequent research on \textbf{enhanced extension field multiplication techniques} \cite{FXFM23} introduced polynomial verification methods using the Schwartz-Zippel lemma for $\Fe{12}$ arithmetic operations. By representing extension field elements as polynomials and verifying their operations through polynomial arithmetic, this approach achieved significant performance improvements in the pairing computations, particularly for emulated pairing circuits where traditional field operations are costly.
+
+Novakovic and Eagen's work \textbf{On Proving Pairings} \cite{OPP24} presented breakthrough optimization strategies that enable the elimination of final exponentiation overhead through residue witness techniques. Their approach demonstrates that two elements in $\Fe{12}$ can be proven equivalent without expensive exponentiation by introducing witness elements that satisfy specific algebraic relationships, effectively embedding the final exponentiation verification into the Miller loop computation itself.
 
 El Housni's seminal work \cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
 
