@@ -1,0 +1,63 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{xcolor}
+\definecolor{navyDark}{HTML}{003f88}
+\definecolor{navy}{HTML}{0066cc}
+\usepackage[colorlinks=true,allcolors=navyDark,citecolor=navy]{hyperref}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx, algpseudocode}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Custom theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% Custom commands for common notation
+\newcommand{\F}{\ensuremath{\mathbb{F}} }
+\newcommand{\Fq}{\ensuremath{\F_q} }
+\newcommand{\Fe}[1]{\ensuremath{\F_{q^{#1}}} } % Field extension
+\newcommand{\G}{\ensuremath{\mathbb{G}} }
+\newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
+
+\title{Fast Probabilistic Algorithms for Proving Pairings}
+
+\author{Shramee Srivastav \\ 
+MIST.cash|FOCBB, Shhtarknet \\ 
+Email: shramee@proton.me}
+
+\date{\today}
+
+\emergencystretch=1em
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+In this paper, we introduce a public-coin interactive proof system for efficiently proving the correctness of elliptic curve pairing computations. Elliptic curve pairings form the mathematical foundation of many modern cryptographic protocols, yet their verification remains computationally intensive.
+
+In resource-constrained environments—including BitcoinVM, blockchain smart contracts, ZKVMs, and recursive zero-knowledge proof systems—traditional pairing verification remains expensive. This limits the applicability and affordability of privacy-preserving applications, effectively hindering widespread adoption of blockchain technology.
+
+We systematically present a progression of state-of-the-art techniques: El Housni's foundational R1CS pairing optimizations \cite{PR1CS22}, Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, and Novakovic and Eagen's final exponentiation elimination \cite{OPP24}.
+
+Building upon these foundations, our approach extends the Schwartz-Zippel verification framework by consolidating entire Miller loop bit operations into unified polynomial verifications. This achieves a 50\% improvement in Miller loop performance. While our method requires additional auxiliary data compared to traditional pairing verification, it achieves a 75\% reduction in commitment overhead relative to Feltroidprime's extension field techniques.
+\end{abstract}
+
+\input{sections/1-introduction.tex}
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\end{document}
