@@ -404,16 +404,16 @@ We now turn our attention to our primary contribution. Building upon Feltroidpri
 \Statex
 
 \For{$i = L - 2$ to $0$}
-    \State $f \leftarrow f^2$
-    \State $f \leftarrow f \cdot l_{T,T}(P)$ \gComm{Repeat for $T_i, P_i$}
+    \State $f \leftarrow f^2$ \label{pr:ml:sq}
+    \State $f \leftarrow f \cdot l_{T,T}(P)$ \gComm{Repeat for $T_i, P_i$}  \label{pr:ml:ldbl}
     \State $T \leftarrow [2]T$ \gComm{Repeat for $T_i$}
     \If{$s_i = 1$}
-        \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness}
-        \State $f \leftarrow f \cdot l_{T,Q}(P)$ \gComm{Repeat for $T_i, Q_i, P_i$}
+        \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness} \label{pr:ml:rw1bit}
+        \State $f \leftarrow f \cdot l_{T,Q}(P)$ \gComm{Repeat for $T_i, Q_i, P_i$} \label{pr:ml:ladd1bit}
         \State $T \leftarrow T + Q$ \gComm{Repeat for $T_i, Q_i$}
     \ElsIf{$s_i = -1$}
-        \State $f \leftarrow f \cdot c$ \Comment{Residue witness}
-        \State $f \leftarrow f \cdot l_{T,-Q}(P)$ \gComm{Repeat for $T_i, -Q_i, P_i$}
+        \State $f \leftarrow f \cdot c$ \Comment{Residue witness} \label{pr:ml:rw-1bit}
+        \State $f \leftarrow f \cdot l_{T,-Q}(P)$ \gComm{Repeat for $T_i, -Q_i, P_i$} \label{pr:ml:ladd-1bit}
         \State $T \leftarrow T - Q$ \gComm{Repeat for $T_i, -Q_i$}
     \EndIf
 \EndFor
@@ -474,7 +474,7 @@ To get a closer look into effectiveness of our scheme, we will make a real world
 
 \subsubsection{Previous scheme \cite{FXFM23}}
 
-\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line 6 and 7 of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
+\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line \ref{pr:ml:sq} and \ref{pr:ml:ldbl} of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
 
 \begin{align*}
     F(x) \cdot F(x) &\stackrel{?}{=} Q_1(x) \cdot P_{12}(x) + T_1(x) \\
