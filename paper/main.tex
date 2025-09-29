@@ -381,7 +381,9 @@ Total cost & 14,536C & 8,802C & \textbf{-39.4\%} \\
 
 \section{Pairing Operations as Polynomials}
 
-Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves pairing efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire pairing process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
+The techniques discussed in the previous section are outlined in Algorithm \ref{alg:pairing}. This algorithm combines El Housni's R1CS optimizations \cite{PR1CS22} with Novakovic and Eagen's residue witness technique for final exponentiation elimination \cite{OPP24}.
+
+We now turn our attention to our primary contribution. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
 
 \subsection{Strategic Polynomial Segmentation}
 
@@ -411,10 +413,6 @@ $$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } 
 
 This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
-\subsection{Recap of Ate Pairing with equivalence check}
-
-From what we have discussed so far, we have a following Optimal ate pairing algorithm \ref{alg:pairing}.
-This algorithm combines optimizations from Pairings in R1CS \cite{PR1CS22} and residue witness check replacing final exponentiations \cite{OPP24}.
 
 \begin{algorithm}
 \caption{Optimal Ate pairing with Residue witness check}
