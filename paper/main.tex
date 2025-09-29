@@ -379,10 +379,36 @@ Total cost & 14,536C & 8,802C & \textbf{-39.4\%} \\
 \end{tabular}
 \end{table}
 
-\section{Miller loop Step as Polynomial}
+\section{Pairing Operations as Polynomials}
 
-Having seen how final exponentiation can be eliminated through residue witnesses, we now turn to optimizing the Miller loop computation itself. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves Miller loop efficiency.
-The approach consolidates different operations in individual Miller loop steps into unified polynomial which is similarly committed and verified with Schwartz-Zippel, substantially reducing constraint count while maintaining cryptographic security.
+Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves pairing efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire pairing process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
+
+\subsection{Strategic Polynomial Segmentation}
+
+A critical consideration in our design is managing polynomial degree growth. While consolidating operations into fewer polynomials reduces overhead, we must balance this against polynomial degree constraints to maintain verification efficiency.
+
+\subsubsection{Squaring operations and polynomial degree}
+
+Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree. Placed incorrectly it becomes the most degree-expensive operation.
+
+\subsubsection{Natural segmentation points}
+The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
+
+\begin{enumerate}
+    \item Minimize the degree growth impact—the squaring happens on a fresh polynomial of degree 11
+    \item Accumulate all subsequent multiplications at manageable degree increases
+    \item Maintain relatively uniform polynomial degrees across segments
+\end{enumerate}
+
+This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations—initial setup and final exponentiation verification—are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
+
+\subsection{Unified Polynomial Framework}
+
+The key insight is that any sequence of field operations in $\Fe{12}$ \footnote{Elements need not have all 12 coefficients as an \Fe{12} but should be in the same form such that the coefficients align with the \Fe{12} representation.} can be expressed as a single polynomial equation of the form:
+
+$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ for } A_1, ..., A_n \in \Fe{12}$$
+
+This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
 \subsection{Recap of Ate Pairing with equivalence check}
 
@@ -390,7 +416,7 @@ From what we have discussed so far, we have a following Optimal ate pairing algo
 This algorithm combines optimizations from Pairings in R1CS \cite{PR1CS22} and residue witness check replacing final exponentiations \cite{OPP24}.
 
 \begin{algorithm}
-\caption{Optimal Ate pairing with Residue witness}
+\caption{Optimal Ate pairing with Residue witness check}
 \label{alg:pairing}
 \begin{algorithmic}[1]
 \Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$
