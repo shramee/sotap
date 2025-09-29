@@ -1,0 +1,182 @@
+\section{Pairing Operations as Polynomials}
+
+The techniques discussed in the previous section are outlined in Algorithm \ref{alg:pairing}. This algorithm combines El Housni's R1CS optimizations \cite{PR1CS22} with Novakovic and Eagen's residue witness technique for final exponentiation elimination \cite{OPP24}.
+
+We now turn our attention to our primary contribution. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
+
+\begin{algorithm}
+\caption{Optimal Ate pairing with Residue witness check}
+\label{alg:pairing}
+\begin{algorithmic}[1]
+\Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$
+\Statex $\text{Internal } W, W^2 \in \Fe{12}$ \Comment{$W$ is 27th root of unity}
+\Ensure $a_{opt}(Q, P)$
+\State Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+\State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
+\State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
+
+\State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
+
+\color{gray}
+\Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
+\color{black}
+
+\Statex
+
+\For{$i = L - 2$ to $0$}
+    \State $f \leftarrow f^2$ \label{pr:ml:sq}
+    \State $f \leftarrow f \cdot l_{T,T}(P)$ \gComm{Repeat for $T_i, P_i$}  \label{pr:ml:ldbl}
+    \State $T \leftarrow [2]T$ \gComm{Repeat for $T_i$}
+    \If{$s_i = 1$}
+        \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness} \label{pr:ml:rw1bit}
+        \State $f \leftarrow f \cdot l_{T,Q}(P)$ \gComm{Repeat for $T_i, Q_i, P_i$} \label{pr:ml:ladd1bit}
+        \State $T \leftarrow T + Q$ \gComm{Repeat for $T_i, Q_i$}
+    \ElsIf{$s_i = -1$}
+        \State $f \leftarrow f \cdot c$ \Comment{Residue witness} \label{pr:ml:rw-1bit}
+        \State $f \leftarrow f \cdot l_{T,-Q}(P)$ \gComm{Repeat for $T_i, -Q_i, P_i$} \label{pr:ml:ladd-1bit}
+        \State $T \leftarrow T - Q$ \gComm{Repeat for $T_i, -Q_i$}
+    \EndIf
+\EndFor
+\Statex
+\State $Q' \leftarrow \pi_p(Q)$ \gComm{Repeat for $Q'_i, Q_i$}
+\State $f \leftarrow f \cdot l_{T,Q'}(P)$ \gComm{Repeat for $Q'_i, T_i, P_i$}
+\State $T \leftarrow T + Q'$  \gComm{Repeat for $Q'_i, T_i$}
+\State $f \leftarrow f \cdot l_{T,-\pi_p^2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$}
+\Statex \Comment{Skip $T \leftarrow T + -\pi_p^2(Q)$}
+
+\If{$w = 1$}
+    \State $f \leftarrow f \cdot W$
+\ElsIf{$w = 2$}
+    \State $f \leftarrow f \cdot W^2$
+\EndIf
+
+\State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$}
+
+\Statex
+
+\State \Return $f$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Strategic Polynomial Segmentation}
+
+A critical consideration in our design is managing polynomial degree growth. While consolidating operations into fewer polynomials reduces overhead, we must balance this against polynomial degree constraints to maintain verification efficiency.
+
+\subsubsection{Squaring operations and polynomial degree}
+
+Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree, making placement critical. When positioned after other operations, squaring becomes the most degree-expensive operation in the sequence.
+
+\subsubsection{Natural segmentation points}
+
+The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
+
+\begin{enumerate}
+    \item Minimize the degree growth impact—the squaring happens on a fresh polynomial of degree 11
+    \item Accumulate all subsequent multiplications at manageable degree increases
+    \item Maintain relatively uniform polynomial degrees across segments
+\end{enumerate}
+
+This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
+
+\subsection{Unified Polynomial Framework}
+
+Any sequence of field operations in $\Fe{12}$\footnote{Elements need not have all 12 non-zero coefficients, but should align with the $\Fe{12}$ representation (e.g., sparse line functions).} can be expressed as a single polynomial equation of the form:
+
+$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } A_1, \ldots, A_n, R \in \Fe{12}$$
+
+This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
+
+\subsection{Comparative Analysis}
+
+The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
+
+To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
+
+\subsubsection{Previous scheme \cite{FXFM23}}
+
+\textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line \ref{pr:ml:sq} and \ref{pr:ml:ldbl} of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
+
+\begin{align*}
+    F(x) \cdot F(x) &\stackrel{?}{=} Q_1(x) \cdot P_{12}(x) + T_1(x) \\
+    T_1(x) \cdot L_1(x) &\stackrel{?}{=} Q_2(x) \cdot P_{12}(x) + T_2(x) \\
+    T_2(x) \cdot L_2(x) &\stackrel{?}{=} Q_3(x) \cdot P_{12}(x) + T_3(x) \\
+    T_3(x) \cdot L_3(x) &\stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)
+\end{align*}
+
+$F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluaiton. All the remainder hints need to be provided for commitment, so this is 12 calldata commitment for $R$ and intermediate remainder polynomials $T_1$, $T_2$, $T_3$. \textbf{Costs sum up to 76C} ($\text{ } 5 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 48 commitments} in $\Fq$ ($4 * 12$). Resulting remainder polynomial $R \in \Fe{12}$ is the result of the Miller loop step.
+
+\subsubsection{Our scheme}
+
+\textbf{In our approach,} instead of working with individual arithmetic operations, we treat the entire bit operation as a single polynomial. In our scheme line 6 and 7 of  3--pair Miller loop (Algorithm \ref{alg:pairing}) looks like this.
+
+$$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
+
+Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation, but we eliminate intermediate ($T_*$ polynomials above) commitments and evaluations. Only the remainder hint needs commitment, so this is 12 calldata commitment for $R$. \textbf{Costs sum up to 40C} ($\text{ } 2 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 12 $\Fq$ commitments}. 
+
+\text{ }
+
+This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savings in the commitments}. When implemented on a blockchains for verfication of ZK proofs, commitment savings become far more critical because of limitations and costs associated with calldata needed for hints.
+
+\subsection{Bit-Type Polynomials}
+
+Our implementation uses different polynomials for different bits in the Miller loop. Let' walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
+
+\subsubsection{Zero Bit Equation}
+
+For zero bit operations (line 6 and 7 with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+
+$$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{12}(x)$$
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
+\hline
+$F \in \Fe{12}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
+\hline
+$L_1, L_2, L_3 \in \text{Sparse}_{01379}$  & The line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
+\hline
+$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
+\hline
+\textbf{Total multiplications} & & & \textbf{36} \\
+\hline
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
+\hline
+\end{tabular}
+\caption{Zero bit operation polynomial components}
+\end{table}
+
+\subsubsection{Non-Zero Bit Equation}
+
+For non-zero bit operations(line 6, 7 and lines 9 to 17 except 12 and 16, with three pairs of lines in Algorithm \ref{alg:pairing}), the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+
+$$F(x) \cdot F(x) \cdot W(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot L_{\text{d3}}(x) \cdot L_{\text{a1}}(x) \cdot L_{\text{a2}}(x) \cdot L_{\text{a3}}(x) = R(x) + Q(x) \cdot P_{12}(x)$$
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
+\hline
+$F \in \Fe{12}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
+\hline
+$L_{\text{d1}}, L_{\text{d2}}, L_{\text{d3}} \in \text{Sparse}_{01379}$ & Doubling line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
+\hline
+$L_{\text{a1}}, L_{\text{a2}}, L_{\text{a3}} \in \text{Sparse}_{01379}$ & Addition line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\\hline
+$W \text{ or } W^{-1} \in \Fe{12}$ & Residue witness & $11$ & $12$ \\
+\hline
+$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
+\hline
+\textbf{Total multiplications} & & & \textbf{60} \\
+\hline
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
+\hline
+\end{tabular}
+\caption{Non-zero bit operation polynomial components}
+\end{table}
+
+The residue witness $W$ encapsulates the equivalence class relationship established by Novakovic and Eagen's final exponentiation elimination.
+The inverse of $W$ is used for negative bits, this just changes the coefficients the equation remains the same.
+
+\subsubsection{Correction Step Equation}

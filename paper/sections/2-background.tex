@@ -1,0 +1,55 @@
+\section{Background}
+
+\begin{algorithm}
+\caption{Optimal Ate pairing over Barreto--Naehrig curves \cite{hsp10}}
+\label{alg:pairing_2010}
+\begin{algorithmic}[1]
+\Require $P \in \G_1, Q \in \G_2$
+\Ensure $a_{opt}(Q, P)$
+\State Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+\State $T \leftarrow Q, f \leftarrow 1$
+\For{$i = L - 2$ to $0$}
+    \State $f \leftarrow f^2 \cdot l_{T,T}(P)$
+    \State $T \leftarrow [2]T$
+    \If{$s_i = 1$}
+        \State $f \leftarrow f \cdot l_{T,Q}(P)$
+        \State $T \leftarrow T + Q$
+    \EndIf
+    \If{$s_i = -1$}
+        \State $f \leftarrow f \cdot l_{T,-Q}(P)$
+        \State $T \leftarrow T - Q$
+    \EndIf
+\EndFor
+\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
+\State $f \leftarrow f \cdot l_{T,Q_1}(P), T \leftarrow T + Q_1$
+\State $f \leftarrow f \cdot l_{T,-Q_2}(P), T \leftarrow T - Q_2$
+\State $f \leftarrow f^{p^{12} - 1 / r}$
+\State \Return $f$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Pairing Computation}
+
+An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable.
+
+The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
+
+\begin{enumerate}
+    \item \textbf{Miller loop}: The core iterative computation that evaluates line functions at pairs of points from $\G_1$ and $\G_2$, accumulating intermediate results to produce a value in $\Fe{12}$.
+    
+    \item \textbf{Final Exponentiation}: This step raises the Miller loop output to the power $(q^{12}-1)/r$, where $r$ is the order of the groups, ensuring the result lies in the correct subgroup $\G_T$.
+\end{enumerate}
+
+While both phases present optimization opportunities, the constraint-based verification of these computations introduces unique challenges and possibilities that differ significantly from native implementations.
+
+\subsection{Schwartz--Zippel lemma}
+
+The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zippel lemma \cite{DemLip78,Sch79,Zip79,Sch80}) provides a probabilistic method for testing polynomial identities. The lemma states that for a non-zero polynomial $P(x_1, x_2, \ldots, x_n)$ of total degree $d$ over a finite field $\F$, when evaluated at uniformly random field elements, the probability that $P$ evaluates to zero is at most $d/|\F|$.
+
+This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\F|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
+
+\subsection{Constraint-Based Computation Models}
+
+In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS\cite{r1cs13}, Plonkish\cite{plnk19}, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
+
+Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems} \cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
