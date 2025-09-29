@@ -389,9 +389,10 @@ A critical consideration in our design is managing polynomial degree growth. Whi
 
 \subsubsection{Squaring operations and polynomial degree}
 
-Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree. Placed incorrectly it becomes the most degree-expensive operation.
+Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree, making placement critical. When positioned after other operations, squaring becomes the most degree-expensive operation in the sequence.
 
 \subsubsection{Natural segmentation points}
+
 The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
 
 \begin{enumerate}
@@ -400,13 +401,13 @@ The optimal points to segment our unified polynomial are immediately \emph{befor
     \item Maintain relatively uniform polynomial degrees across segments
 \end{enumerate}
 
-This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations—initial setup and final exponentiation verification—are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
+This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
 
 \subsection{Unified Polynomial Framework}
 
-The key insight is that any sequence of field operations in $\Fe{12}$ \footnote{Elements need not have all 12 coefficients as an \Fe{12} but should be in the same form such that the coefficients align with the \Fe{12} representation.} can be expressed as a single polynomial equation of the form:
+Any sequence of field operations in $\Fe{12}$\footnote{Elements need not have all 12 non-zero coefficients, but should align with the $\Fe{12}$ representation (e.g., sparse line functions).} can be expressed as a single polynomial equation of the form:
 
-$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ for } A_1, ..., A_n \in \Fe{12}$$
+$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } A_1, \ldots, A_n, R \in \Fe{12}$$
 
 This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
