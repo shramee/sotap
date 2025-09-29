@@ -4,22 +4,26 @@ Blockchain technology is ready for widespread adoption—we have reached a scale
 
 \subsection{Motivation}
 
-Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, , BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
+Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
 
 However, \textbf{pairings are computationally intensive}. In execution environments such as blockchain virtual machines, recursive proof systems, and arithmetized circuits, the costs associated with this computation become prohibitive for practical deployment.
 
 \subsection{Our Contribution}
 
-We present a novel optimization for Miller loop computation through a public-coin interactive proof system that verifies individual steps involved in the pairing computation as a polynomial under the Schwartz Zippel Lemma for polynomial identity testing. Over the previous technique employing similar design \cite{FXFM23} our approach achieves:
+We present a novel optimization for pairing computation through a public-coin interactive proof system that consolidates the pairing operations into unified polynomial verifications under the Schwartz-Zippel lemma. By treating complete loop iterations as single polynomial relationships rather than sequences of individual field operations\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
 \item \textbf{50\% reduction} in the pairing computation complexity
-\item \textbf{75\% decrease} in auxiliary data overhead
+\item \textbf{Over 70\% decrease} in auxiliary data overhead
 \item Practical deployment enabling ZK proof verification within blockchain transaction limits
 \end{itemize}
 
 Our key insight is that instead of optimizing individual field operations, we can treat complete Miller loop iterations as single polynomial relationships, dramatically reducing both computational and communication costs.
 
+\
+
+\textbf{Implementation and Impact:} Garaga\cite{grg}, a state-of-the-art elliptic curve tooling library for Cairo and Starknet, implements our two round interactive proof system with polynomial batching. These techniques allowed Garaga to fit their pairing transaction within Starknet's 4000 calldata limit while minimising the gas costs.
+
 \subsection{Paper organization}
 
-Section 2 provides necessary background on pairings and constraint systems. Sections 3-5 survey the evolution of optimization techniques that form our foundation. Section 6 presents our unified Miller loop optimization framework. Section 7 demonstrates experimental validation and performance analysis. Section 8 concludes with implications and future work.
+Section 2 provides necessary background on pairings and constraint systems. Sections 3 surveys the evolution of optimization techniques that form our foundation. Section 4 presents our unified Miller loop optimization framework. Section 5 outlines the public-coin interactive proof systems with one, two and three rounds for different applications. Section 6 concludes with implications and future work.
