@@ -134,7 +134,6 @@ The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zi
 
 This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\F|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
 
-
 \subsection{Constraint-Based Computation Models}
 
 In the context of arithmetization protocols and virtual machines (such as Starkware's Cairo VM\cite{cairo}, R1CS\cite{r1cs13}, Plonkish\cite{plnk19}, etc.), where field operations are expressed as algebraic constraints, the computational landscape differs dramatically from native implementations. Operations that are traditionally expensive can become remarkably efficient. Field inversions, for example, can be computed at a fraction of their usual cost, often reducing their relative costs from over 100× to about the same cost as multiplication. Conversely, seemingly straightforward operations may require complex constraint representations.
@@ -385,35 +384,6 @@ The techniques discussed in the previous section are outlined in Algorithm \ref{
 
 We now turn our attention to our primary contribution. Building upon Feltroidprime's direct extension multiplication framework, we present a novel optimization that significantly improves efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
 
-\subsection{Strategic Polynomial Segmentation}
-
-A critical consideration in our design is managing polynomial degree growth. While consolidating operations into fewer polynomials reduces overhead, we must balance this against polynomial degree constraints to maintain verification efficiency.
-
-\subsubsection{Squaring operations and polynomial degree}
-
-Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree, making placement critical. When positioned after other operations, squaring becomes the most degree-expensive operation in the sequence.
-
-\subsubsection{Natural segmentation points}
-
-The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
-
-\begin{enumerate}
-    \item Minimize the degree growth impact—the squaring happens on a fresh polynomial of degree 11
-    \item Accumulate all subsequent multiplications at manageable degree increases
-    \item Maintain relatively uniform polynomial degrees across segments
-\end{enumerate}
-
-This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
-
-\subsection{Unified Polynomial Framework}
-
-Any sequence of field operations in $\Fe{12}$\footnote{Elements need not have all 12 non-zero coefficients, but should align with the $\Fe{12}$ representation (e.g., sparse line functions).} can be expressed as a single polynomial equation of the form:
-
-$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } A_1, \ldots, A_n, R \in \Fe{12}$$
-
-This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
-
-
 \begin{algorithm}
 \caption{Optimal Ate pairing with Residue witness check}
 \label{alg:pairing}
@@ -467,6 +437,34 @@ This unified framework allows us to batch verify entire computational phases rat
 \State \Return $f$
 \end{algorithmic}
 \end{algorithm}
+
+\subsection{Strategic Polynomial Segmentation}
+
+A critical consideration in our design is managing polynomial degree growth. While consolidating operations into fewer polynomials reduces overhead, we must balance this against polynomial degree constraints to maintain verification efficiency.
+
+\subsubsection{Squaring operations and polynomial degree}
+
+Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree, making placement critical. When positioned after other operations, squaring becomes the most degree-expensive operation in the sequence.
+
+\subsubsection{Natural segmentation points}
+
+The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
+
+\begin{enumerate}
+    \item Minimize the degree growth impact—the squaring happens on a fresh polynomial of degree 11
+    \item Accumulate all subsequent multiplications at manageable degree increases
+    \item Maintain relatively uniform polynomial degrees across segments
+\end{enumerate}
+
+This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
+
+\subsection{Unified Polynomial Framework}
+
+Any sequence of field operations in $\Fe{12}$\footnote{Elements need not have all 12 non-zero coefficients, but should align with the $\Fe{12}$ representation (e.g., sparse line functions).} can be expressed as a single polynomial equation of the form:
+
+$$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } A_1, \ldots, A_n, R \in \Fe{12}$$
+
+This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
 \subsection{Overview of our approach}
 
