@@ -242,3 +242,29 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $54$ & $50$ \\
 \end{table}
 
 With this we have all the polynomials we need for verifying entire pairing operation. Next we will look into high level overview of pairing verification via an interactive oracle proof.
+
+\subsection{Security}
+
+Let's go over the security of our polynomial verification scheme.
+
+\subsubsection{Polynomial Identity Testing}
+
+Polynomial $P$ of degree $d$ over a field \Fq has at most $d$ roots in \Fq.
+Thus for a non-zero univariate polynomial evaluated at a random point $r \overset{\small{\$}}{\longleftarrow} \Fq$, the probability,
+
+$$\mathop{\text{Pr}}\limits[P(r) = 0] \leq \frac{d}{|S|}$$
+
+\subsubsection{Euclidean division}
+
+Given polynomials $A$ and $B$ in $\Fq$ with $B \neq 0$, there exist unique polynomials $Q$ and $R$ where $\deg(R) \leq \deg(B)$ such that:
+
+$$A(x) = B(x) \cdot Q(x) + R(x)$$
+
+\subsubsection{Security outline}
+
+Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdot ... \cdot A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
+where $\deg(R) < 12$ and $\deg(A_1 \cdot A_2 \cdot ... \cdot A_n) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$,
+
+\textbf{Soundness}: Soundness error $\delta_s = \mathop{\text{Pr}}\limits[P(r) = 0] \leq \frac{d}{|S|}$. For 254-bit BN254 field, $d \leq 2^8$ and $|S| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+
+\textbf{Completeness}: If the prover is honest and provides correct $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier will always accept.
