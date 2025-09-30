@@ -179,4 +179,30 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
 The residue witness $W$ encapsulates the equivalence class relationship established by Novakovic and Eagen's final exponentiation elimination.
 The inverse of $W$ is used for negative bits, this just changes the coefficients the equation remains the same.
 
-\subsubsection{Correction Step Equation}
+\subsubsection{Frobenius mapping Step Equation}
+
+The correction step finalizes the Miller loop by incorporating the Frobenius endomorphism corrections (lines \ref{pr:ml:pi1} and \ref{pr:ml:pi2} in Algorithm \ref{alg:pairing}). Again, we have two $\text{Sparse}_{01379}$ lines for each pair, for $\pi_p$ and $-\pi_p^2$ mappings, without any squaring of the accumulator. The verification equation becomes:
+
+$$F(x) \cdot L_{1\pi}(x) \cdot L_{2\pi}(x) \cdot L_{3\pi}(x) \cdot L_{1\pi^2}(x) \cdot L_{2\pi^2}(x) \cdot L_{3\pi^2}(x) = R(x) + Q(x) \cdot P_{12}(x)$$
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
+\hline
+$F \in \Fe{12}$ & Miller loop accumulator & $11$ & $12$ \\
+\hline
+$L_{1\pi}, L_{2\pi}, L_{3\pi} \in \text{Sparse}_{01379}$ & $\pi_p$ correction lines & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
+\hline
+$L_{1\pi^2}, L_{2\pi^2}, L_{3\pi^2} \in \text{Sparse}_{01379}$ & $-\pi_p^2$ correction lines & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
+\hline
+$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
+\hline
+\textbf{Total coefficients} & & & \textbf{48} \\
+\hline
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $65$ & $66$ \\
+\hline
+\end{tabular}
+\caption{Correction step polynomial components}
+\end{table}
