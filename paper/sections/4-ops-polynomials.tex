@@ -206,3 +206,39 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $65$ & $66$ \\
 \end{tabular}
 \caption{Correction step polynomial components}
 \end{table}
+
+\subsubsection{Final Exponentiation Equation}
+
+The final exponentiation check is handled as described in \cite{OPP24}. The equation handles the cubic scale factor mutiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
+
+$$F(x) \cdot c^{-q}(x) \cdot c^{q^2}(x) \cdot c^{-q^3}(x) \cdot W^w(x) = 1 + Q(x) \cdot P_{12}(x)$$
+
+where $w \in \{0, 1, 2\}$ determines the cubic root of unity scaling factor, and the Frobenius mappings are computed using the residue witness $c$ and its inverse and provided as input. Cubic root is sparse element with just 2 coefficients the degree ranging from 8 to 10 because of positioning of the coefficients. Our $R$ is now $1$ for a successful proof verification.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
+\hline
+$F \in \Fe{12}$ & Final Miller loop result & $11$ & $12$ \\
+\hline
+$c^{-q} \in \Fe{12}$ & Residue witness Frobenius $-q$ & $11$ & $12$ \\
+\hline
+$c^{q^2} \in \Fe{12}$ & Residue witness Frobenius $q^2$ & $11$ & $12$ \\
+\hline
+$c^{-q^3} \in \Fe{12}$ & Residue witness Frobenius $-q^3$ & $11$ & $12$ \\
+\hline
+$W^w \in \Fe{12}$ & Cubic scale factor & $10$ & $2$ \\
+\hline
+$R = 1$ & Unity (constant) & $0$ & $1$ \\
+\hline
+\textbf{Total coefficients} & & & \textbf{51} \\
+\hline
+Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $54$ & $50$ \\
+\hline
+\end{tabular}
+\caption{Final exponentiation polynomial components}
+\end{table}
+
+With this we have all the polynomials we need for verifying entire pairing operation. Next we will look into high level overview of pairing verification via an interactive oracle proof.
