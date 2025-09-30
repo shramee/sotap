@@ -117,11 +117,11 @@ Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C f
 
 This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savings in the commitments}. When implemented on a blockchains for verfication of ZK proofs, commitment savings become far more critical because of limitations and costs associated with calldata needed for hints.
 
-\subsection{Bit-Type Polynomials}
+\subsection{Operation Polynomials}
 
 Our implementation uses different polynomials for different bits in the Miller loop. Let' walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
 
-\subsubsection{Zero Bit Equation}
+\subsubsection{Miller loop: Zero Bit Equation}
 
 For zero bit operations (line 6 and 7 with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
@@ -147,7 +147,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
 \caption{Zero bit operation polynomial components}
 \end{table}
 
-\subsubsection{Non-Zero Bit Equation}
+\subsubsection{Miller loop: Non-Zero Bit Equation}
 
 For non-zero bit operations(line 6, 7 and lines 9 to 17 except 12 and 16, with three pairs of lines in Algorithm \ref{alg:pairing}), the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
@@ -179,7 +179,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
 The residue witness $W$ encapsulates the equivalence class relationship established by Novakovic and Eagen's final exponentiation elimination.
 The inverse of $W$ is used for negative bits, this just changes the coefficients the equation remains the same.
 
-\subsubsection{Frobenius mapping Step Equation}
+\subsubsection{Miller loop: Frobenius mapping Equation}
 
 The correction step finalizes the Miller loop by incorporating the Frobenius endomorphism corrections (lines \ref{pr:ml:pi1} and \ref{pr:ml:pi2} in Algorithm \ref{alg:pairing}). Again, we have two $\text{Sparse}_{01379}$ lines for each pair, for $\pi_p$ and $-\pi_p^2$ mappings, without any squaring of the accumulator. The verification equation becomes:
 
