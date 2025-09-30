@@ -32,6 +32,26 @@
 \newcommand{\G}{\ensuremath{\mathbb{G}} }
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
 
+\newcommand{\IOP}[3]{\fbox{\parbox{\linewidth}{
+\begin{center}
+    \begin{tikzpicture}[node distance=11cm, every node/.style={font=\small}]
+    \node (V) {#1};\node (P)[right of=V] {#2};
+\end{tikzpicture}
+#3
+\end{center}
+}}
+}
+
+\newcommand{\TikzArrow}[3]{\begin{tikzpicture}[node distance=11cm, every node/.style={font=\small}]
+    \node (V) {};\node (P)[right of=V] {};
+    \draw[->] (#1) -- (#2) node[midway, above] {#3};
+\end{tikzpicture} \
+}
+
+\newcommand{\PDoes}[1]{\TikzArrow{P}{V}{#1}}
+\newcommand{\PtoV}[1]{\TikzArrow{P}{V}{#1}}
+\newcommand{\VtoP}[1]{\TikzArrow{V}{P}{#1}}
+
 \title{Fast Probabilistic Algorithms for Proving Pairings}
 
 \author{Shramee Srivastav \\ 
