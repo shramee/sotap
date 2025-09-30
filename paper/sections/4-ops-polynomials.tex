@@ -39,18 +39,18 @@ We now turn our attention to our primary contribution. Building upon Feltroidpri
 \EndFor
 \Statex
 \State $Q' \leftarrow \pi_p(Q)$ \gComm{Repeat for $Q'_i, Q_i$}
-\State $f \leftarrow f \cdot l_{T,Q'}(P)$ \gComm{Repeat for $Q'_i, T_i, P_i$}
+\State $f \leftarrow f \cdot l_{T,Q'}(P)$ \gComm{Repeat for $Q'_i, T_i, P_i$} \label{pr:ml:pi1}
 \State $T \leftarrow T + Q'$  \gComm{Repeat for $Q'_i, T_i$}
-\State $f \leftarrow f \cdot l_{T,-\pi_p^2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$}
+\State $f \leftarrow f \cdot l_{T,-\pi_p^2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$} \label{pr:ml:pi2}
 \Statex \Comment{Skip $T \leftarrow T + -\pi_p^2(Q)$}
 
 \If{$w = 1$}
-    \State $f \leftarrow f \cdot W$
+    \State $f \leftarrow f \cdot W$ \label{pr:ml:27r}
 \ElsIf{$w = 2$}
-    \State $f \leftarrow f \cdot W^2$
+    \State $f \leftarrow f \cdot W^2$ \label{pr:ml:27r2}
 \EndIf
 
-\State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$}
+\State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$} \label{pr:ml:fe}
 
 \Statex
 
