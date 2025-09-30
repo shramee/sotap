@@ -90,9 +90,9 @@ This unified framework allows us to batch verify entire computational phases rat
 
 The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
 
-To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
+To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}. We benchmark our approach against the fastest known polynomial commitment adaptation \cite{FXFM23}.
 
-\subsubsection{Previous scheme \cite{FXFM23}}
+\subsubsection{Previous scheme}
 
 \textbf{Adapting faster extension field multiplication \cite{FXFM23}} idea to line \ref{pr:ml:sq} and \ref{pr:ml:ldbl} of Miller loop algorithm \ref{alg:pairing} for a 3--pair Miller loop, we have following polynomial relationships to assert.
 
@@ -111,9 +111,9 @@ $F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multipl
 
 $$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
 
-Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation, but we eliminate intermediate ($T_*$ polynomials above) commitments and evaluations. Only the remainder hint needs commitment, so this is 12 calldata commitment for $R$. \textbf{Costs sum up to 40C} ($\text{ } 2 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 12 $\Fq$ commitments}. 
+Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation, but we eliminate intermediate ($T_*$ polynomials above) commitments and evaluations. Only the remainder hint needs commitment, so this is 12 calldata commitment for $R$. \textbf{Costs sum up to 40C} ($\text{ } 2 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 12 $\Fq$ commitments}.
 
-\text{ }
+\hspace{0cm}
 
 This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savings in the commitments}. When implemented on a blockchains for verfication of ZK proofs, commitment savings become far more critical because of limitations and costs associated with calldata needed for hints.
 
@@ -245,26 +245,26 @@ With this we have all the polynomials we need for verifying entire pairing opera
 
 \subsection{Security}
 
-Let's go over the security of our polynomial verification scheme.
+We analyze the security of our polynomial verification scheme.
 
 \subsubsection{Polynomial Identity Testing}
 
-Polynomial $P$ of degree $d$ over a field \Fq has at most $d$ roots in \Fq.
-Thus for a non-zero univariate polynomial evaluated at a random point $r \overset{\small{\$}}{\longleftarrow} \Fq$, the probability,
+A polynomial $P$ of degree $d$ over a field \Fq has at most $d$ roots in \Fq.
+Thus for a non-zero univariate polynomial evaluated at a random point $r \xleftarrow{\$} \Fq$, the probability of zero output is,
 
-$$\mathop{\text{Pr}}\limits[P(r) = 0] \leq \frac{d}{|S|}$$
+$$\Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$$
 
-\subsubsection{Euclidean division}
+\subsubsection{Euclidean Division}
 
-Given polynomials $A$ and $B$ in $\Fq$ with $B \neq 0$, there exist unique polynomials $Q$ and $R$ where $\deg(R) \leq \deg(B)$ such that:
+Given polynomials $A$ and $B$ in $\Fq[x]$ with $B \neq 0$, there exist unique polynomials $Q$ and $R$ where $\deg(R) \leq \deg(B)$ such that:
 
 $$A(x) = B(x) \cdot Q(x) + R(x)$$
 
-\subsubsection{Security outline}
+\subsubsection{Security Analysis}
 
-Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdot ... \cdot A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
-where $\deg(R) < 12$ and $\deg(A_1 \cdot A_2 \cdot ... \cdot A_n) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$,
+Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdots A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
+where $\deg(R) \leq 11$ and $\deg(P) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$:
 
-\textbf{Soundness}: Soundness error $\delta_s = \mathop{\text{Pr}}\limits[P(r) = 0] \leq \frac{d}{|S|}$. For 254-bit BN254 field, $d \leq 2^8$ and $|S| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
 
-\textbf{Completeness}: If the prover is honest and provides correct $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier will always accept.
+\textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
