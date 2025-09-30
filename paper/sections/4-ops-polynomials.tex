@@ -103,7 +103,7 @@ To get a closer look into effectiveness of our scheme, we will make a real world
     T_3(x) \cdot L_3(x) &\stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)
 \end{align*}
 
-$F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluaiton. All the remainder hints need to be provided for commitment, so this is 12 calldata commitment for $R$ and intermediate remainder polynomials $T_1$, $T_2$, $T_3$. \textbf{Costs sum up to 76C} ($\text{ } 5 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 48 commitments} in $\Fq$ ($4 * 12$). Resulting remainder polynomial $R \in \Fe{12}$ is the result of the Miller loop step.
+$F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation. All the remainder hints need to be provided for commitment, so this is 12 calldata commitment for $R$ and intermediate remainder polynomials $T_1$, $T_2$, $T_3$. \textbf{Costs sum up to 76C} ($\text{ } 5 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 48 commitments} in $\Fq$ ($4 * 12$). Resulting remainder polynomial $R \in \Fe{12}$ is the result of the Miller loop step.
 
 \subsubsection{Our scheme}
 
@@ -116,6 +116,35 @@ Similar to the previous approach, $F$ and $R$ cost 12C each for evaluation, 4C f
 \hspace{0cm}
 
 This results in \textbf{47\% fewer constraints} and a whopping \textbf{75\% savings in the commitments}. When implemented on a blockchains for verfication of ZK proofs, commitment savings become far more critical because of limitations and costs associated with calldata needed for hints.
+
+
+\subsubsection{Performance Comparison}
+
+Table \ref{tab:miller_loop_comparison} compares the computational costs and commitment overhead between the schemes for a single 0-bit Miller loop operation with 3 pairs.
+
+\begin{table}[h]
+\centering
+\caption{Miller loop bit operation comparison (3-pair)}
+\label{tab:miller_loop_comparison}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Scheme} & \textbf{Constraints} & \textbf{$\Fq$ Commitments} & \textbf{Improvement} \\
+\hline
+\cite{PR1CS22} & 132C & --- & Baseline \\
+\hline
+\cite{FXFM23} & 76C* & 48 & 42\% \\
+\hline
+\textbf{Our scheme} & \textbf{40C}* & \textbf{12} & \textbf{70\%} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|l|}{\cite{PR1CS22} (Table \ref{tab:fq12_pr1cs}): 1 square (36C) + 3 sparse mul (3$\times$30C) = 132C} \\
+\multicolumn{4}{|l|}{\cite{FXFM23}: 5 evals (5$\times$12C) + 3 line evals (3$\times$4C) + 4 muls (4$\times$1C) = 76C} \\
+\multicolumn{4}{|l|}{Our scheme: 2 evals (2$\times$12C) + 3 line evals (3$\times$4C) + 4 muls (4$\times$1C) = 40C} \\
+\multicolumn{4}{|l|}{*Costs exclude Fiat-Shamir commitment overhead} \\
+\hline
+\end{tabular}
+\end{table}
+
 
 \subsection{Operation Polynomials}
 
