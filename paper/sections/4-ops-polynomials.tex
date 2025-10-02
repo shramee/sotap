@@ -38,11 +38,11 @@ We now turn our attention to our primary contribution. Building upon Feltroidpri
     \EndIf
 \EndFor
 \Statex
-\State $Q' \leftarrow \pi_p(Q)$ \gComm{Repeat for $Q'_i, Q_i$}
-\State $f \leftarrow f \cdot l_{T,Q'}(P)$ \gComm{Repeat for $Q'_i, T_i, P_i$} \label{pr:ml:pi1}
-\State $T \leftarrow T + Q'$  \gComm{Repeat for $Q'_i, T_i$}
-\State $f \leftarrow f \cdot l_{T,-\pi_p^2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$} \label{pr:ml:pi2}
-\Statex \Comment{Skip $T \leftarrow T + -\pi_p^2(Q)$}
+\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$ \gComm{Repeat for $Q'_i, T_i$}
+\State $f \leftarrow f \cdot l_{T,Q_1}(P)$ \gComm{Repeat for $Q_{1i}, T_i, P_i$} \label{pr:ml:pi1}
+\State $T \leftarrow T + Q_1$  \gComm{Repeat for $Q_{1i}, T_i$}
+\State $f \leftarrow f \cdot l_{T,-Q_2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$} \label{pr:ml:pi2}
+\Statex \Comment{Skip $T \leftarrow T - Q_2(Q)$}
 
 \If{$w = 1$}
     \State $f \leftarrow f \cdot W$ \label{pr:ml:27r}
