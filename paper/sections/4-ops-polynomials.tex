@@ -105,7 +105,7 @@ To get a closer look into effectiveness of our scheme, we will make a real world
 
 $F$, $T_1$, $T_2$, $T_3$, $R$ cost 12C each for evaluation, 4C for $\Fq$ multiplication, and $L_1$, $L_2$, $L_3$ require 4C each for evaluation. All the remainder hints need to be provided for commitment, so this is 12 calldata commitment for $R$ and intermediate remainder polynomials $T_1$, $T_2$, $T_3$. \textbf{Costs sum up to 76C} ($\text{ } 5 * 12C \text{ } + \text{ } 3 * 4C \text{ } + \text{ } 4C \text{ }$) \textbf{and 48 commitments} in $\Fq$ ($4 * 12$). Resulting remainder polynomial $R \in \Fe{12}$ is the result of the Miller loop step.
 
-\subsubsection{Our scheme}
+\subsubsection{Our scheme} \label{sec:op:comp:our}
 
 \textbf{In our approach,} instead of working with individual arithmetic operations, we treat the entire bit operation as a single polynomial. In our scheme line \ref{pr:ml:sq} and \ref{pr:ml:ldbl} of  3--pair Miller loop (Algorithm \ref{alg:pairing}) looks like this.
 
@@ -150,9 +150,9 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 
 Our implementation uses different polynomials for different bits in the Miller loop. Let' walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
 
-\subsubsection{Miller loop: Zero Bit Equation}
+\subsubsection{Miller loop: Zero Bit Equation} \label{sec:op:ml-0bit}
 
-For zero bit operations (line 6 and 7 with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the Miller loop just performs doubling. So for each pair we have $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+As seen in \ref{sec:op:comp:our} for zero bit operations (line \ref{pr:ml:sq} and \ref{pr:ml:ldbl}  with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the verification equation is:
 
 \begin{equation} \label{eq:op:0b}
 F^2(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{12}(x)
@@ -178,7 +178,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $38$ & $39$ \\
 \caption{Zero bit operation polynomial components}
 \end{table}
 
-\subsubsection{Miller loop: Non-Zero Bit Equation}
+\subsubsection{Miller loop: Non-Zero Bit Equation} \label{sec:op:ml-nzbit}
 
 For non-zero bit operations(lines \ref{pr:ml:rw1bit}, \ref{pr:ml:ladd1bit}, \ref{pr:ml:rw-1bit}, \ref{pr:ml:ladd-1bit} with three pairs of lines in Algorithm \ref{alg:pairing}), the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
 
@@ -212,7 +212,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $76$ & $77$ \\
 The residue witness $W$ encapsulates the equivalence class relationship established by Novakovic and Eagen's final exponentiation elimination.
 The inverse of $W$ is used for negative bits, this just changes the coefficients the equation remains the same.
 
-\subsubsection{Miller loop: Frobenius mapping Equation}
+\subsubsection{Miller loop: Frobenius mapping Equation} \label{sec:op:ml-frob}
 
 The correction step finalizes the Miller loop by incorporating the Frobenius endomorphism corrections (lines \ref{pr:ml:pi1} and \ref{pr:ml:pi2} in Algorithm \ref{alg:pairing}). Again, we have two $\text{Sparse}_{01379}$ lines for each pair, for $\pi_p$ and $-\pi_p^2$ mappings, without any squaring of the accumulator. The verification equation becomes:
 
@@ -242,7 +242,7 @@ Q Amortized & $\text{LHS}_{\text{Degree}} - R_{\text{Degree}}$ & $65$ & $66$ \\
 \caption{Correction step polynomial components}
 \end{table}
 
-\subsubsection{Final Exponentiation Equation}
+\subsubsection{Final Exponentiation Equation} \label{sec:op:finx}
 
 The final exponentiation check is handled as described in \cite{OPP24}. The equation handles the cubic scale factor mutiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
 
