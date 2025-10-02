@@ -72,10 +72,12 @@ In resource-constrained environments—including BitcoinVM, blockchain smart con
 
 We systematically present a progression of state-of-the-art techniques: El Housni's foundational R1CS pairing optimizations \cite{PR1CS22}, Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, and Novakovic and Eagen's final exponentiation elimination \cite{OPP24}.
 
-Building upon these foundations, our approach extends the Schwartz-Zippel verification framework by consolidating entire Miller loop and the final exponentiation operations into unified polynomial verifications. This achieves a 50\% improvement in Pairing performance. While our method requires additional auxiliary data compared to traditional pairing verification, it achieves a 75\% reduction in commitment overhead relative to Feltroidprime's extension field techniques.
+Building upon these foundations, our approach constructs a Polynomial Identity Testing framework, consolidating Miller loop and the final exponentiation operations into univariate polynomial relations that can be verified with efficient polynomial identity testing. This achieves a 50\% improvement in Pairing performance. While our method requires additional auxiliary data compared to traditional pairing verification, it achieves a 75\% reduction in commitment overhead relative to Feltroidprime's extension field techniques.
 \end{abstract}
 
 \tableofcontents
+\listofalgorithms
+\listoftables
 
 \input{sections/1-introduction.tex}
 \input{sections/2-background.tex}
