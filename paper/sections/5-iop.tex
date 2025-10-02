@@ -1,28 +1,33 @@
 \section{Interactive Oracle Proof}
 
-\subsection{Polynomial Accumulation and implementation}
+Now that we have covered the core construction behind our contribution, let's take a holistic view of verification of a pairing computation with an interactive proof system. While the construction above works beautifully on it's own, we can further optimize the protocol by batching all polynomial verifications into a two round interactive proof.
 
-The commitment can include all the required $R$s for each equation we want to prove.
-We arrive at the input elements through computation in the circuit, the commitments array is popped on reaching the point in the computation.
-We obtain an RLC (Random Linear Combination) of all LHS evaluations and precompute $P_{12}$. For example, for zero bits we go for,
+\subsection{Batching Polynomial Identity Testing}
 
-$$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) - R(x) = Q(x) \cdot P_{12}(x)$$
+The whole process of polynomial verification can be batched into a single polynomial verification. Here's how a two round interactive proof system would look like,
+
+The prover can commit all $R$s for all $n$ equations involved in pairing computation in the first interaction and receive a random challenge $z$. The challenge $z$ can then be used to batch all the $Q$s into a single polynomial as a consecutive powers random linear combination like this,
+
+$$Q_{acc} = \sum_{i=0}^{n - 1}z^i \cdot Q_i(z)$$
+
+The verifier then prepares a new challenge $c$ and checks,
+
+$$\sum_{i=0}^{n - 1}z^i \cdot A_i(c) \cdot B_i(c) \cdots X_i(c) = \sum_{i=0}^{n-1}{z_i \cdot R_i(c) + Q_{acc}(c) \cdot P_{12}(c)}$$
 
 or,
 
-$$\text{LHS} = F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) - R(x)$$
+\begin{equation}
+    \label{eq:iop-batched}
+    \sum_{i=0}^{n - 1}z^i \cdot [A_i(c) \cdot B_i(c) \cdots X_i(c) - R_i(c)] = Q_{acc}(c) \cdot P_{12}(c)
+\end{equation}
 
-We then prepare an RLC of each equation to prove, for $n$ equations we have,
+This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as described in Tables \ref{tbl:op:ml-0bit}, \ref{tbl:op:ml-nzbit}, \ref{tbl:op:ml-frob}, \ref{tbl:op:finx}) to a single polynomial of degree 76.
 
-$$\sum_{i=1}^{n}c_i \cdot \text{LHS}_i = \sum_{i=1}^{n}c_i  \cdot Q_i(x) \cdot P_{12}(x)$$
-
-Along with the commitments to each $R$ we expect the prover to provide the correct RLC polynomial for $\sum_{i=1}^{n}c_i  \cdot Q_i$. Here, $x$ and all $c_i$ are obtained from Fiat Shamir heuristics over all $R_i$ commitments. This prevents the prover from guessing the randomness before commitment. But allows her to aggregate RLC for all quotients.
-
-\subsubsection{Prover}
+\subsection{Prover}
 
 Prover performs the pairing verification herself, and computes and stores all $R_i$ and $Q_i$. After the pairing computation, she uses same hashing method as the verifier to obtain all $c_i$. She then computes the RLC of all $Q_i$ and sends it along with all $R_i$ commitments.
 
-\subsubsection{Verifier}
+\subsection{Verifier}
 
 Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
 The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz--Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\F|}$} probability.
