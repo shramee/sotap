@@ -38,7 +38,7 @@ We now turn our attention to our primary contribution. Building upon Feltroidpri
     \EndIf
 \EndFor
 \Statex
-\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$ \gComm{Repeat for $Q'_i, T_i$}
+\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$ \gComm{Repeat for $Q_{1i}, T_i$}
 \State $f \leftarrow f \cdot l_{T,Q_1}(P)$ \gComm{Repeat for $Q_{1i}, T_i, P_i$} \label{pr:ml:pi1}
 \State $T \leftarrow T + Q_1$  \gComm{Repeat for $Q_{1i}, T_i$}
 \State $f \leftarrow f \cdot l_{T,-Q_2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$} \label{pr:ml:pi2}
@@ -146,7 +146,7 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 \end{table}
 
 
-\subsection{Operation Polynomials}
+\subsection{Operation Polynomials} \label{sec:op-polys}
 
 Our implementation uses different polynomials for different bits in the Miller loop. Let' walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
 
