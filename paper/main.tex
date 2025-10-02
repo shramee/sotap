@@ -31,28 +31,30 @@
 \newcommand{\Fe}[1]{\ensuremath{\F_{q^{#1}}} } % Field extension
 \newcommand{\G}{\ensuremath{\mathbb{G}} }
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
+\newcommand{\gText}[1]{\color{gray}#1\color{black}}
 
-\newcommand{\IOP}[3]{\fbox{\parbox{\linewidth}{
+\newcommand{\IOP}[4]{\fbox{\parbox{\linewidth}{
 \begin{center}
-    \begin{tikzpicture}[node distance=11cm, every node/.style={font=\small}]
-    \node (V) {#1};\node (P)[right of=V] {#2};
-\end{tikzpicture}
-#3
+    \begin{tikzpicture}[node distance=13cm, every node/.style={font=\footnotesize}]
+    \node (L)[draw,font=\large,rectangle] {#2};\node (R)[draw,font=\large,rectangle, right of=L] {#3};
+    #4
+    \end{tikzpicture}\linebreak[1]
+
+    #1
 \end{center}
 }}
 }
 
-\newcommand{\TikzArrow}[3]{\begin{tikzpicture}[node distance=11cm, every node/.style={font=\small}]
-    \node (V) {};\node (P)[right of=V] {};
-    \draw[->] (#1) -- (#2) node[midway, above] {#3};
-\end{tikzpicture} \
+\newcommand{\TikzArrow}[4]{
+    \draw[->] ([yshift=-{#4}cm]#1.center) -- ([yshift=-{#4}cm]#2.center) node[midway, above] {#3};
 }
 
-\newcommand{\PDoes}[1]{\TikzArrow{P}{V}{#1}}
-\newcommand{\PtoV}[1]{\TikzArrow{P}{V}{#1}}
-\newcommand{\VtoP}[1]{\TikzArrow{V}{P}{#1}}
+\newcommand{\LDoes}[2]{\node[above=-2pt, right] at ([yshift=-{#2}cm,xshift=-.7cm]L.center) {#1};}
+\newcommand{\RDoes}[2]{\node[above=-2pt, left] at ([yshift=-{#2}cm,xshift=.7cm]R.center) {#1};}
+\newcommand{\RtoL}[2]{\TikzArrow{R}{L}{#1}{#2}}
+\newcommand{\LtoR}[2]{\TikzArrow{L}{R}{#1}{#2}}
 
-\title{Fast Probabilistic Algorithms for Proving Pairings}
+\title{Probabilistic Proof for Pairings}
 
 \author{Shramee Srivastav \\ 
 MIST.cash|FOCBB, Shhtarknet \\ 
