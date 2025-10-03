@@ -12,6 +12,7 @@
 \usepackage{algorithm}
 \usepackage{algorithmicx, algpseudocode}
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
@@ -33,26 +34,35 @@
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
 \newcommand{\gText}[1]{\color{gray}#1\color{black}}
 
-\newcommand{\IOP}[4]{\fbox{\parbox{\linewidth}{
+\newcommand{\IOP}[4]{\vspace{0.5cm}\fbox{\parbox{\linewidth}{
 \begin{center}
-    \begin{tikzpicture}[node distance=13cm, every node/.style={font=\footnotesize}]
+    \begin{tikzpicture}[node distance=13cm, every node/.style={font=\footnotesize},>-{>[length=9pt, width=10pt,line width=2pt]}]
+        % \tikz [] % Bend all arrows
     \node (L)[draw,font=\large,rectangle] {#2};\node (R)[draw,font=\large,rectangle, right of=L] {#3};
     #4
-    \end{tikzpicture}\linebreak[1]
+    \end{tikzpicture}\linebreak
 
     #1
 \end{center}
 }}
 }
 
+% https://tikz.dev/tikz-shapes
+
 \newcommand{\TikzArrow}[4]{
-    \draw[->] ([yshift=-{#4}cm]#1.center) -- ([yshift=-{#4}cm]#2.center) node[midway, above] {#3};
+    \draw[gray,>-{>[length=7pt, width=8pt]},line width=1.5pt] ([yshift=-{#4}cm]#1.east) -- ([yshift=-{#4}cm]#2.west) node[midway, above, black] {#3};
 }
 
-\newcommand{\LDoes}[2]{\node[above=-2pt, right] at ([yshift=-{#2}cm,xshift=-.7cm]L.center) {#1};}
-\newcommand{\RDoes}[2]{\node[above=-2pt, left] at ([yshift=-{#2}cm,xshift=.7cm]R.center) {#1};}
-\newcommand{\RtoL}[2]{\TikzArrow{R}{L}{#1}{#2}}
-\newcommand{\LtoR}[2]{\TikzArrow{L}{R}{#1}{#2}}
+\newcommand{\LDoes}[2]{\node[draw,rectangle,above=1pt,right,align=left] at ([yshift=-{#2}cm]L.west) {#1};}
+\newcommand{\RDoes}[2]{\node[draw,rectangle,above=1pt,left,align=right] at ([yshift=-{#2}cm]R.east) {#1};}
+\newcommand{\RtoL}[2]{
+    \usetikzlibrary {arrows.meta}
+    \draw[gray,>-{>},line width=1.5pt] ([yshift=-{#2}cm]R.east) -- ([yshift=-{#2}cm]L.west) node[midway, above, black] {#1};
+}
+\newcommand{\LtoR}[2]{
+    \usetikzlibrary {arrows.meta}
+    \draw[gray,>-{>[length=9pt, width=10pt,line width=2pt]},line width=1.5pt] ([yshift=-{#2}cm]L.west) -- ([yshift=-{#2}cm]R.east) node[midway, above, black] {#1};
+}
 
 \title{Probabilistic Proof for Pairings}
 
