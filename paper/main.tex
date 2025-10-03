@@ -47,6 +47,8 @@
 }}
 }
 
+\usepackage[printwatermark]{xwatermark}
+
 % https://tikz.dev/tikz-shapes
 
 \newcommand{\TikzArrow}[4]{
@@ -78,6 +80,8 @@ Email: shramee@proton.me}
 \maketitle
 
 \input{sections/0-abstract.tex}
+
+\newwatermark[pages={1-24},fontfamily=times,color=red!10,angle=45,scale=3.5,xpos=0,ypos=0]{CONFIDENTIAL\\DRAFT}
 
 \tableofcontents
 \listofalgorithms
