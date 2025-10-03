@@ -231,6 +231,49 @@ We apply the Fiat-Shamir \cite{fiatshamir} transformation using algebraic hash f
     \LtoR{Accept/Reject}{8.3}
 }
 
+\subsection{Security}
+
+For analysing the security of our random linear combination batching proof system, let's look at the prover attempting to cheat the verifier by producing an incorrect remainder in $\mathcal{R}$ and tries to obtain a $Q_{acc}$ that will pass the verifier's checks.
+
+
+\noindent Prover tries to cheat on remainders array, $\mathcal{R}$, by changing $R_j$ to $R_j'$. Prover commits $\mathcal{R}'$ array with incorrect $R_j'$
+
+Say,
+$$R_j' - R_j = \Delta_j$$
+
+For the proof to be accepted, the prover needs to absorb the difference from $\Delta_j$ in the RLC so that verifier's check passes,
+
+$$\text{Verifier's check: }\sum_{i=0}^{s} z^i(A_i - R_i) \stackrel{?}{=} Q_{RLC} \cdot P_{12}$$
+
+But, with incorrect $R_j$, we have $\Delta_j$ to absorb, and LHS is unbalanced by $z^j\Delta_j$,
+$$
+\sum_{i=0}^{s} z^i(A_i - R_i) - z^j\Delta_j = Q_{RLC} \cdot P_{12}
+$$
+
+$$
+\text{or, }\sum_{i=0}^{s} z^i(A_i - R_i) = Q_{RLC} \cdot P_{12} + z^j\Delta_j
+$$
+
+So the prover needs to find polynomial $Q'_{acc}$ such that,
+\begin{align*}
+    Q'_{acc} \cdot P_{12} &= Q_{RLC} \cdot P_{12} + z^j\Delta_j \\ \\
+    \text{or, } Q'_{acc} &= \frac{Q_{RLC} \cdot P_{12} + z^j\Delta_j}{P_{12}}\\ \\
+    \text{or, } Q'_{acc} &= Q_{RLC} + \frac{z^j\Delta_j}{P_{12}}\\
+\end{align*}
+
+But $\deg(\Delta_j) \leq \deg(R_j) < \deg(P_{12})$, so $\deg(\Delta_j)$ is not divisible by $\deg(P_{12})$.
+
+So the polynomial $Q'_{acc}$ does not exist.
+
+\subsubsection{Security Analysis}
+
+Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdots A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
+where $\deg(R) \leq 11$ and $\deg(P) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$:
+
+\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+
+\textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
+
 \subsection{Performance}
 
 Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
