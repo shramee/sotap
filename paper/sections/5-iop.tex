@@ -121,8 +121,85 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 
 \subsection{Verifier}
 
-Verifier receives all the remainders, $R_i$, and RLC of quotients - $\sum_{i=1}^{n}c_i  \cdot Q_i$.
-The verifier then prepares all $c_i$ solely from the remainder coefficients. For the evaluation point $x$, she includes all coefficients from the quotient RLC in the Fiat-Shamir hash as well. This guarantees soundness in Fiat Shamir. Then she uses generated $c_i$ for aggregating $\text{LHS}_i$ evaluated at $x$. In the end, she subtracts the evaluation of quotients RLC at $x$ times $P_{12}(x)$ from the aggregated LHS evaluation. If the result is zero, according to Schwartz--Zippel lemma, all the provided $R_i$ are correct with a very high\footnote{$Pr[P(r_0, r_1, r_2,..., r_d) = 0] \leq \frac{d}{|\F|}$} probability.
+The verifier recieves computed remainders $\mathcal{R}$ for each polynomial equation described in Section \ref{sec:op-polys} from the prover. Along the array of remainders, it retains the challenge $c$ provided to the prover after the first round. Along with point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, internal parameter $W$ (the 27th root of unity) and $Q_\text{acc}$, the verifier runs the pairing computation while using the remainders and performs polynomial evaluations (Algo \ref{alg:evalpolyprod}) at each step. This process is detailed in Algorithm \ref{alg:2r:verifier}.
+
+\begin{algorithm}
+\caption{EvalPoly: Evaluate polynomial product minus remainder}
+\label{alg:evalpolyprod}
+\begin{algorithmic}[1]
+\Require $R \in \Fq[x]$, $z \in \Fq$, $P_1, P_2, \ldots, P_n \in \Fq[x]$
+\Ensure $e \in \Fq = \prod_{i=1}^{n} P_i(z) - R(z)$
+\State $e \leftarrow P_1(z)$ \gComm{Initialize evaluation with first polynomial}
+\For{$i = 2$ to $n$} \gComm{Start from second polynomial}
+    \State $e \leftarrow e \cdot P_i(z)$ \gComm{Multiply polynomial evaluations into e}
+\EndFor
+\State $e \leftarrow e - R(z)$ \gComm{Subtract evaluation of R}
+\State \Return $e$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Pairing Verifier: Evaluating remainders}
+\label{alg:2r:verifier}
+\begin{algorithmic}[1]
+\Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$, $\mathcal{R} \text{ array of remainders}$, $Q_{acc} \in \Fq[x]$
+\Statex Internal: 27th root of unity, $W, W^2 \in \Fe{12}$, first round challenge, $z \xleftarrow{\$} \Fq$
+\Ensure $pairing(P, Q) \stackrel{?}{=} 1$
+\Statex Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+
+\State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
+\State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
+\State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
+\State $x \xleftarrow{\$} \Fq$ \gComm{This will be our evaluation point}
+\State $e_\text{acc} \leftarrow 0$ \gComm{This will be our evaluation point}
+\State $a_\text{rlc} \leftarrow 1$ \gComm{This will be our evaluation point}
+\color{gray}
+\Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
+\color{black}
+
+\Statex
+\Statex \gText{Miller loop bits}
+\For{$i = L - 2$ to $0$}
+    \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
+    \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
+    \If{$s_i = 0$}
+		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+    \ElsIf{$s_i = 1$}
+        \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+    \ElsIf{$s_i = -1$}
+        \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+    \EndIf
+    \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
+\EndFor
+\Statex
+\Statex \gText{Miller loop Frobenius correction}
+\State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
+\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
+\State $L_\pi \leftarrow l_{T,Q_1}(P)$
+\State $T \leftarrow T + Q_1$
+\State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
+\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
+
+\Statex
+
+\Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
+\State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
+\If{$w = 0$}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+\ElsIf{$w = 1$}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+\ElsIf{$w = 2$}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+\EndIf
+
+\Statex
+
+\State \Return $Q_{acc}(x) \stackrel{?}{=} e_\text{acc}$
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Performance}
 
