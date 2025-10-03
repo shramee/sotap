@@ -201,6 +201,36 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{Interactive proof}
+
+Let's look into how the algorithms describe above come together to prove and verify a pairing computation.
+We will go through the two-round public-coin interactive proof system in this section and in the next section we will see how to convert it into a non-interactive proof using Fiat-Shamir transformation.
+
+\IOP{Two-Round Pairing IOP}{Verifier}{Prover}{
+    \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
+    \RtoL{Round I: Commits \textit{pairing inputs} and remainders array $\mathcal{R}$}{2.5}
+    \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
+    \RDoes{Computes $Q_{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{4.5}
+    \RtoL{Round II: Commit $Q_{acc}$}{5.5}
+    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm \ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.5}
+    \LtoR{Accept/Reject}{8}
+}
+
+\subsection{Non-interactive proof with Fiat-Shamir Transformation}
+
+We apply the Fiat-Shamir \cite{fiatshamir} transformation using algebraic hash functions $H_i: \mathbb{F}_q^* \to \mathbb{F}_q$. In constraint-based systems, we instantiate $H$ using field arithmetic-friendly hash functions such as Poseidon\cite{poseidon} or MiMC\cite{mimc}, which are significantly more efficient than traditional cryptographic hash functions in arithmetized environments. These algebraic hash functions are modeled as random oracles in our security analysis. Alternatively, in non-constraint-based systems, we can utilize standard cryptographic hash functions like SHA-256 or BLAKE3\cite{blake3}.
+
+\IOP{Non-interactive proof}{Verifier}{Prover}{
+    \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
+    \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs} and $\mathcal{R}$})$}{2}
+    \RDoes{Computes $Q_{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{2.8}
+    \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_{acc}$}{4}
+    \LDoes{Recomputes $z = H(\text{\textit{pairing inputs} and $\mathcal{R}$})$ for RLC}{5}
+    \LDoes{Derives evaluation point $x = H(z, Q_{acc})$}{5.8}
+    \LDoes{Runs Algorithm \ref{alg:2r:verifier} and tests polynomial\\identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.8}
+    \LtoR{Accept/Reject}{8.3}
+}
+
 \subsection{Performance}
 
 Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
