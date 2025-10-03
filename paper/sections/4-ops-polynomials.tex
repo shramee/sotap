@@ -280,24 +280,24 @@ Q Amortized & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $43$ & $44$ \\
 
 With this we have all the polynomials we need for verifying entire pairing operation. Next we will look into high level overview of pairing verification via an interactive oracle proof.
 
-\subsection{Security}
+\subsection{Security} \label{sec:op-sec}
 
 We analyze the security of our polynomial verification scheme.
 
-\subsubsection{Polynomial Identity Testing}
+\subsubsection{Polynomial Identity Testing} \label{sec:op-sec:pit}
 
 A polynomial $P$ of degree $d$ over a field \Fq has at most $d$ roots in \Fq.
 Thus for a non-zero univariate polynomial evaluated at a random point $r \xleftarrow{\$} \Fq$, the probability of zero output is,
 
 $$\Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$$
 
-\subsubsection{Euclidean Division}
+\subsubsection{Euclidean Division} \label{sec:op-sec:div}
 
 Given polynomials $A$ and $B$ in $\Fq[x]$ with $B \neq 0$, there exist unique polynomials $Q$ and $R$ where $\deg(R) < \deg(B)$ such that:
 
 $$A(x) = B(x) \cdot Q(x) + R(x)$$
 
-\subsubsection{Security Analysis}
+\subsubsection{Security Analysis}  \label{sec:op-sec:analysis}
 
 Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdots A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
 where $\deg(R) \leq 11$ and $\deg(P) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$:
