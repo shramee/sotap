@@ -1,4 +1,4 @@
-\section{Interactive Oracle Proof}
+\section{Interactive Proof with Quotients batching}
 
 Now that we have covered the core construction behind our contribution, let's take a holistic view of verification of a pairing computation with an interactive proof system. While the construction above works beautifully on it's own, we can further optimize the protocol by batching all polynomial verifications into a two round interactive proof.
 
@@ -121,7 +121,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 
 \subsection{Verifier}
 
-The verifier recieves computed remainders $\mathcal{R}$ for each polynomial equation described in Section \ref{sec:op-polys} from the prover. Along the array of remainders, it retains the challenge $c$ provided to the prover after the first round. Along with point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, internal parameter $W$ (the 27th root of unity) and $Q_\text{acc}$, the verifier runs the pairing computation while using the remainders and performs polynomial evaluations (Algo \ref{alg:evalpolyprod}) at each step. This process is detailed in Algorithm \ref{alg:2r:verifier}.
+The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ from \cite{OPP24}, the internal parameter $W$ (the 27th root of unity), computed remainders $\mathcal{R}$ for each polynomial equation described in Section \ref{sec:op-polys} and $Q_\text{acc}$ from the prover. The verifier retains the challenge $c$ from the first round. Using these values, the verifier performs a pairing computation with polynomial evaluations (Algorithm \ref{alg:evalpolyprod}) at each step, as detailed in Algorithm \ref{alg:2r:verifier}. After each evaluation, the verifier attempts to reconstruct RLC $Q_{acc}$ the same way as the prover did, And checks the final equality described in Equation \ref{eq:iop-batched} on page \pageref{eq:iop-batched}.
 
 \begin{algorithm}
 \caption{EvalPoly: Evaluate polynomial product minus remainder}
@@ -206,24 +206,3 @@ The verifier recieves computed remainders $\mathcal{R}$ for each polynomial equa
 Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
 Combined with residue witness technique for final exponentiation elimination\cite{OPP24}, these optimizations enabled processing of ZK proofs on Starknet even before the modulo builtin\cite{sn_mod_builtin} became available, which later greatly improved finite field arithmetic operations. These techniques were subsequently integrated into Garaga, which remains the most efficient pairing implementation by operation count on Starknet to date.
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
-
-\subsection{[wip] Protocol Overview}
-
-\subsection{[wip] Single-Round Protocol}
-
-\subsubsection{[wip] Protocol description (Algorithm)}
-\subsubsection{[wip] Complexity analysis}
-
-
-\subsection{Two-Round Protocol with RLC Batching}
-
-\subsubsection{[wip] Protocol description (Algorithm)}
-\subsubsection{[wip] Complexity analysis}
-\subsubsection{[wip] Comparison with single-round}
-
-
-\subsection{Three-Round Protocol with Native Field Optimization}
-
-\subsubsection{[wip] Protocol description (Algorithm)}
-\subsubsection{[wip] Complexity analysis}
-\subsubsection{[wip] Architecture-specific benefits}
