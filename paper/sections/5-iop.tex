@@ -1,4 +1,4 @@
-\section{Interactive Proof with Quotients batching}
+\section{Full Pairing Proof with Quotients batching}
 
 Now that we have covered the core construction behind our contribution, let's take a holistic view of verification of a pairing computation with an interactive proof system. While the construction above works beautifully on it's own, we can further optimize the protocol by batching all polynomial verifications into a two round interactive proof.
 
@@ -23,7 +23,7 @@ or,
 
 This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as described in Tables \ref{tbl:op:ml-0bit}, \ref{tbl:op:ml-nzbit}, \ref{tbl:op:ml-frob}, \ref{tbl:op:finx}) to a single polynomial of degree 76.
 
-\subsection{Prover}
+\subsection{Prover's Algorithms}
 
 The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section \ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm \ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm \ref{alg:2r:prover}. After recieving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm \ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
 
@@ -119,7 +119,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Verifier}
+\subsection{Verifier's Algorithms}
 
 The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ from \cite{OPP24}, the internal parameter $W$ (the 27th root of unity), computed remainders $\mathcal{R}$ for each polynomial equation described in Section \ref{sec:op-polys} and $Q_\text{acc}$ from the prover. The verifier retains the challenge $c$ from the first round. Using these values, the verifier performs a pairing computation with polynomial evaluations (Algorithm \ref{alg:evalpolyprod}) at each step, as detailed in Algorithm \ref{alg:2r:verifier}. After each evaluation, the verifier attempts to reconstruct RLC $Q_\text{acc}$ the same way as the prover did, And checks the final equality described in Equation \ref{eq:iop-batched} on page \pageref{eq:iop-batched}.
 
@@ -216,18 +216,24 @@ We will go through the two-round public-coin interactive proof system in this se
     \LtoR{Accept/Reject}{8}
 }
 
-\subsection{Non-interactive proof with Fiat-Shamir Transformation}
+\subsection{Fiat-Shamir Transformation}
 
-We apply the Fiat-Shamir \cite{fiatshamir} transformation using algebraic hash functions $H_i: \mathbb{F}_q^* \to \mathbb{F}_q$. In constraint-based systems, we instantiate $H$ using field arithmetic-friendly hash functions such as Poseidon\cite{poseidon} or MiMC\cite{mimc}, which are significantly more efficient than traditional cryptographic hash functions in arithmetized environments. These algebraic hash functions are modeled as random oracles in our security analysis. Alternatively, in non-constraint-based systems, we can utilize standard cryptographic hash functions like SHA-256 or BLAKE3\cite{blake3}.
+The Fiat-Shamir transformation\cite{fiatshamir} converts an interactive proof into a non-interactive one by replacing the verifier's random challenge with a hash of the protocol transcript.
+
+This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $s'(x, m, \lambda) = \delta_s(x, m) + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section \ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
+
+\subsection{Non-interactive proof}
+
+Let's look at what the protocol looks like after applying Fiat-Shamir transformation.
 
 \IOP{Non-interactive proof}{Verifier}{Prover}{
     \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
-    \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs} and $\mathcal{R}$})$}{2}
+    \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$}{2}
     \RDoes{Computes $Q_\text{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{2.8}
     \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$}{4}
-    \LDoes{Recomputes $z = H(\text{\textit{pairing inputs} and $\mathcal{R}$})$ for RLC}{5}
+    \LDoes{Recomputes $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$ for RLC}{5}
     \LDoes{Derives evaluation point $x = H(z, Q_\text{acc})$}{5.8}
-    \LDoes{Runs Algorithm \ref{alg:2r:verifier} and tests polynomial\\identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.8}
+    \LDoes{Runs Algorithm \ref{alg:2r:verifier} with $z$ and tests polynomial\\identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.8}
     \LtoR{Accept/Reject}{8.3}
 }
 
@@ -237,7 +243,7 @@ We analyze the security of our random linear combination batching scheme against
 
 \subsubsection{Attack Model}
 
-Consider a prover attempting to cheat by submitting an incorrect remainder $R_j' \neq R_j$ within the commitment array $\mathcal{R}$. The prover commits to $\mathcal{R}'$ containing $R_j'$, after which the challenge $z$ is derived (via Fiat-Shamir) from this commitment. We have $\Delta_j$ as:
+Consider a prover attempting to cheat by submitting an incorrect remainder $R_j' \neq R_j$ within the commitment array $\mathcal{R}$. The prover commits to $\mathcal{R}'$ containing $R_j'$, after which the challenge $z$ is derived (via Fiat-Shamir) from this commitment or received from the verifier in interactive setting. We have $\Delta_j$ as:
 $$\Delta_j = R_j' - R_j \neq 0 \text{, and } \deg(\Delta_j) \leq \deg(R_j)$$
 
 \subsubsection{Verifier's checks}
@@ -248,7 +254,11 @@ $$\sum_{i=0}^{s} z^i(A_i - R_i') \stackrel{?}{=} Q_{\text{RLC}} \cdot P_{12}$$
 Substituting $R_j' = R_j + \Delta_j$ reveals an imbalance:
 $$\sum_{i=0}^{s} z^i(A_i - R_i) - z^j\Delta_j = Q_{\text{RLC}} \cdot P_{12}$$
 
-\subsubsection{Attempting Forgery}
+\subsubsection{Absorbing $\Delta$ in $\mathcal{R}$}
+
+Absorbing $\Delta_j$ into the remainders array $\mathcal{R}$ would require the knowledge of $z$ before committing to $\mathcal{R}$. However, since $z$ is derived from the commitment of $\mathcal{R}$ itself (in non-interactive setting) or received after committing to $\mathcal{R}$ (in interactive setting), this temporal ordering prevents the prover from adjusting $\mathcal{R}$ based on $z$, making it impossible to absorb $\Delta_j$ into another $R_k$ in $\mathcal{R}$.
+
+\subsubsection{Absorbing $\Delta$ in $Q_\text{acc}$}
 
 Rearranging:
 $$\sum_{i=0}^{s} z^i(A_i - R_i) = Q_{\text{RLC}} \cdot P_{12} + z^j\Delta_j$$
@@ -259,15 +269,13 @@ Q'_{\text{RLC}} \cdot P_{12} &= Q_{\text{RLC}} \cdot P_{12} + z^j\Delta_j \\
 Q'_{\text{RLC}} &= Q_{\text{RLC}} + \frac{z^j\Delta_j}{P_{12}}
 \end{align*}
 
-Here $P_{12}$ is irreducible with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq 11$, so we have $\deg(z^j\Delta_j) < \deg(P_{12})$ for all valid $j$. By the uniqueness of polynomial division and the irreducibility of $P_{12}$, the term $z^j\Delta_j$ cannot be divisible by $P_{12}$. \\ Therefore, $\frac{z^j\Delta_j}{P_{12}} \notin \mathbb{F}_q[x]$.
+Here $P_{12}$ is irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$, so we have $\deg(\Delta_j) < \deg(P_{12})$ for all valid $j$. When you divide a polynomial of degree lesser than the divisor you get a rational function. So it is \textbf{information-theoretically impossible} to find the polynomial $Q'_\text{acc}$.
 
 Thus, no polynomial $Q'_{\text{RLC}} \in \mathbb{F}_q[x]$ exists that satisfies the verifier's equation with the incorrect remainder $R_j'$.
 
-\subsubsection{Conclusion}
+\subsubsection{Soundness and Completeness} \label{sec:iop:soundness}
 
-A malicious prover cannot produce an accepting proof with an incorrect remainder. The security of our batching scheme reduces to the binding property of the polynomial commitment and the negligible soundness error $\delta_s \leq \frac{d}{|\mathbb{F}_q|}$ from the Schwartz-Zippel lemma, where $d < 2^8$ and $|\mathbb{F}_q| \approx 2^{254}$.
-
-\subsubsection{Soundness and Completeness}
+As seen above, algebraic forgery is impossible. The only way for a malicious prover to pass is if the polynomial happens to evaluate to $0$ at $x$.
 
 After batching with random linear combination as described in Section \ref{sec:iop:batching}, we have a single polynomial $P_\text{acc}(x)$ of degree $d < 2^8$ to verify. So the security parameters follow from Section \ref{sec:op-sec:pit} and \ref{sec:op-sec:analysis}.
 
@@ -275,8 +283,4 @@ After batching with random linear combination as described in Section \ref{sec:i
 
 \textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
 
-\subsection{Performance}
-
-Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
-Combined with residue witness technique for final exponentiation elimination\cite{OPP24}, these optimizations enabled processing of ZK proofs on Starknet even before the modulo builtin\cite{sn_mod_builtin} became available, which later greatly improved finite field arithmetic operations. These techniques were subsequently integrated into Garaga, which remains the most efficient pairing implementation by operation count on Starknet to date.
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
