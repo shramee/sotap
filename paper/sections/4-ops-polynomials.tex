@@ -124,7 +124,7 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 
 \begin{table}[h]
 \centering
-\caption{Miller loop bit operation comparison (3-pair)}
+\caption{3-Pair Miller loop 0-bit constraints comparison}
 \label{tab:miller_loop_comparison}
 \begin{tabular}{|l|c|c|c|}
 \hline
@@ -170,9 +170,9 @@ $L_1, L_2, L_3 \in \text{Sparse}_{01379}$  & The line functions & $9 \times 3 = 
 \hline
 $R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
 \hline
-\textbf{Total multiplications} & & & \textbf{36} \\
+\textbf{Total constraints} & \multicolumn{2}{|c|}{36C Evals, 4C Muls and 1C RLC} & \textbf{41} \\
 \hline
-Q Amortized & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $38$ & $39$ \\
+Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $38$ & $39$ \\
 \hline
 \end{tabular}
 \caption{Zero bit operation polynomial components} \label{tbl:op:ml-0bit}
@@ -201,9 +201,9 @@ $W \text{ or } W^{-1} \in \Fe{12}$ & Residue witness & $11$ & $12$ \\
 \hline
 $R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
 \hline
-\textbf{Total multiplications} & & & \textbf{60} \\
+\textbf{Total constraints} & \multicolumn{2}{|c|}{60C Evals, 8C Muls and 1C RLC} & \textbf{69} \\
 \hline
-Q Amortized & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $76$ & $77$ \\
+Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $76$ & $77$ \\
 \hline
 \end{tabular}
 \caption{Non-zero bit operation polynomial components} \label{tbl:op:ml-nzbit}
@@ -234,9 +234,9 @@ $L_{1\pi^2}, L_{2\pi^2}, L_{3\pi^2} \in \text{Sparse}_{01379}$ & $-\pi_p^2$ corr
 \hline
 $R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
 \hline
-\textbf{Total coefficients} & & & \textbf{48} \\
+\textbf{Total constraints} & \multicolumn{2}{|c|}{48C Evals, 6C Muls and 1C RLC} & \textbf{55} \\
 \hline
-Q Amortized & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $54$ & $55$ \\
+Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $54$ & $55$ \\
 \hline
 \end{tabular}
 \caption{Correction step polynomial components} \label{tbl:op:ml-frob}
@@ -270,9 +270,9 @@ $W^w \in \Fe{12}$ & Cubic scale factor & $10$ & $2$ \\
 \hline
 $R = 1$ & Unity (constant) & $0$ & $1$ \\
 \hline
-\textbf{Total coefficients} & & & \textbf{51} \\
+\textbf{Total constraints} & \multicolumn{2}{|c|}{51C Evals, 4C Muls and 1C RLC} & \textbf{56} \\
 \hline
-Q Amortized & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $43$ & $44$ \\
+Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $43$ & $44$ \\
 \hline
 \end{tabular}
 \caption{Final exponentiation polynomial components} \label{tbl:op:finx}
