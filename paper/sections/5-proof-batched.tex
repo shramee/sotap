@@ -25,7 +25,7 @@ This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as desc
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section \ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm \ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm \ref{alg:2r:prover}. After recieving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm \ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section \ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm \ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm \ref{alg:2r:prover}. After receiving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm \ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
 
 \begin{algorithm}
 \caption{PolyMulDiv: Polynomial multiplication and Euclidean division}
