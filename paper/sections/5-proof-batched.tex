@@ -220,7 +220,7 @@ We will go through the two-round public-coin interactive proof system in this se
 
 The Fiat-Shamir transformation\cite{fiatshamir} converts an interactive proof into a non-interactive one by replacing the verifier's random challenge with a hash of the protocol transcript.
 
-This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $s'(x, m, \lambda) = \delta_s(x, m) + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section \ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
+This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $\delta_s + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section \ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
 
 \subsection{Non-interactive proof}
 
@@ -275,11 +275,16 @@ Thus, no polynomial $Q'_{\text{RLC}} \in \mathbb{F}_q[x]$ exists that satisfies 
 
 \subsubsection{Soundness and Completeness} \label{sec:iop:soundness}
 
-As seen above, algebraic forgery is impossible. The only way for a malicious prover to pass is if the polynomial happens to evaluate to $0$ at $x$.
+As seen above, algebraic forgery is impossible. The only way for a malicious prover to pass is if the non-zero polynomial happens to evaluate to $0$ at $x$.
 
 After batching with random linear combination as described in Section \ref{sec:iop:batching}, we have a single polynomial $P_\text{acc}(x)$ of degree $d < 2^8$ to verify. So the security parameters follow from Section \ref{sec:op-sec:pit} and \ref{sec:op-sec:analysis}.
 
-\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+\textbf{Soundness}: The soundness error for the IOP is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so,
+
+$$\delta_s \leq 2^{-246}$$
+
+\textbf{Soundness for non-interactive random-oracle proof system}: Applying Fiat-Shamir transformation, the knowledge soundness error becomes $\delta_s' = \delta_s + 3(m^2 + 1)2^{-\lambda}$ \cite{IOP-NI} where $m = 2$ (number of hash queries) and $\lambda$ is the hash output length. For a hash function with output length of the size of the field $|\Fq|$,
+$$\delta_s' \leq 2^{-246} + 15 \cdot 2^{-254} \approx 2^{-246}$$
 
 \textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
 
