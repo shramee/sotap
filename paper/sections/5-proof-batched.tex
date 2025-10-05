@@ -249,10 +249,10 @@ $$\Delta_j = R_j' - R_j \neq 0 \text{, and } \deg(\Delta_j) \leq \deg(R_j)$$
 \subsubsection{Verifier's checks}
 
 For the verifier's check to pass with the incorrect remainder, the following equation must hold:
-$$\sum_{i=0}^{s} z^i(A_i - R_i') \stackrel{?}{=} Q_{\text{RLC}} \cdot P_{12}$$
+$$\sum_{i=0}^{s} z^i(A_i - R_i') \stackrel{?}{=} Q_\text{acc} \cdot P_{12}$$
 
 Substituting $R_j' = R_j + \Delta_j$ reveals an imbalance:
-$$\sum_{i=0}^{s} z^i(A_i - R_i) - z^j\Delta_j = Q_{\text{RLC}} \cdot P_{12}$$
+$$\sum_{i=0}^{s} z^i(A_i - R_i) - z^j\Delta_j = Q_\text{acc} \cdot P_{12}$$
 
 \subsubsection{Absorbing $\Delta$ in $\mathcal{R}$}
 
@@ -261,17 +261,17 @@ Absorbing $\Delta_j$ into the remainders array $\mathcal{R}$ would require the k
 \subsubsection{Absorbing $\Delta$ in $Q_\text{acc}$}
 
 Rearranging:
-$$\sum_{i=0}^{s} z^i(A_i - R_i) = Q_{\text{RLC}} \cdot P_{12} + z^j\Delta_j$$
+$$\sum_{i=0}^{s} z^i(A_i - R_i) = Q_\text{acc} \cdot P_{12} + z^j\Delta_j$$
 
-For the proof to be accepted, the prover must find a polynomial $Q'_{\text{RLC}}$ satisfying:
+For the proof to be accepted, the prover must find a polynomial $Q'_\text{acc}$ satisfying:
 \begin{align*}
-Q'_{\text{RLC}} \cdot P_{12} &= Q_{\text{RLC}} \cdot P_{12} + z^j\Delta_j \\
-Q'_{\text{RLC}} &= Q_{\text{RLC}} + \frac{z^j\Delta_j}{P_{12}}
+Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} + z^j\Delta_j \\
+Q'_\text{acc} &= Q_\text{acc} + \frac{z^j\Delta_j}{P_{12}}
 \end{align*}
 
-Here $P_{12}$ is irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$, so we have $\deg(\Delta_j) < \deg(P_{12})$ for all valid $j$. When you divide a polynomial of degree lesser than the divisor you get a rational function. So it is \textbf{information-theoretically impossible} to find the polynomial $Q'_\text{acc}$.
+Here $P_{12}$ is irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$, so we have $\deg(\Delta_j) < \deg(P_{12})$ for all valid $j$. And since $\deg(\Delta_j) < \deg(P_{12})$, the division $z^j·\Delta_j/P_{12}$ yields a rational function, not a polynomial. When you divide a polynomial of degree lesser than the divisor you get a rational function. So it is \textbf{information-theoretically impossible} to find the polynomial $Q'_\text{acc}$.
 
-Thus, no polynomial $Q'_{\text{RLC}} \in \mathbb{F}_q[x]$ exists that satisfies the verifier's equation with the incorrect remainder $R_j'$.
+Thus, no polynomial $Q'_\text{acc} \in \mathbb{F}_q[x]$ exists that satisfies the verifier's equation with the incorrect remainder $R_j'$.
 
 \subsubsection{Soundness and Completeness} \label{sec:iop:soundness}
 
