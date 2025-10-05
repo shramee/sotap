@@ -151,8 +151,8 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
 \State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
 \State $x \xleftarrow{\$} \Fq$ \gComm{This will be our evaluation point}
-\State $e_\text{acc} \leftarrow 0$ \gComm{This will be our evaluation point}
-\State $a_\text{rlc} \leftarrow 1$ \gComm{This will be our evaluation point}
+\State $e_\text{acc} \leftarrow 0$ \gComm{Accumulated evaluation result}
+\State $a_\text{rlc} \leftarrow 1$ \gComm{Random linear combination multiplier}
 \color{gray}
 \Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
 \color{black}
