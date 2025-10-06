@@ -42,7 +42,7 @@ The computation of an optimal ate pairing---the focus of our implementation---co
 
 While both phases present optimization opportunities, the constraint-based verification of these computations introduces unique challenges and possibilities that differ significantly from native implementations.
 
-\subsection{Schwartz--Zippel lemma}
+\subsection{Schwartz--Zippel lemma} \label{sec:bg:sz}
 
 The Schwartz--Zippel lemma (or more precisely, the Demillo--Lipton--Schwartz--Zippel lemma \cite{DemLip78,Sch79,Zip79,Sch80}) provides a probabilistic method for testing polynomial identities. The lemma states that for a non-zero polynomial $P(x_1, x_2, \ldots, x_n)$ of total degree $d$ over a finite field $\F$, when evaluated at uniformly random field elements, the probability that $P$ evaluates to zero is at most $d/|\F|$.
 
