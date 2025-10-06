@@ -302,6 +302,6 @@ $$A(x) = B(x) \cdot Q(x) + R(x)$$
 Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdots A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
 where $\deg(R) \leq 11$ and $\deg(P) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$:
 
-\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$\footnote{For $k$-pair pairings, the maximum degree is approximately $88 + 18(k-3)$, remaining well below $2^8$ for most practical purposes. But can be increased to $2^{10}$ for many more pairs with negligible change in soundness.}. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
 
 \textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
