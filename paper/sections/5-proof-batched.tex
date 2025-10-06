@@ -197,7 +197,8 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 
 \Statex
 
-\State \Return $Q_\text{acc}(x) \stackrel{?}{=} e_\text{acc}$
+\Statex \gText{Add check for expected pairing output}
+\State \Return $Q_\text{acc}(x) \stackrel{?}{=} e_\text{acc} \land R \stackrel{?}{=} 1$
 \end{algorithmic}
 \end{algorithm}
 
