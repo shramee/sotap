@@ -4,3 +4,17 @@
 
 We have covered a comprehensive proving strategy for pairing computations. This section details a proof similar to the protocol from Section \ref{sec:iop} but tailored for field emulation contexts. These techniques are particularly useful when emulating a large 200+ bit field in another 200+ bit field, such as verifying BN254 pairings in systems with different native fields.
 
+\subsection{Field Emulation}
+
+Typically, field emulation involves representing elements of a field $\F_{e}$ via multiple \nb-bit limbs in another field $\F_{n}$.
+The emulated field $\F_{e}$ operations are several times more expensive than native field $\F_{n}$ operations, as each emulated operation requires multiple native field operations to handle carries, reductions, and correctness checks.
+
+Number of bits per limb, \nb, is usually chosen such that $\nb \cdot 2 < \log_2(p_2)$. This constraint ensures that the multiplication of two \nb-bit limbs fits within a single $\F_{n}$ element, which is crucial for efficiency and avoiding overflow.
+
+\subsubsection{Limb representation}
+
+An element $a \in \F_{e}$ is represented as:
+$$a = (a_0, a_1, \ldots, a_{n-1}) \text{ where } a = \sum_{i=0}^{n-1} a_i \cdot 2^{i \cdot \nb}$$
+
+with each limb $a_i \in \F_{n}$ satisfying $0 \leq a_i < 2^\nb$.
+
