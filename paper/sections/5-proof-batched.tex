@@ -274,7 +274,7 @@ Here $P_{12}$ is irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Del
 
 Thus, no polynomial $Q'_\text{acc} \in \mathbb{F}_q[x]$ exists that satisfies the verifier's equation with the incorrect remainder $R_j'$.
 
-\subsubsection{Soundness and Completeness} \label{sec:iop:soundness}
+\subsubsection{Soundness} \label{sec:iop:soundness}
 
 As seen above, algebraic forgery is impossible. The only way for a malicious prover to pass is if the non-zero polynomial happens to evaluate to $0$ at $x$.
 
@@ -287,6 +287,27 @@ $$\delta_s \leq 2^{-246}$$
 \textbf{Soundness for non-interactive random-oracle proof system}: Applying Fiat-Shamir transformation, the knowledge soundness error becomes $\delta_s' = \delta_s + 3(m^2 + 1)2^{-\lambda}$ \cite{IOP-NI} where $m = 2$ (number of hash queries) and $\lambda$ is the hash output length. For a hash function with output length of the size of the field $|\Fq|$,
 $$\delta_s' \leq 2^{-246} + 15 \cdot 2^{-254} \approx 2^{-246}$$
 
-\textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
+\subsubsection{Completeness}
+
+For an honest prover executing Algorithm \ref{alg:2r:prover} with valid inputs:
+
+\begin{enumerate}
+\item \textbf{Polynomial construction}: At each operation, the prover computes following polynomials:
+   $$\prod_{j} P_{i,j} = Q_i \cdot P_{12} + R_i$$
+
+\item \textbf{RLC formation}: Given challenge $z$, the prover forms:
+   $$Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$$
+
+\item \textbf{Verifier's check}: The verifier evaluates at point $x$:
+   \begin{align}
+   \text{LHS} &= \sum_{i=0}^{n-1} z^i \cdot \left[\prod_{j} P_{i,j}(x) - R_i(x)\right]\\
+   &= \sum_{i=0}^{n-1} z^i \cdot Q_i(x) \cdot P_{12}(x) \quad \text{(by construction)}\\
+   &= P_{12}(x) \cdot \sum_{i=0}^{n-1} z^i \cdot Q_i(x)\\
+   &= P_{12}(x) \cdot Q_{\text{acc}}(x) = \text{RHS}
+   \end{align}
+\end{enumerate}
+
+Since the equality holds for any evaluation point $x$, the protocol satisfies perfect completeness.
+
 
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
