@@ -1,4 +1,5 @@
 \section{Full Pairing Proof with Quotients batching}
+\label{sec:iop}
 
 Now that we have covered the core construction behind our contribution, let's take a holistic view of verification of a pairing computation with an interactive proof system. While the construction above works beautifully on it's own, we can further optimize the protocol by batching all polynomial verifications into a two round interactive proof.
 
@@ -46,6 +47,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 \State \Return $(Q, R)$ \gComm{Quotient and Remainder with $\deg(R) < \deg(P_{12})$}
 \end{algorithmic}
 \end{algorithm}
+
 \begin{algorithm}
 \caption{Random Linear Combination: Adjacent Powers}
 \label{alg:rlc}
@@ -150,9 +152,8 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
 \State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
 \State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
-\State $x \xleftarrow{\$} \Fq$ \gComm{This will be our evaluation point}
-\State $e_\text{acc} \leftarrow 0$ \gComm{Accumulated evaluation result}
-\State $a_\text{rlc} \leftarrow 1$ \gComm{Random linear combination multiplier}
+\State $x \xleftarrow{\$} \Fq$ \gComm{Sample evaluation point from field}
+\State $e_\text{acc} \leftarrow 0$, $a_\text{rlc} \leftarrow 1$ \gComm{Evaluation accumulator and random linear combination multiplier}
 \color{gray}
 \Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
 \color{black}
@@ -197,8 +198,7 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 
 \Statex
 
-\Statex \gText{Add check for expected pairing output}
-\State \Return $Q_\text{acc}(x) \stackrel{?}{=} e_\text{acc} \land R \stackrel{?}{=} 1$
+\State \Return $Q_\text{acc}(x) \stackrel{?}{=} e_\text{acc} \land R \stackrel{?}{=} 1$ \gComm{Polynomial identity and expected pairing output check}
 \end{algorithmic}
 \end{algorithm}
 
