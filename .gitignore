@@ -13,4 +13,4 @@ paper/*.lot
 paper/*.bcf
 paper/*.run.xml
 paper/*.loa
-paper/main.xwm
+paper/*.xwm

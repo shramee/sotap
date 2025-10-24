@@ -1,6 +1,6 @@
-\documentclass[12pt,a4paper]{article}
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb,amsthm}
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{cite}
@@ -15,13 +15,6 @@
 \usetikzlibrary{arrows.meta}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-
-% Custom theorem environments
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newtheorem{definition}{Definition}
-\newtheorem{proposition}{Proposition}
-\newtheorem{corollary}{Corollary}
 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
@@ -47,7 +40,6 @@
 }}
 }
 
-\usepackage[printwatermark]{xwatermark}
 
 % https://tikz.dev/tikz-shapes
 
@@ -67,12 +59,18 @@
 }
 
 \title{Probabilistic Pairing Proofs}
-
-\author{Shramee Srivastav \\ 
-MIST.cash|FOCBB, Shhtarknet \\ 
-Email: shramee@proton.me}
-
-\date{\today}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Shramee Srivastav\inst{1}\orcidID{0009-0009-7208-3478}}
+%
+\authorrunning{S. Srivastav}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{MIST.cash|FOCBB, Shhtarknet \email{shramee@proton.me}}
 
 \emergencystretch=1em
 \begin{document}
@@ -80,13 +78,6 @@ Email: shramee@proton.me}
 \maketitle
 
 \input{sections/0-abstract.tex}
-
-\newwatermark[pages={1-24},fontfamily=times,color=red!10,angle=45,scale=3.5,xpos=0,ypos=0]{CONFIDENTIAL\\DRAFT}
-
-\tableofcontents
-\listofalgorithms
-\listoftables
-
 \input{sections/1-introduction.tex}
 \input{sections/2-background.tex}
 \input{sections/3-related-work.tex}
@@ -94,7 +85,7 @@ Email: shramee@proton.me}
 \input{sections/5-proof-batched.tex}
 \input{sections/conclusion.tex}
 
-\bibliographystyle{alpha}
+\bibliographystyle{splncs04}
 \bibliography{references}
 
 \end{document}
