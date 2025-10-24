@@ -5,5 +5,12 @@ In resource-constrained environments—including BitcoinVM, blockchain smart con
 
 We systematically present a progression of state-of-the-art techniques: El Housni's foundational R1CS pairing optimizations \cite{PR1CS22}, Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, and Novakovic and Eagen's final exponentiation elimination \cite{OPP24}.
 
-Building upon these foundations, our approach consolidates Miller loop iterations and final exponentiation verification into univariate polynomial relations that can be verified through efficient polynomial identity testing. By verifying these polynomial relationships instead of performing the computations we achieve a 50\% improvement in Pairing performance. While our method requires additional auxiliary data compared to traditional pairing verification, it achieves a 75\% reduction in commitment overhead relative to Feltroidprime's extension field techniques.
+Building upon these foundations, our approach consolidates Miller loop iterations and final exponentiation verification into univariate polynomial relations verified through efficient polynomial identity testing. For BN254 3-pairing verification (standard in Groth16), our Cairo implementation achieves:
+
+\begin{itemize}
+\item \textbf{45\% reduction} in Miller loop field operations
+\item \textbf{77\% reduction} in commitment overhead (Fiat-Shamir hashing)
+\item \textbf{37\% overall} speedup for complete pairing verification
+\end{itemize}
+
 \end{abstract}
