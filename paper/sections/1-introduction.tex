@@ -22,7 +22,7 @@ Our key insight is that instead of optimizing individual field operations, we ca
 
 \
 
-\textbf{Implementation and Impact:} Garaga\cite{grg}, a state-of-the-art elliptic curve tooling library for Cairo and Starknet, implements our two round interactive proof system with polynomial batching. These techniques allowed Garaga to fit their pairing transaction within Starknet's 4000 calldata limit while minimising the gas costs.
+\textbf{Implementation and Impact:} Garaga\cite{grg}, a state-of-the-art elliptic curve tooling library for Cairo and Starknet, implements our two round interactive proof system with polynomial batching. These techniques allowed Garaga to fit their pairing transaction within Starknet's 4000 calldata limit while simultaneously minimising the gas costs.
 
 \subsection{Paper organization}
 
@@ -34,6 +34,6 @@ The remainder of this paper is organized as follows.
 
 \textbf{Section 4} presents our unified Miller loop optimization framework.
 
-\textbf{Section 5} outlines the public-coin interactive proof systems with one, two and three rounds for different applications.
+\textbf{Section 5} outlines the public-coin interactive proof systems and algorithms for prover and verifier.
 
 \textbf{Section 6} concludes with implications and future work.
