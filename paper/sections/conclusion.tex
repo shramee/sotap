@@ -1,6 +1,13 @@
 \section{Conclusion}
 
-\subsection{Performance}
+\subsection{Target Environments}
 
-Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
-Combined with residue witness technique for final exponentiation elimination\cite{OPP24}, these optimizations enabled processing of ZK proofs on Starknet even before the modulo builtin\cite{sn_mod_builtin} became available, which later greatly improved finite field arithmetic operations. These techniques were subsequently integrated into Garaga, which remains the most efficient pairing implementation by operation count on Starknet to date.
+Our polynomial batching approach delivers maximum impact in constraint-based environments where traditional optimization strategies fall short. These environments share key characteristics that make our techniques particularly effective:
+
+\textbf{Arithmetized Computation Models:} Systems like Cairo VM, R1CS, and Plonkish arithmetization benefit most from our approach. In these environments, field inversions cost nearly the same as multiplications (2C vs 1C), while polynomial verification through Schwartz-Zippel becomes remarkably efficient. Our batching transforms hundreds of individual field operations into single polynomial verifications.
+
+\textbf{Calldata-Constrains Blockchains:} Ethereum Layer 2s, Bitcoin sidechains, and other blockchain VMs impose limits on transaction calldata. Our 77\% reduction in commitment overhead directly translates to fitting more proofs within transaction limits—enabling applications previously impossible due to size constraints.
+
+\textbf{Recursive Proof Systems:} In recursive SNARK/STARK compositions where pairings verify inner proofs, our optimizations compound at each recursion level. The 37\% overall speedup enables deeper recursion trees and more complex proof compositions within practical time bounds.
+
+\textbf{Zero-Knowledge Virtual Machines (ZKVMs):} Systems like RISC Zero, SP1, and Jolt that emulate general computation benefit from our unified polynomial framework, as they naturally express operations as constraint systems where our batching excels.
