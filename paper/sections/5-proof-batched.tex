@@ -238,6 +238,13 @@ Let's look at what the protocol looks like after applying Fiat-Shamir transforma
     \LtoR{Accept/Reject}{8.3}
 }
 
+\textbf{Concrete Fiat-Shamir costs:} In our Cairo implementation, each 
+POSEIDON hash invocation costs approximately 25-30 Cairo steps. Our batching 
+strategy reduces the number of hash operations from $O(k \cdot n)$ to $O(k)$ 
+where $k$ is the Miller loop length and $n$ is the number of pairings. For 
+BN254 with $k=66$ and $n=3$, this yields the 77\% reduction observed in 
+Table~\ref{tab:main_performance}.
+
 \subsection{Security Analysis}
 
 We analyze the security of our random linear combination batching scheme against a malicious prover attempting to produce an incorrect remainder.
