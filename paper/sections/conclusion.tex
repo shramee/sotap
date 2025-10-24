@@ -1,0 +1,6 @@
+\section{Conclusion}
+
+\subsection{Performance}
+
+Batching operations in Miller loop steps yielded substantial performance improvements. Processing all operations within a Miller loop step as a single polynomial and performing Schwartz-Zippel verification of polynomial multiplications significantly reduced the overall computational requirements of the pairing verification process.
+Combined with residue witness technique for final exponentiation elimination\cite{OPP24}, these optimizations enabled processing of ZK proofs on Starknet even before the modulo builtin\cite{sn_mod_builtin} became available, which later greatly improved finite field arithmetic operations. These techniques were subsequently integrated into Garaga, which remains the most efficient pairing implementation by operation count on Starknet to date.
