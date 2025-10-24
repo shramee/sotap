@@ -11,3 +11,76 @@ Our polynomial batching approach delivers maximum impact in constraint-based env
 \textbf{Recursive Proof Systems:} In recursive SNARK/STARK compositions where pairings verify inner proofs, our optimizations compound at each recursion level. The 37\% overall speedup enables deeper recursion trees and more complex proof compositions within practical time bounds.
 
 \textbf{Zero-Knowledge Virtual Machines (ZKVMs):} Systems like RISC Zero, SP1, and Jolt that emulate general computation benefit from our unified polynomial framework, as they naturally express operations as constraint systems where our batching excels.
+
+\subsection{Implementation and Performance}
+
+Table~\ref{tab:main_performance} presents measurements from Garaga's production Cairo implementation on Starknet, demonstrating that our theoretical predictions (from section \ref{sec:ops:comp-analysis}) closely match real-world performance.
+
+For 3-pairing Miller loop verification (standard in Groth16), our theoretical analysis (Section~\ref{sec:op:comp:our}) for a single bit operation predicted:
+\begin{itemize}
+\item 47\% constraint reduction (76C $\rightarrow$ 40C per operation)
+\item 75\% commitment reduction (48 $\rightarrow$ 12 $\mathbb{F}_p$ elements)
+\end{itemize}
+
+The measured results for Miller Loop validate these predictions:
+\begin{itemize}
+\item \textbf{45\% reduction} in field multiplications (14,456 $\rightarrow$ 7,975 MULMOD)
+\item \textbf{77\% reduction} in hash operations (3,758 $\rightarrow$ 876 POSEIDON)
+\item \textbf{53\% reduction} in total execution cycles (236,382 $\rightarrow$ 110,666)
+\end{itemize}
+
+The close alignment validates our polynomial batching analysis. The hash reduction exceeds our prediction because non-zero bit operations save more commitments and also the associated Fiat-Shamir challenge derivations.
+
+\textbf{Calldata and Fiat-Shamir:} For Miller loop operations, POSEIDON hash reductions improve  from 54\% (n=1) to 69\% (n=2) to 77\% (n=3). This occurs because traditional  approaches require $O(k \cdot n)$ commitments where $k$ is the Miller loop length and $n$ is the number of pairings, while our consolidated polynomial approach requires only $O(k)$ commitments regardless of $n$. Details in Table~\ref{tab:main_performance}
+
+\begin{table*}[t]
+\centering
+\caption{Performance comparison: Cairo implementation on Starknet}
+\label{tab:main_performance}
+\begin{tabular}{|l|r|r|r|r|r|r|r|}
+\hline
+\textbf{Operation} & \multicolumn{2}{c|}{\textbf{MULMOD}} & \multicolumn{2}{c|}{\textbf{ADDMOD}} & \multicolumn{2}{c|}{\textbf{POSEIDON}} & \textbf{Speedup} \\
+\cline{2-7}
+& Before & After & Before & After & Before & After & \\
+\hline
+\multicolumn{8}{|c|}{\textbf{Miller Loop (BN254)}} \\
+\hline
+Single pair & 5,984 & 3,303 & 5,927 & 3,228 & 1,810 & 828 & 47.7\% \\
+% n=2 pairs & 10,132 & 5,639 & 10,107 & 5,576 & 2,740 & 852 & 51.1\% \\
+Three pairs & 14,456 & 7,975 & 14,463 & 7,924 & 3,758 & 876 & 53.2\% \\
+\hline
+\textbf{Average} & \multicolumn{2}{c|}{\textbf{44.8\%}} & \multicolumn{2}{c|}{\textbf{45.2\%}} & \multicolumn{2}{c|}{\textbf{76.7\%}} & \textbf{50.6\%} \\
+\hline
+\hline
+\multicolumn{8}{|c|}{\textbf{Complete Pairing (BN254)}} \\
+\hline
+Single pair & 10,670 & 7,984 & 13,150 & 10,446 & 3,741 & 2,759 & 23.8\% \\
+% n=2 pairs & 14,818 & 10,320 & 17,330 & 12,794 & 4,671 & 2,783 & 31.7\% \\
+Three pairs & 19,142 & 12,656 & 21,686 & 15,142 & 5,689 & 2,807 & 37.1\% \\
+\hline
+\textbf{Average} & \multicolumn{2}{c|}{\textbf{33.9\%}} & \multicolumn{2}{c|}{\textbf{30.2\%}} & \multicolumn{2}{c|}{\textbf{50.7\%}} & \textbf{30.9\%} \\
+\hline
+\hline
+\multicolumn{8}{|c|}{\textbf{Miller Loop (BLS12\_381)}} \\
+\hline
+Single pair & 4,936 & 2,672 & 4,966 & 2,686 & 1,580 & 790 & 47.2\% \\
+% n=2 pairs & 8,030 & 4,418 & 8,171 & 4,525 & 2,276 & 812 & 50.9\% \\
+Three pairs & 11,356 & 6,164 & 11,608 & 6,364 & 3,088 & 834 & 53.8\% \\
+\hline
+\textbf{Average} & \multicolumn{2}{c|}{\textbf{45.7\%}} & \multicolumn{2}{c|}{\textbf{45.5\%}} & \multicolumn{2}{c|}{\textbf{73.0\%}} & \textbf{50.6\%} \\
+\hline
+\hline
+\multicolumn{8}{|c|}{\textbf{Complete Pairing (BLS12\_381)}} \\
+\hline
+Single pair & 10,064 & 7,795 & 14,027 & 11,742 & 3,913 & 3,123 & 19.6\% \\
+% n=2 pairs & 13,158 & 9,541 & 17,232 & 13,581 & 4,609 & 3,145 & 26.8\% \\
+Three pairs & 16,484 & 11,287 & 20,669 & 15,420 & 5,421 & 3,167 & 32.7\% \\
+\hline
+\textbf{Average} & \multicolumn{2}{c|}{\textbf{31.5\%}} & \multicolumn{2}{c|}{\textbf{25.4\%}} & \multicolumn{2}{c|}{\textbf{41.6\%}} & \textbf{26.4\%} \\
+\hline
+\multicolumn{8}{l}{\footnotesize MULMOD/ADDMOD: Field operations in $\mathbb{F}_p$} \\
+\multicolumn{8}{l}{\footnotesize POSEIDON: Hash operations for Fiat-Shamir; } \\
+\multicolumn{8}{l}{\footnotesize Speedup: VM Cycle reduction.} \\
+\hline
+\end{tabular}
+\end{table*}

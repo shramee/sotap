@@ -86,7 +86,7 @@ $$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } 
 
 This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
-\subsection{Comparative Analysis}
+\subsection{Comparative Analysis} \label{sec:ops:comp-analysis}
 
 The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
 
