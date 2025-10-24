@@ -318,9 +318,39 @@
 	abstract     = {In this paper we describe simple identification and signature schemes which enable any user to prove his identity and the authenticity of his messages to any other user without shared or public keys. The schemes are provably secure against any known or chosen message attack if factoring is difficult, and typical implementations require only 1{\%} to 4{\%} of the number of modular multiplications required by the RSA scheme. Due to their simplicity, security and speed, these schemes are ideally suited for microprocessor-based devices such as smart cards, personal computers, and remote control systems.}
 }
 @misc{IOP-NI,
-	author = {Eli Ben-Sasson and Alessandro Chiesa and Nicholas Spooner},
-	title = {Interactive Oracle Proofs},
-	howpublished = {Cryptology {ePrint} Archive, Paper 2016/116},
-	year = {2016},
-	url = {https://eprint.iacr.org/2016/116}
+	title        = {Interactive Oracle Proofs},
+	author       = {Eli Ben-Sasson and Alessandro Chiesa and Nicholas Spooner},
+	year         = 2016,
+	url          = {https://eprint.iacr.org/2016/116},
+	howpublished = {Cryptology {ePrint} Archive, Paper 2016/116}
+}
+@misc{fmt74,
+	title        = {Fast modular transforms},
+	author       = {A. Borodin and R. Moenck},
+	year         = 1974,
+	journal      = {Journal of Computer and System Sciences},
+	volume       = 8,
+	number       = 3,
+	pages        = {366--386},
+	doi          = {https://doi.org/10.1016/S0022-0000(74)80029-2},
+	issn         = {0022-0000},
+	url          = {https://www.sciencedirect.com/science/article/pii/S0022000074800292},
+	abstract     = {It is shown that if division and multiplication in a Euclidean domain can be performed in O(N loga N) steps, then the residues of an N precision element in the domain can be computed in O(N loga+1 N) steps. A special case of this result is that the residues of an N precision integer can be computed in O(N log2 N log log N) total operations. Using a polynomial division algorithm due to Strassen [24], it is shown that a polynomial of degree N−1 can be evaluated at N points in O(N log2 N) total operations or O(N log N) multiplications. Using the methods of Horowitz [10] and Heindel [9], it is shown that if division and multiplication in a Euclidean domain can be performed in O(N loga N) steps, then the Chinese Remainder Algorithm (CRA) can be performed in O(N loga+1 N) steps. Special cases are: (a) the integer CRA can be performed in O(N log2 N log log N) total operations, and (b) a polynomial of degree N−1 can be interpolated in O(N log2 N) total operations or O(N log N) multiplications. Using these results, it is shown that a polynomial of degree N and all its derivatives can be evaluated at a point in O(N log2 N) total operations.}
+}
+@misc{polyint96,
+	title        = {The Similarities (and Differances) between Polynomials and Integers},
+	author       = {Landau, Susan and Immerman, Neil},
+	year         = 1996,
+	publisher    = {University of Massachusetts},
+	address      = {USA},
+	url          = {https://people.cs.umass.edu/~immerman/pub/similarity.pdf},
+	abstract     = {The purpose of this paper is to examine the two domains of the integers and the polynomials, in an attempt to understand the nature of complexity in these very basic situations. Can we formalize the integer algorithms which shed light on the polynomial domain, and vice versa? When will the casting of one in the other speed up an existing algorithm? Why do some problems not lend themselves to this kind of speed-up? We give several simple and natural theorems that show how problems in one domain can be embedded in the other, and we examine the complexity-theoretic consequences of these embeddings. We also prove several results on the impossibility of solving integer problems by mimicking their polynomial counterparts.}
+}
+@misc{polycarry15,
+	title        = {Polynomial Expressions of Carries in p-ary Arithmetics},
+	author       = {Kaji, Shizuo and Maeno, Toshiaki and Nuida, Koji and Numata, Yasuhide},
+	year         = 2015,
+	journal      = {arXiv.org},
+	url          = {https://arxiv.org/abs/1506.02742},
+	language     = {en}
 }
