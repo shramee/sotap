@@ -319,15 +319,14 @@ For an honest prover executing Algorithm \ref{alg:2r:prover} with valid inputs:
    $$Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$$
 
 \item \textbf{Verifier's check}: The verifier evaluates at point $x$:
-   \begin{align}
+   \begin{align*}
    \text{LHS} &= \sum_{i=0}^{n-1} z^i \cdot \left[\prod_{j} P_{i,j}(x) - R_i(x)\right]\\
    &= \sum_{i=0}^{n-1} z^i \cdot Q_i(x) \cdot P_{12}(x) \quad \text{(by construction)}\\
    &= P_{12}(x) \cdot \sum_{i=0}^{n-1} z^i \cdot Q_i(x)\\
    &= P_{12}(x) \cdot Q_{\text{acc}}(x) = \text{RHS}
-   \end{align}
+   \end{align*}
 \end{enumerate}
 
 Since the equality holds for any evaluation point $x$, the protocol satisfies perfect completeness.
-
 
 % https://github.com/shramee/cairo_pairing/blob/main/packages/bn254_u256/src/pairing/schzip/steps.cairo
