@@ -26,7 +26,7 @@ The measured results for Miller Loop validate these predictions:
 \begin{itemize}
 \item \textbf{45\% reduction} in field multiplications (14,456 $\rightarrow$ 7,975 MULMOD)
 \item \textbf{77\% reduction} in hash operations (3,758 $\rightarrow$ 876 POSEIDON)
-\item \textbf{53\% reduction} in total execution cycles (236,382 $\rightarrow$ 110,666)
+\item \textbf{53\% reduction} in total execution VM CPU cycles (236,382 $\rightarrow$ 110,666)
 \end{itemize}
 
 The close alignment validates our polynomial batching analysis. The hash reduction exceeds our prediction because non-zero bit operations save more commitments and also the associated Fiat-Shamir challenge derivations.
@@ -84,6 +84,17 @@ Three pairs & 16,484 & 11,287 & 20,669 & 15,420 & 5,421 & 3,167 & 32.7\% \\
 \hline
 \end{tabular}
 \end{table*}
+
+\subsection{Gnark, the current state of the art}
+For comparison, Gnark, which is considered the current state of the art for field emulation, reports the following constraints for BN254 pairings: single-pair pairing requires 2,328,968 SCS constraints (960,784 R1CS), while the Miller loop alone requires 1,197,558 SCS constraints (311,672 R1CS). For three pairs, the complete pairing requires 3,671,409 SCS constraints, with the Miller loop using 1,197,558 SCS constraints.
+
+Gnark's SCS constraints which include both addition and multiplication gates are comparable to our VM steps, our optimized implementation achieves 53,130 steps for a single Miller loop and 155,366 steps for a complete pairing, representing a significant improvement in algorithmic efficiency for the verifier.
+
+We intend to implement our protocol over Gnark to enable significant improvements for recursive BN254 SNARKs. However, these two challenges need to be addressed:
+\begin{enumerate}
+    \item In Gnark, hashes can only be batched once per circuit—this poses a challenge for our IOP implementation from Section 5, which requires multiple rounds of Fiat-Shamir hashing.
+    \item Achieving the same level of hashing improvements requires computing a GKR verification in-circuit. This necessitates further research on the viability of multiple GKR proofs or the exposure of partial hash state finalizations.
+\end{enumerate}
 
 \subsection{Final Remarks}
 
