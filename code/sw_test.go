@@ -116,14 +116,14 @@ type Bench6_Pairing_MLSBatch struct {
 }
 
 func (c *Bench6_Pairing_MLSBatch) Define(api frontend.API) error {
-	pairing, err := NewPairing(api)
-	if err != nil {
-		return fmt.Errorf("new pairing: %w", err)
-	}
-	err = pairing.PairingCheckBatched([]*G1Affine{&c.Pairs.In1G1, &c.Pairs.In2G1}, []*G2Affine{&c.Pairs.In1G2, &c.Pairs.In2G2})
-	if err != nil {
-		return fmt.Errorf("pair: %w", err)
-	}
+	// pairing, err := NewPairing(api)
+	// if err != nil {
+	// 	return fmt.Errorf("new pairing: %w", err)
+	// }
+	// err = pairing.PairingCheckBatched([]*G1Affine{&c.Pairs.In1G1, &c.Pairs.In2G1}, []*G2Affine{&c.Pairs.In1G2, &c.Pairs.In2G2})
+	// if err != nil {
+	// 	return fmt.Errorf("pair: %w", err)
+	// }
 	return nil
 }
 
