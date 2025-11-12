@@ -16,13 +16,6 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
-% Custom theorem environments
-\newtheorem{theorem}{Theorem}
-\newtheorem{lemma}{Lemma}
-\newtheorem{definition}{Definition}
-\newtheorem{proposition}{Proposition}
-\newtheorem{corollary}{Corollary}
-
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
@@ -55,6 +48,8 @@
     \draw[gray,>-{>[length=7pt, width=8pt]},line width=1.5pt] ([yshift=-{#4}cm]#1.east) -- ([yshift=-{#4}cm]#2.west) node[midway, above, black] {#3};
 }
 
+\newcommand{\keywords}[1]{\textbf{Keywords:} #1}
+\newcommand{\orcid}[1]{\small{[\href{https://orcid.org/#1}{#1}]}}
 \newcommand{\LDoes}[2]{\node[draw,rectangle,above=1pt,right,align=left] at ([yshift=-{#2}cm]L.west) {#1};}
 \newcommand{\RDoes}[2]{\node[draw,rectangle,above=1pt,left,align=right] at ([yshift=-{#2}cm]R.east) {#1};}
 \newcommand{\RtoL}[2]{
@@ -68,9 +63,10 @@
 
 \title{Probabilistic Pairing Proofs}
 
-\author{Shramee Srivastav\inst{1}\orcidID{0009-0009-7208-3478} \\
-MIST.cash|FOCBB, Shhtarknet \email{shramee@proton.me}}
-
+\author{Shramee Srivastav \\
+\orcid{0009-0009-7208-3478} \\
+MIST.cash|FOCBB, Shhtarknet \\
+\texttt{shramee@proton.me}}
 
 \date{\today}
 
