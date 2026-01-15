@@ -65,3 +65,39 @@ Results are available in [results/](./results) directory.
 - LaTeX distribution (TeXLive, MiKTeX, etc.)
 - Go 1.19+ 
 - gnark library
+
+## Benchmarks
+
+Before implementation:
+
+| circuit                    | MULMOD | ADDMOD | POSEIDON | ~cycles |
+| -------------------------- | ------ | ------ | -------- | ------- |
+| Miller n=1 BLS12_381       | 4936   | 4966   | 1580     | 90154   |
+| Miller n=2 BLS12_381       | 8030   | 8171   | 2276     | 141734  |
+| Miller n=3 BLS12_381       | 11356  | 11608  | 3088     | 198070  |
+| MultiPairing n=1 BLS12_381 | 10064  | 14027  | 3913     | 217841  |
+| MultiPairing n=2 BLS12_381 | 13158  | 17232  | 4609     | 269421  |
+| MultiPairing n=3 BLS12_381 | 16484  | 20669  | 5421     | 325757  |
+| Miller n=1 BN254           | 5984   | 5927   | 1810     | 101558  |
+| Miller n=2 BN254           | 10132  | 10107  | 2740     | 167298  |
+| Miller n=3 BN254           | 14456  | 14463  | 3758     | 236382  |
+| MultiPairing n=1 BN254     | 10670  | 13150  | 3741     | 203854  |
+| MultiPairing n=2 BN254     | 14818  | 17330  | 4671     | 269594  |
+| MultiPairing n=3 BN254     | 19142  | 21686  | 5689     | 338678  |
+
+New results:
+
+| circuit                    | MULMOD | ADDMOD | POSEIDON | ~cycles |
+| -------------------------- | ------ | ------ | -------- | ------- |
+| Miller n=1 BLS12_381       | 2672   | 2686   | 790      | 47588   |
+| Miller n=2 BLS12_381       | 4418   | 4525   | 812      | 69558   |
+| Miller n=3 BLS12_381       | 6164   | 6364   | 834      | 91528   |
+| MultiPairing n=1 BLS12_381 | 7795   | 11742  | 3123     | 175215  |
+| MultiPairing n=2 BLS12_381 | 9541   | 13581  | 3145     | 197185  |
+| MultiPairing n=3 BLS12_381 | 11287  | 15420  | 3167     | 219155  |
+| Miller n=1 BN254           | 3303   | 3228   | 828      | 53130   |
+| Miller n=2 BN254           | 5639   | 5576   | 852      | 81898   |
+| Miller n=3 BN254           | 7975   | 7924   | 876      | 110666  |
+| MultiPairing n=1 BN254     | 7984   | 10446  | 2759     | 155366  |
+| MultiPairing n=2 BN254     | 10320  | 12794  | 2783     | 184134  |
+| MultiPairing n=3 BN254     | 12656  | 15142  | 2807     | 212902  |
