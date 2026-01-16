@@ -4,22 +4,21 @@ Blockchain technology continues to mature with improving scalability and infrast
 
 \subsection{Motivation}
 
-
 Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
 
 However, \textbf{pairings are computationally intensive}. This creates critical bottlenecks in two important deployment contexts:
 
 \begin{enumerate}
-\item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive especially during peak network congestion.
+\item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive during peak network congestion.
 
 \item \textbf{Arithmatized computation systems} (R1CS~\cite{r1cs13}, Plonkish~\cite{plnk19}, Cairo AIR~\cite{cairo21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
 \end{enumerate}
 
-In such contexts, we can make pairing verification practical by using an efficient proof system to verify the correctness of the pairing computation, rather than executing all operations natively within the expensive environment.
+In such contexts, we can make pairing application practical by using an efficient proof system to verify the correctness of the pairing computation, rather than executing all operations natively within the expensive environment.
 
 \subsection{Our Contribution}
 
-We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual field operations\cite{FXFM23}, our approach achieves:
+We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual extension field operations~\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
 \item \textbf{45\% reduction} in Miller loop field operations

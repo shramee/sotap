@@ -1,0 +1,237 @@
+\section{Related Work}
+
+The landscape of efficient pairing verification in constraint systems has evolved through several key contributions. El Housni's \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} established the theoretical framework for optimizing pairings in Rank-1 Constraint Systems, introducing techniques for efficient Miller loop implementation and final exponentiation that exploit the unique properties of constraint-based computation models. This work demonstrated that operations traditionally considered expensive in native implementations could be restructured to achieve remarkable efficiency gains in arithmetized environments.
+
+Feltroidprime's subsequent research on \textbf{enhanced extension field multiplication techniques}~\cite{FXFM23} introduced polynomial verification methods using the Schwartz-Zippel lemma for $\Fe{12}$ arithmetic operations. By representing extension field elements as polynomials and verifying their operations through polynomial arithmetic, this approach achieved significant performance improvements in the pairing computations, particularly for emulated pairing circuits where traditional field operations are costly.
+
+Novakovic and Eagen's work \textbf{On Proving Pairings}~\cite{OPP24} presented breakthrough optimization strategies that enable the elimination of final exponentiation overhead through residue witness techniques. Their approach demonstrates that two elements in $\Fe{12}$ can be proven equivalent without expensive exponentiation by introducing witness elements that satisfy specific algebraic relationships, effectively embedding the final exponentiation verification into the Miller loop computation itself.
+
+\subsection{Pairings in R1CS -- Housni 2022}
+
+El Housni's seminal work~\cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
+
+\subsubsection{Cost of inversions}
+
+Housni notes that the cost of inversions is much lower in constraint systems, almost the same as multiplication. Over $\F_p$, inversions cost 2 constraints: one for computing $x \cdot y$ where $y$ is provided from the hint, and one equality check $x \cdot y \stackrel{?}{=} 1$. Division can be similarly reduced to just two constraints. For $c = a/b$ where $c$ is the input from hint, we compute $b \cdot c$ and equality check $b \cdot c \stackrel{?}{=} a$. This is further generalised to field extensions.
+% \begin{align*}
+%     \text{For } x, y &\in \F_{p^{n}} \\
+%     x/y &= z \text{ (}z\text{ as input from hint)} \\
+%     \text{Compute } t &= y \cdot z \\
+%     \text{Equality check } t &\stackrel{?}{=} x \\
+%     \text{Cost} &= 1 \text{ multiplication} + n \text{ (n equality checks)}
+% \end{align*}
+
+% \subsubsection{Miller loop}
+
+% The paper's section 6 is a comprehensive toolkit of Miller loop and final exponentiation optimizations, featuring handcrafted formulas and algorithmic insights specifically designed for constraint system efficiency. These optimizations form the foundation upon which we layer the subsequent advances discussed in this paper.
+
+\subsubsection{Affine coordinates}
+
+Since division cost about as much as multiplications, we can represent points in affine coordinates for lower operation counts. Point doubling and addition formulas are provided in section 6.1 of~\cite{PR1CS22}. Doubling costs 12C and addition costs 10C.
+
+\subsubsection{Avoid doubling}
+
+For double and add operations on non zero bits of the Miller loop, instead of computing [2]S + Q, computing S + Q + S saves 2C per non zero bit.
+Taking this a step further, computation of y coordinate for the intermediate $S + Q$ point can be ommitted and $\lambda_1$ can be directly used in computation of $\lambda_2$. This \textbf{costs 17C}, that's a \textbf{23\% savings} over 22C for [2]S + Q.
+
+\subsubsection{Line evaluations}
+
+Following~\cite{Ara13}, the lines are sparse elements in $\Fe{12}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \F_{p^{2}}$. The multiplication of these sparse elements costs 39C.
+Housni proposes representing the lines in the form $1 + \frac{b'x_P}{y_P} \cdot w + \frac{c'}{y_P} \cdot w^3$ which makes it sparser (notice unit first coefficient resulting in free multiplication).
+
+% This can be rewritten as,
+% $$
+% 1 + b' \cdot \frac{x_P}{y_P} \cdot w + c' \cdot \frac{1}{y_P} \cdot w^3
+% $$
+
+Terms $\frac{x_P}{y_P}$ and $\frac{1}{y_P}$ can be precomputed at the cost of 2C, and reused throughout the miller loop. Untwisting isomorphisms for this form are given on pages 15–16 in section 6.1 of~\cite{PR1CS22}.
+This representation only \textbf{costs 30C}, that's a \textbf{30\% savings} over 39C for the original representation.
+
+\subsubsection{Performance}
+
+Table \ref{tab:fq12_pr1cs} summarizes the arithmetic costs for $\Fe{12}$ as presented in Housni's paper.
+
+\begin{table}[h]
+\centering
+\caption{Arithmetic in Housni's paper\cite{PR1CS22}}
+\label{tab:fq12_pr1cs}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+ & Mul & Square & Div & Sparse Mul \\
+\hline
+$\Fe{12}$ & 54C & 36C & 66C & 30C \\
+\hline
+\end{tabular}
+\end{table}
+
+% \subsubsection{Benchmarking and Field emulation costs}
+
+% For our purposes...
+
+\subsection{Faster Extension Field Multiplications -- Feltroidprime 2023}
+
+Feltroidprime~\cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\F_{p}$ to achieve significant performance improvements.
+
+\subsubsection{Isomorphisms among towered to direct extensions}
+
+Feltroidprime walks through the construction of mapping functions to go back and forth between direct and towered extensions.
+
+% He starts with the tower for BN254 (as used in gnark\cite{gnark}):
+
+% \begin{flalign}
+% \F_{p^2}[u] &= \F_{p}[u]/(u^2+1) \\
+% \F_{p^6}[v] &= \F_{p^2}[v]/(v^3-9-u) \\
+% \Fe{12}[w] &= \F_{p^6}[w]/(w^2-v)
+% \end{flalign}
+
+% Obtains irreducible polynomials,
+
+% $$P_{12}(x) = x^{12} - 18x^6 + 82 \text{ and } P_6(x) = x^6 - 18v^3 + 82$$
+
+He starts with the tower for BN254 (as used in gnark\cite{gnark}) and obtains irreducible polynomial -- $P_{12}(x) = x^{12} - 18x^6 + 82$
+
+And prepares isomorphisms between tower and direct representations\cite{FELT23ISO} which we will not include in this paper for brevity.
+
+\subsubsection{Multiplication and Schwartz--Zippel lemma}
+
+Feltroidprime proposes using Euclidean division of polynomials to multiply $A, B \in \Fe{12}$. The computation happens as follows:
+\begin{enumerate}
+    \item Treat $A, B$ as polynomials of degree less than 11, with coefficients in $\F_p$.
+    \item Compute the product $C = A \cdot B$ as a polynomial of degree less than 22 for $\Fe{12}$.
+    \item Perform Euclidean division of $C$ by the irreducible polynomial $P_{12}(x)$ to obtain the quotient $Q$ and remainder $R$:
+    $
+    \boxed{A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)}
+    $
+    \item $R \in \Fe{12}$ is used as the result of the multiplication between $A$ and $B$.
+\end{enumerate}
+
+Inside the circuit, this computation can be provided as a hint and verified with the Schwartz--Zippel lemma. The Fiat--Shamir heuristic can be used to generate the challenge with the transcript.
+
+\subsubsection{Deferred Evaluation and Batching}
+
+In Section 4, Feltroidprime discusses deferring the evaluation to the end of the algorithm and combining it with a polynomial commitment scheme to batch the verifications. This batching transforms hundreds of individual verifications into a single equation. So they can be checked at a single random point, amortizing the costs for Fiat-Shamir hashing.
+
+The batching process is a random linear combination of all the equations to be verified. For $n$ multiplications, we have:
+
+\begin{equation}
+    \label{fxfm_batched}
+    \sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z)} =  \sum_{i=0}^{n-1}{c_i*R_i(x) + \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)}}
+\end{equation}
+
+\subsubsection{Performance}
+
+For performance analysis, we will use the batched verification version.
+
+% For performance analysis, we will use the following version of the batched verification outlined in \ref{fxfm_batched}.
+
+% $$\sum_{i=0}^{n-1}{c_i*(A_i(z)*B_i(z) - R_i(x))} = \sum_{i=0}^{n-1}{c_i*Q_i(z)*P_{12}(z)}$$
+
+The implementation receives the computed RHS polynomial aggregation $Q_{Agg} = \sum_{i=0}^{n-1}{c_i*Q_i}$ as hint. The LHS aggregation, $\sum_{i=0}^{n-1}{c_i*A_i(z)*B_i(z) - R_i(x)}$ is computed within the verifier circuit. While the amortized cost computing the $Q_{Agg}(z)$ and $P_{12}(z)$ once in the circuit approaches zero as the number of batched operations increases, we conservatively account for 1C per multiplication to provide fair cost comparison.
+
+\textbf{Multiplication costs} 12C each for $A$, $B$ and $R$ evaluation, 1C for multiplying $A(z)$ and $B(z)$ evaluations, plus 1C for preparing the RLC $c_i$ multiplication and conservative 1C for RHS aggregation.
+
+For \textbf{squarings}, the evaluation of $A(z)$ is just used again, costing 12C less than multiplication.
+
+\textbf{Division} costs multiplication plus additional 12C for assertion.
+
+\textbf{Sparse element multiplication} costs Evaluations for $A$, $B$ and $R$ where $B$ contains 5 non-zero coefficients, one out of which is unitary free multiplication. The costs comes at 31C which is 4C more than squaring which has free second polynomial because $A = B$ for squarings.
+
+\begin{table}[h]
+\centering
+\caption{Arithmetic in Feltroidprime's paper\cite{FXFM23}}
+\label{tab:fq12_fxfm}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+ & Mul & Square & Div & Sparse Mul \\
+\hline
+$\Fe{12}$ & 39C* & 27C* & 51C* & 31C* \\
+\hline
+\multicolumn{5}{|c|}{} \\
+\multicolumn{5}{|c|}{*Costs exclude Fiat-Shamir commitment overhead} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Eliminating Final Exponentiation -- Novakovic \& Eagen 2024}
+
+The mathematical structure underlying pairing based cryptography involves equivalence classes. Tate pairings (as described in~\cite{OPP24} and~\cite{P4B19}) result in the output in the quotient group $F_{q^k}/(F_{q^k})^r$.
+This requires the output of the Miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation}, normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
+
+This operation is particularly expensive in extension fields like $\Fe{12}$, because $(q^{12}-1)/r$ becomes very large.
+
+\subsubsection{Equivalence class}
+
+Novakovic and Eagen~\cite{OPP24} highlight that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a residue--witness based approach.
+
+\textbf{Equivalence class representation}: Two elements $A, B \in \Fe{12}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$.
+
+$$
+A \equiv B \iff \exists c \in \Fe{12} : A \cdot c^r = B
+$$
+
+\subsubsection{Equivalence via Residue Check}
+
+So we have,
+
+\begin{flalign*}
+    A \cdot c^r &\equiv A \\
+    \text{After final exponentiation,} \\
+    (A \cdot c^r)^{(q^{12}-1)/r} &\equiv A^{(q^{k}-1)/r} \\
+    A^{(q^{k}-1)/r} \cdot c^{r*(q^{k}-1)/r} &\equiv A^{(q^{k}-1)/r} \\
+    A^{(q^{k}-1)/r} \cdot c^{q^{k}-1} &\equiv A^{(q^{k}-1)/r} \\
+    \text{With Fermat's Little Theorem,}  \\
+    A^{(q^{k}-1)/r} \cdot 1 &\equiv A^{(q^{k}-1)/r} \\
+\end{flalign*}
+
+If we expect the result of the pairing, $A \in \Fe{k}$, to be equal to some desired output $B \in \Fe{k}$, we can use the equivalence relation to establish there exists some $c \in \Fe{k}$ such that $A \cdot c^r = B$.
+
+This can be generalized to $A \cdot w^{rt} = B$ for $c = w^t$ in $A \cdot c^r = B$.
+
+\subsubsection{Hasse bound and exponentiation by r}
+
+According to Hasse theorem~\cite{Sil09}, $q + 1 - r \leq 2\sqrt{q}$ for an elliptic curve over finite field $\Fq$ and  $r$ the order of the curve.
+
+The exponentiation by r can be written as exponentiation by $q + 1 - t$. Where $t \leq 2\sqrt{q}$ is much smaller exponentiation in worst case. And the computation of $c^{q}$ is efficiently computed by exploiting the Frobenius endomorphisms.
+
+\subsubsection{Parameters for BN254 curve}
+Section 4.2 and 4.3 of~\cite{OPP24} dive into finding optimal parameters for the curve to establish $A \cdot c^\lambda = B$
+
+For Ethereum's BN254 curve, the optimal parameter is $\lambda = 6x + 2 + q - q^2 + q^3$, which decomposes into two efficiently computable components:
+
+\begin{enumerate}
+\item \textbf{Miller loop component} ($6x + 2$) --- Integrated into existing Miller loop operations
+\item \textbf{Frobenius component} ($q - q^2 + q^3$) --- Computed using efficient Frobenius mappings
+\end{enumerate}
+
+This eliminates the expensive final exponentiation, replacing it with a few additional Miller loop operations and three Frobenius mappings.
+
+\subsubsection{Performance}
+
+Replacing the final exponentiation by residue witness check saves over 85\% of final exponentiation costs for BN254 curve, reducing the constraints required for whole pairing by 32\%.
+
+Table \ref{tab:pairing_performance} summarizes the performance impact of eliminating the final exponentiation step, comparing the original pairing costs with those after applying the residue witness technique.
+
+\begin{table}[h]
+\centering
+\caption{Performance impact of residue witness check~\cite{OPP24}}
+\label{tab:pairing_performance}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Computation} & \textbf{Full Pairing} & \textbf{Witness Check~\cite{OPP24}} & \textbf{Change} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\textbf{Emulated BN254 pairing}} \\
+\hline
+Final Exponentiation & 295,823C & 38,276C & -87.1\% \\
+\hline
+Total cost & 784,050C & 526,503C & \textbf{-32.8\%} \\
+\hline
+\multicolumn{4}{|c|}{} \\
+\multicolumn{4}{|c|}{\textbf{Native BLS12377~\cite{sf2c22} pairing}} \\
+\hline
+Final Exponentiation & 6,130C & 396C & -93.5\% \\
+\hline
+Total cost & 14,536C & 8,802C & \textbf{-39.4\%} \\
+\hline
+\end{tabular}
+\end{table}

@@ -22,11 +22,11 @@ or,
     \sum_{i=0}^{n - 1}z^i \cdot [A_i(c) \cdot B_i(c) \cdots X_i(c) - R_i(c)] = Q_\text{acc}(c) \cdot P_{12}(c)
 \end{equation}
 
-This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as described in Tables \ref{tbl:op:ml-0bit}, \ref{tbl:op:ml-nzbit}, \ref{tbl:op:ml-frob}, \ref{tbl:op:finx}) to a single polynomial of degree 76.
+This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as described in Tables~\ref{tbl:op:ml-0bit},~\ref{tbl:op:ml-nzbit},~\ref{tbl:op:ml-frob},~\ref{tbl:op:finx}) to a single polynomial of degree 76.
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section \ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in \cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm \ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm \ref{alg:2r:prover}. After receiving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm \ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section~\ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in~\cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm~\ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm~\ref{alg:2r:prover}. After receiving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm~\ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
 
 \begin{algorithm}
 \caption{PolyMulDiv: Polynomial multiplication and Euclidean division}
@@ -82,13 +82,13 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \If{$s_i = 0$}
-		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{Algorithm \ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm \ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm \ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 \EndFor
@@ -99,7 +99,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{Algorithm \ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 
 \Statex
@@ -107,11 +107,11 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 
 \If{$w = 0$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm \ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
 \ElsIf{$w = 1$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm \ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
 \ElsIf{$w = 2$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm \ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
 \EndIf
 \State $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$) \gComm{Final $\mathcal{Q}$ and $\mathcal{R}$ accumulation, skip $f$}
 
@@ -123,7 +123,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 
 \subsection{Verifier's Algorithms}
 
-The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ from \cite{OPP24}, the internal parameter $W$ (the 27th root of unity), computed remainders $\mathcal{R}$ for each polynomial equation described in Section \ref{sec:op-polys} and $Q_\text{acc}$ from the prover. The verifier retains the challenge $c$ from the first round. Using these values, the verifier performs a pairing computation with polynomial evaluations (Algorithm \ref{alg:evalpolyprod}) at each step, as detailed in Algorithm \ref{alg:2r:verifier}. After each evaluation, the verifier attempts to reconstruct RLC $Q_\text{acc}$ the same way as the prover did, And checks the final equality described in Equation \ref{eq:iop-batched} on page \pageref{eq:iop-batched}.
+The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ from~\cite{OPP24}, the internal parameter $W$ (the 27th root of unity), computed remainders $\mathcal{R}$ for each polynomial equation described in Section~\ref{sec:op-polys} and $Q_\text{acc}$ from the prover. The verifier retains the challenge $c$ from the first round. Using these values, the verifier performs a pairing computation with polynomial evaluations (Algorithm~\ref{alg:evalpolyprod}) at each step, as detailed in Algorithm~\ref{alg:2r:verifier}. After each evaluation, the verifier attempts to reconstruct RLC $Q_\text{acc}$ the same way as the prover did, And checks the final equality described in Equation~\ref{eq:iop-batched} on page \pageref{eq:iop-batched}.
 
 \begin{algorithm}
 \caption{EvalPoly: Evaluate polynomial product minus remainder}
@@ -164,13 +164,13 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
     \If{$s_i = 0$}
-		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 \EndFor
@@ -181,7 +181,7 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo \ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 
 \Statex
@@ -189,11 +189,11 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
 \If{$w = 0$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
 \ElsIf{$w = 1$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
 \ElsIf{$w = 2$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo \ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
 \EndIf
 
 \Statex
@@ -208,12 +208,12 @@ Let's look into how the algorithms describe above come together to prove and ver
 We will go through the two-round public-coin interactive proof system in this section and in the next section we will see how to convert it into a non-interactive proof using Fiat-Shamir transformation.
 
 \IOP{Two-Round Pairing IOP}{Verifier}{Prover}{
-    \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
+    \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
     \RtoL{Round I: Commits \textit{pairing inputs} and remainders array $\mathcal{R}$}{2.5}
     \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
-    \RDoes{Computes $Q_\text{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{4.5}
+    \RDoes{Computes $Q_\text{acc}$ with Algorithm~\ref{alg:rlc} using $\mathcal{Q}$ and $z$}{4.5}
     \RtoL{Round II: Commit $Q_\text{acc}$}{5.5}
-    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm \ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.5}
+    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.5}
     \LtoR{Accept/Reject}{8}
 }
 
@@ -221,20 +221,20 @@ We will go through the two-round public-coin interactive proof system in this se
 
 The Fiat-Shamir transformation\cite{fiatshamir} converts an interactive proof into a non-interactive one by replacing the verifier's random challenge with a hash of the protocol transcript.
 
-This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $\delta_s + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section \ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
+This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $\delta_s + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section~\ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
 
 \subsection{Non-interactive proof}
 
 Let's look at what the protocol looks like after applying Fiat-Shamir transformation.
 
 \IOP{Non-interactive proof}{Verifier}{Prover}{
-    \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
+    \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
     \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$}{2}
-    \RDoes{Computes $Q_\text{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{2.8}
+    \RDoes{Computes $Q_\text{acc}$ with Algorithm~\ref{alg:rlc} using $\mathcal{Q}$ and $z$}{2.8}
     \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$}{4}
     \LDoes{Recomputes $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$ for RLC}{5}
     \LDoes{Derives evaluation point $x = H(z, Q_\text{acc})$}{5.8}
-    \LDoes{Runs Algorithm \ref{alg:2r:verifier} with $z$ and tests polynomial\\identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.8}
+    \LDoes{Runs Algorithm~\ref{alg:2r:verifier} with $z$ and tests polynomial\\identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.8}
     \LtoR{Accept/Reject}{8.3}
 }
 
@@ -285,7 +285,7 @@ Thus, no polynomial $Q'_\text{acc} \in \mathbb{F}_q[x]$ exists that satisfies th
 
 As seen above, algebraic forgery is impossible. Therefore, security reduces to analysing the probability that a malicious prover succeeds through random chance.
 
-Our random linear combination batching scheme (as described in Section \ref{sec:iop:batching}) effectively converts our univariate polynomial verifications into a single bivariate polynomial identity test:
+Our random linear combination batching scheme (as described in Section~\ref{sec:iop:batching}) effectively converts our univariate polynomial verifications into a single bivariate polynomial identity test:
 
 $$
 P_\text{final}(z, x) = \sum_{i=0}^{n - 1} z^i \cdot [\prod_{j} P_{i,j}(x) - R_i(x)] - Q_\text{acc}(x) \cdot P_{12}(x)
@@ -298,7 +298,7 @@ If a prover commits to incorrect remainder(s), $P_{\text{err}}$ becomes a non-ze
     \item Degree in $x$: less than $2^8$ (from the polynomial products)
 \end{itemize}
 
-By the Schwartz-Zippel lemma (Section \ref{sec:bg:sz}), the probability that $P_{\text{err}}$ evaluates to zero at randomly chosen $(z, x) \in \mathbb{F}_q^2$ is bounded by:
+By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}), the probability that $P_{\text{err}}$ evaluates to zero at randomly chosen $(z, x) \in \mathbb{F}_q^2$ is bounded by:
 
 $$\delta_s = \Pr[P_{\text{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\text{err}}) + \deg_x(P_{\text{err}})}{|\mathbb{F}_q|} \leq \frac{n + 2^8}{|\mathbb{F}_q|}$$
 
@@ -306,7 +306,7 @@ $$\delta_s = \Pr[P_{\text{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\text{err}}) + \
 
 $$\delta_s \leq \frac{67 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}$$
 
-\textbf{Non-interactive proof via Fiat-Shamir}: When transformed into a non-interactive proof with Fiat-Shamir under random oracle model, the knowledge soundness error becomes \cite{IOP-NI}:
+\textbf{Non-interactive proof via Fiat-Shamir}: When transformed into a non-interactive proof with Fiat-Shamir under random oracle model, the knowledge soundness error becomes~\cite{IOP-NI}:
 
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
 
@@ -316,7 +316,7 @@ $$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}$$
 
 \subsubsection{Completeness}
 
-For an honest prover executing Algorithm \ref{alg:2r:prover} with valid inputs:
+For an honest prover executing Algorithm~\ref{alg:2r:prover} with valid inputs:
 
 \begin{enumerate}
 \item \textbf{Polynomial construction}: At each operation, the prover computes following polynomials:

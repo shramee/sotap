@@ -37,13 +37,13 @@ Let's consider this multiplication in emulated field $\F_{e}$:
 \subsubsection{Polynomial representation}
 
 For verification purposes, we associate each element with a polynomial:
-$$a(X) = \sum_{i=0}^{n-1} a_i \cdot X^i$$
+\[a(X) = \sum_{i=0}^{n-1} a_i \cdot X^i\]
 
 This allows us to express field operations as polynomial relations that can be verified efficiently.
 
 \subsection{Deferred Multiplication Verification}
 
-Inspired by gnark's approach \cite{gnark}, instead of verifying each emulated field multiplication immediately, we defer the verification and batch all checks together. This is similar to our pairing-level batching strategy but applied at the field arithmetic level.
+Inspired by gnark's approach~\cite{gnark}, instead of verifying each emulated field multiplication immediately, we defer the verification and batch all checks together. This is similar to our pairing-level batching strategy but applied at the field arithmetic level.
 
 For a multiplication $a \cdot b = r$ in $\F_{e}$, we compute:
 \begin{itemize}
