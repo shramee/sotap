@@ -1,6 +1,6 @@
 \section{Pairing Operations as Polynomials}
 
-The techniques discussed in the previous section are outlined in Algorithm~\ref{alg:pairing}. This algorithm combines El Housni's R1CS optimizations~\cite{PR1CS22} with Novakovic and Eagen's residue witness technique for final exponentiation elimination~\cite{OPP24}.
+The techniques discussed in the previous section are outlined in Algorithm~\ref{alg:pairing}. This algorithm combines El Housni's R1CS optimizations~\cite{PR1CS22} with Novakovic and Eagen's residue witness technique for final exponentiation elimination~\cite{OPP24}. The algorithm uses \textbf{a 27th root of unity $W$} to scale the Miller loop output $f \in \Fe{12}$. $f$ needs to be a cubic residue for final exponentiation (see Section 4.3~\cite{OPP24}). If $f$ is not a cubic residue, multiplying it by $W^w, w \in {1,2}$ makes it one.
 
 We now turn our attention to our primary contribution. Building upon Feltroidprime's direct extension multiplication framework, we present a new optimization that significantly improves efficiency across all phases of the pairing computation. Our approach consolidates operations across the entire process into unified polynomial verifications. This includes the Miller loop step operations as well as the final exponentiation (via residue witness) verification. Each phase is expressed as a polynomial relationship and verified using the Schwartz-Zippel lemma, substantially reducing constraint count while maintaining cryptographic security.
 
