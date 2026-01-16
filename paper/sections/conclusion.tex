@@ -86,9 +86,8 @@ Three pairs & 16,484 & 11,287 & 20,669 & 15,420 & 5,421 & 3,167 & 32.7\% \\
 \end{table*}
 
 \subsection{Gnark, the current state of the art}
-For comparison, Gnark, which is considered the current state of the art for field emulation, reports the following constraints for BN254 pairings: single-pair pairing requires 2,328,968 SCS constraints (960,784 R1CS), while the Miller loop alone requires 1,197,558 SCS constraints (311,672 R1CS). For three pairs, the complete pairing requires 3,671,409 SCS constraints, with the Miller loop using 1,197,558 SCS constraints.
-
-Gnark's SCS constraints which include both addition and multiplication gates are comparable to our VM steps, our optimized implementation achieves 53,130 steps for a single Miller loop and 155,366 steps for a complete pairing, representing a significant improvement in algorithmic efficiency for the verifier.
+For comparison, Gnark, which is considered the current state of the art for field emulation, reports the following constraints for BN254 pairings: single-pair pairing requires 960,784 R1CS constraints, while the Miller loop alone requires 311,672 R1CS constraints.
+Our optimized implementation achieves 53,130 steps for a single Miller loop and 155,366 steps for a complete pairing, representing a significant improvement in algorithmic efficiency for the verifier.
 
 We intend to implement our protocol over Gnark to enable significant improvements for recursive BN254 SNARKs. However, these two challenges need to be addressed:
 \begin{enumerate}
