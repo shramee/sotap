@@ -1,17 +1,7 @@
 \begin{abstract}
-In this paper, we introduce a public-coin interactive proof system for efficiently proving the correctness of elliptic curve pairing computations. Elliptic curve pairings form the mathematical foundation of many modern cryptographic protocols, yet their verification remains computationally intensive.
+Elliptic curve pairings are fundamental to modern zero-knowledge proof systems, including Groth16, PLONK, and KZG polynomial commitments. In bidding-based execution environments (Ethereum VM, BitVM, blockchain smart contracts) where users compete for limited computational resources through gas fees, and in arithmatized computation systems (R1CS, Plonkish, Cairo AIR) where each computational step imposes significant prover overhead, the complexity of pairings computation remains a practical problem.
 
-In resource-constrained environments—including BitcoinVM, blockchain smart contracts, ZKVMs, and recursive zero-knowledge proof systems—traditional pairing verification remains expensive. This limits the applicability and affordability of privacy-preserving applications, effectively hindering widespread adoption of blockchain technology.
+We present a public-coin interactive proof system that consolidates the Miller loop iterations and final exponentiation into a single polynomial relation. The relation can then be verified as polynomial identities greatly reducing the pairing costs.
 
-We systematically present a progression of state-of-the-art techniques: El Housni's foundational R1CS pairing optimizations \cite{PR1CS22}, Feltroidprime's enhanced extension field arithmetic \cite{FXFM23}, and Novakovic and Eagen's final exponentiation elimination \cite{OPP24}.
-
-Building upon these foundations, our approach consolidates Miller loop iterations and final exponentiation verification into univariate polynomial relations verified through efficient polynomial identity testing. For BN254 3-pairing verification (standard in Groth16), our Cairo implementation achieves:
-
-\begin{itemize}
-\item \textbf{45\% reduction} in Miller loop field operations
-\item \textbf{77\% reduction} in commitment overhead (Fiat-Shamir hashing)
-\item \textbf{37\% overall} speedup for complete pairing verification
-\end{itemize}
-
-\keywords{Elliptic curve pairings \and Pairing-based cryptography \and Zero-knowledge proofs \and Polynomial identity testing \and Blockchain \and Efficient implementations \and Provable security}
+The techniques presented here have been integrated into Garaga~\cite{grg}, a production elliptic curve tooling library for Cairo and Starknet. For BN254 3-pairing verification (standard in Groth16), the implementation achieves: 45\% reduction in field operations (14,456 → 7,975 MULMOD), 77\% reduction in commitment overhead (3,758 → 876 POSEIDON hashes), and 37\% overall speedup. These improvements enable practical pairing verification in resource-constrained blockchain environments and recursive proof systems.
 \end{abstract}
