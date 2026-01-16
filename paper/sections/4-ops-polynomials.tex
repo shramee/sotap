@@ -86,11 +86,13 @@ $$A_1(x) \cdot \ldots \cdot A_n(x) = Q(x) \cdot P_{12}(x) + R(x) \text{ where } 
 
 This unified framework allows us to batch verify entire computational phases rather than individual operations, achieving dramatic improvements in both constraint counts and commitment overhead across the complete pairing computation.
 
-\subsection{Comparative Analysis} \label{sec:ops:comp-analysis}
+\subsection{Comparative Analysis~\label{sec:ops:comp-analysis}}
 
 The Miller loop is comprised of steps for each individual bit, which in NAF (non-adjacent form)\cite{naf}, may be +1, -1 or 0. Instead of performing a polynomial commitment for each individual extension field arithmetic operation separately, we propose the whole bit operation be viewed as one polynomial. And commitment be made to that polynomial.
 
-To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three--pairing Miller loop which is common for verification of Groth16\cite{Gro16}. We benchmark our approach against the fastest known polynomial commitment adaptation~\cite{FXFM23}.
+To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three---pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
+
+For the comparison equations below, $F \in \Fe{12}$ represents the Miller loop accumulator~\ref{pr:ml:sq} at the start of this bit operation, $L_1, L_2, L_3$ are the sparse line doublings~\ref{pr:ml:ldbl} $l_{T_i,T_i}(P_i)$ for the three pairs, $R(x) \in \Fe{12}$ is the remainder polynomial (the updated accumulator after this step), and $Q(x)$ is the quotient polynomial.
 
 \subsubsection{Previous scheme}
 
