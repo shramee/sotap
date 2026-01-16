@@ -29,7 +29,7 @@
 
 \subsection{Pairing Computation}
 
-An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable.
+An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable. We will focus on the optimal ate pairing~\cite{hsp10} over Barreto-Naehrig (BN) curves, which is widely used due to its efficiency. We will specifically use the Ethereum's BN254 curve, defined over a 254-bit prime field $\Fq$, with groups $\G_1, \G_2$ of order $r$ and target group $\G_T$ contained in the 12th extension field $\Fe{12}$.
 
 The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
 
