@@ -1,15 +1,86 @@
-% Essential citations actually used in the paper
-@misc{Gro16,
-	title        = {On the Size of Pairing-based Non-interactive Arguments},
-	author       = {Jens Groth},
-	year         = 2016,
-	howpublished = {\url{https://eprint.iacr.org/2016/260}}
+@inproceedings{Gro16,
+  author    = {Jens Groth},
+  title     = {On the Size of Pairing-Based Non-interactive Arguments},
+  booktitle = {Advances in Cryptology -- EUROCRYPT 2016},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {9666},
+  pages     = {305--326},
+  publisher = {Springer},
+  year      = {2016},
+  doi       = {10.1007/978-3-662-49896-5_11}
 }
-@misc{PR1CS22,
-	title        = {Pairings in Rank-1 Constraint Systems},
-	author       = {Youssef El Housni},
-	year         = 2022,
-	howpublished = {\url{https://eprint.iacr.org/2022/1162}}
+
+@inproceedings{PR1CS22,
+  author    = {Youssef El Housni},
+  title     = {Pairings in Rank-1 Constraint Systems},
+  booktitle = {Topics in Cryptology -- CT-RSA 2023},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {13871},
+  pages     = {321--345},
+  publisher = {Springer},
+  year      = {2023},
+  doi       = {10.1007/978-3-031-30634-1_11}
+}
+
+@inproceedings{poseidon,
+  author    = {Lorenzo Grassi and Dmitry Khovratovich and Christian Rechberger and Arnab Roy and Markus Schofnegger},
+  title     = {Poseidon: A New Hash Function for Zero-Knowledge Proof Systems},
+  booktitle = {30th {USENIX} Security Symposium ({USENIX} Security 21)},
+  pages     = {519--535},
+  publisher = {{USENIX} Association},
+  year      = {2021},
+  url       = {https://www.usenix.org/conference/usenixsecurity21/presentation/grassi}
+}
+
+@inproceedings{mimc,
+  author    = {Martin Albrecht and Lorenzo Grassi and Christian Rechberger and Arnab Roy and Tyge Tiessen},
+  title     = {{MiMC}: Efficient Encryption and Cryptographic Hashing with Minimal Multiplicative Complexity},
+  booktitle = {Advances in Cryptology -- ASIACRYPT 2016},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {10031},
+  pages     = {191--219},
+  publisher = {Springer},
+  year      = {2016},
+  doi       = {10.1007/978-3-662-53887-6_7}
+}
+
+% Published in TCC 2016-B
+@inproceedings{IOP-NI,
+  author    = {Eli Ben-Sasson and Alessandro Chiesa and Nicholas Spooner},
+  title     = {Interactive Oracle Proofs},
+  booktitle = {Theory of Cryptography -- TCC 2016-B},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {9986},
+  pages     = {31--60},
+  publisher = {Springer},
+  year      = {2016},
+  doi       = {10.1007/978-3-319-47025-2_2}
+}
+
+% Published in SAC 2005 (Original BN Curve paper)
+@inproceedings{BN05,
+  author    = {Paulo S. L. M. Barreto and Michael Naehrig},
+  title     = {Pairing-Friendly Elliptic Curves of Prime Order},
+  booktitle = {Selected Areas in Cryptography -- SAC 2005},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {3897},
+  pages     = {319--331},
+  publisher = {Springer},
+  year      = {2005},
+  doi       = {10.1007/11693383_22}
+}
+
+% Published in Pairing 2010
+@inproceedings{hsp10,
+  author    = {Jean-Luc Beuchat and Jorge Enrique Gonz{\'{a}}lez{-}D{\'{i}}az and Shigeo Mitsunari and Eiji Okamoto and Francisco Rodr{\'{i}}guez-Henr{\'{i}}quez and Tadanori Teruya},
+  title     = {High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves},
+  booktitle = {Pairing-Based Cryptography -- Pairing 2010},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {6487},
+  pages     = {21--39},
+  publisher = {Springer},
+  year      = {2010},
+  doi       = {10.1007/978-3-642-17455-1_2}
 }
 @inproceedings{Trs03,
 	title        = {Torus-Based Cryptography},
@@ -76,6 +147,7 @@
 @book{naf,
 	title        = {Guide to Elliptic Curve Cryptography},
 	year         = 2004,
+	author       = {Darrel Hankerson, Scott Vanstone and Alfred Menezes},
 	publisher    = {Springer-Verlag},
 	pages        = {98--99},
 	note         = {Non-adjacent form representation},
@@ -163,11 +235,18 @@
 	numpages     = 17
 }
 @misc{plnk19,
-	title        = {PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of knowledge},
 	author       = {Ariel Gabizon and Zachary J. Williamson and Oana Ciobotaru},
+	title        = {PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of knowledge},
 	year         = 2019,
 	note         = {Cryptology ePrint Archive, Paper 2019/953},
 	howpublished = {\url{https://eprint.iacr.org/2019/953}}
+}
+@misc{cairo21,
+  author = {Lior Goldberg and Shahar Papini and Michael Riabzev},
+  title = {Cairo – a Turing-complete {STARK}-friendly {CPU} architecture},
+  year = {2021},
+  howpublished = {Cryptology {ePrint} Archive, Paper 2021/1063},
+  url = {https://eprint.iacr.org/2021/1063}
 }
 @techreport{bls05,
 	title        = {{BLS Signatures}},
@@ -272,13 +351,6 @@
 	url          = {https://eprint.iacr.org/2005/133},
 	howpublished = {Cryptology {ePrint} Archive, Paper 2005/133}
 }
-@misc{hsp10,
-	title        = {High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves},
-	author       = {Jean-Luc Beuchat and Jorge Enrique González Díaz and Shigeo Mitsunari and Eiji Okamoto and Francisco Rodríguez-Henríquez and Tadanori Teruya},
-	year         = 2010,
-	url          = {https://eprint.iacr.org/2010/354},
-	howpublished = {Cryptology {ePrint} Archive, Paper 2010/354}
-}
 @inproceedings{sf2c22,
 	title        = {Families of SNARK-Friendly 2-Chains of Elliptic Curves},
 	author       = {El Housni, Youssef and Guillevic, Aurore},
@@ -291,20 +363,6 @@
 	editor       = {Dunkelman, Orr and Dziembowski, Stefan},
 	abstract     = {At CANS'20, El Housni and Guillevic introduced a new 2-chain of pairing-friendly elliptic curves for recursive zero-knowledge Succinct Non-interactive ARguments of Knowledge (zk-SNARKs) made of the former BLS12-377 curve (a Barreto--Lynn--Scott curve over a 377-bit prime field) and the new BW6-761 curve (a Brezing--Weng curve of embedding degree 6 over a 761-bit prime field). First we generalise the curve construction, the pairing formulas ({\$}{\$}e :{\backslash}mathbb G{\_}1 {\backslash}times {\backslash}mathbb G{\_}2 {\backslash}rightarrow {\backslash}mathbb G{\_}T{\$}{\$}e:G1{\texttimes}G2{\textrightarrow}GT) and the group operations to any BW6 curve defined on top of any BLS12 curve, forming a family of 2-chain pairing-friendly curves.}
 }
-@misc{poseidon,
-	title        = {Poseidon: A New Hash Function for Zero-Knowledge Proof Systems},
-	author       = {Lorenzo Grassi and Dmitry Khovratovich and Christian Rechberger and Arnab Roy and Markus Schofnegger},
-	year         = 2019,
-	url          = {https://eprint.iacr.org/2019/458},
-	howpublished = {Cryptology {ePrint} Archive, Paper 2019/458}
-}
-@misc{mimc,
-	title        = {{MiMC}: Efficient Encryption and Cryptographic Hashing with Minimal Multiplicative Complexity},
-	author       = {Martin Albrecht and Lorenzo Grassi and Christian Rechberger and Arnab Roy and Tyge Tiessen},
-	year         = 2016,
-	url          = {https://eprint.iacr.org/2016/492},
-	howpublished = {Cryptology {ePrint} Archive, Paper 2016/492}
-}
 @inproceedings{fiatshamir,
 	title        = {How To Prove Yourself: Practical Solutions to Identification and Signature Problems},
 	author       = {Fiat, Amos and Shamir, Adi},
@@ -316,13 +374,6 @@
 	isbn         = {978-3-540-47721-1},
 	editor       = {Odlyzko, Andrew M.},
 	abstract     = {In this paper we describe simple identification and signature schemes which enable any user to prove his identity and the authenticity of his messages to any other user without shared or public keys. The schemes are provably secure against any known or chosen message attack if factoring is difficult, and typical implementations require only 1{\%} to 4{\%} of the number of modular multiplications required by the RSA scheme. Due to their simplicity, security and speed, these schemes are ideally suited for microprocessor-based devices such as smart cards, personal computers, and remote control systems.}
-}
-@misc{IOP-NI,
-	title        = {Interactive Oracle Proofs},
-	author       = {Eli Ben-Sasson and Alessandro Chiesa and Nicholas Spooner},
-	year         = 2016,
-	url          = {https://eprint.iacr.org/2016/116},
-	howpublished = {Cryptology {ePrint} Archive, Paper 2016/116}
 }
 @misc{fmt74,
 	title        = {Fast modular transforms},
