@@ -27,7 +27,7 @@
 \newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
 \newcommand{\gText}[1]{\color{gray}#1\color{black}}
 
-\newcommand{\IOP}[4]{\vspace{0.5cm}\fbox{\parbox{\linewidth}{
+\newcommand{\IOP}[4]{\vspace{0.5cm}\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{
 \begin{center}
     \begin{tikzpicture}[node distance=11cm, every node/.style={font=\footnotesize},>-{>[length=9pt, width=10pt,line width=2pt]}]
     \node (L)[draw,font=\large,rectangle] {#2};\node (R)[draw,font=\large,rectangle, right of=L] {#3};
