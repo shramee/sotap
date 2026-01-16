@@ -1,39 +1,30 @@
 \section{Introduction}
 
-Blockchain technology is ready for widespread adoption—we have reached a scale where processing Visa-like volumes on-chain is within reach. However, privacy remains a significant barrier to entry for many users and applications. Zero-knowledge proofs (ZKPs) have emerged as a powerful solution to this challenge.
+Blockchain technology continues to mature with improving scalability and infrastructure. However, privacy remains a significant barrier to entry for many users and applications. Zero-knowledge proofs (ZKPs) have emerged as a powerful solution to this challenge.
 
 \subsection{Motivation}
 
+
 Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
 
-However, \textbf{pairings are computationally intensive}. In execution environments such as blockchain virtual machines, recursive proof systems, and arithmetized circuits, the costs associated with this computation become prohibitive for practical deployment.
+However, \textbf{pairings are computationally intensive}. This creates critical bottlenecks in two important deployment contexts:
+
+\begin{enumerate}
+\item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive especially during peak network congestion.
+
+\item \textbf{Arithmatized computation systems} (R1CS~\cite{r1cs13}, Plonkish~\cite{plnk19}, Cairo AIR~\cite{cairo21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
+\end{enumerate}
+
+In such contexts, we can make pairing verification practical by using an efficient proof system to verify the correctness of the pairing computation, rather than executing all operations natively within the expensive environment.
 
 \subsection{Our Contribution}
 
-We present a novel optimization for pairing computation through a public-coin interactive proof system that consolidates the pairing operations into unified polynomial verifications under the Schwartz-Zippel lemma. By treating complete loop iterations as single polynomial relationships rather than sequences of individual field operations\cite{FXFM23}, our approach achieves:
+We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual field operations\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
-\item \textbf{37\% reduction} in the pairing computation complexity
-\item \textbf{77\% reduction} in auxiliary data overhead
-\item Practical deployment enabling ZK proof verification within blockchain transaction limits
+\item \textbf{45\% reduction} in Miller loop field operations
+\item \textbf{77\% reduction} in commitment overhead (Fiat-Shamir hashing)
+\item \textbf{37\% overall speedup} for complete pairing verification
 \end{itemize}
 
-Our key insight is that instead of optimizing individual field operations, we can treat complete Miller loop iterations as single polynomial relationships, dramatically reducing both computational and communication costs.
-
-\
-
-\textbf{Implementation and Impact:} Garaga\cite{grg}, a state-of-the-art elliptic curve tooling library for Cairo and Starknet, implements our two round interactive proof system with polynomial batching. These techniques allowed Garaga to fit their pairing transaction within Starknet's 4000 calldata limit while simultaneously minimising the gas costs.
-
-\subsection{Paper organization}
-
-The remainder of this paper is organized as follows.
-
-\textbf{Section 2} provides necessary background on pairings and constraint systems.
-
-\textbf{Section 3} surveys the evolution of optimization techniques that form our foundation.
-
-\textbf{Section 4} presents our unified Miller loop optimization framework.
-
-\textbf{Section 5} outlines the public-coin interactive proof systems and algorithms for prover and verifier.
-
-\textbf{Section 6} concludes with implications and future work.
+Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate commitments.
