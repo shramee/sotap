@@ -47,57 +47,19 @@ The Schwartz-Zippel lemma (or more precisely, the Demillo-Lipton-Schwartz-Zippel
 
 This probabilistic bound becomes negligible for cryptographically sized fields where $d \ll |\F|$, making it practical to verify polynomial identities by evaluation instead of coefficient-wise operations.
 
-\subsection{Constraint-Based Computation Models}
+\subsection{Computation Models}
 
-\subsubsection{Computational Model}
+While we specifically implement our library in Cairo, we map our MULMOD operation to an constraint (denoted by \textbf{C}) to maintain compatibility with the Rank-1 Constraint System (R1CS) model to benchmark against established literature. In R1CS~\cite{Gro16}, prover complexity is dominated by multiplication gates while additions are free. In the Cairo VM, this corresponds to the Algebraic Intermediate Representation (AIR) where operations are verified through polynomial constraints. To synchronize our data with the benchmarks provided by El Housni~\cite{PR1CS22}, we define our cost metric based on field multiplications.
 
-Our optimization targets constraint-based computation models where programs are represented as systems of algebraic constraints over finite fields. We formalize this model as follows:
+\subsubsection{R1CS Cost Model}
 
-\textbf{Definition (Constraint System):} A constraint system over a finite field $\Fq$ consists of:
-\begin{itemize}
-\item A set of variables $\mathbf{v} = (v_1, \ldots, v_m) \in \Fq^m$
-\item A partition of variables into:
-\begin{itemize}
-\item \textit{Public inputs} $\mathbf{x} \in \Fq^n$ (known to verifier)
-\item \textit{Private witnesses} $\mathbf{w} \in \Fq^{m-n}$ (known only to prover)
-\end{itemize}
-\item A set of polynomial constraints $\{C_i(\mathbf{v}) = 0\}_{i=1}^{\ell}$ where each $C_i$ is a polynomial over $\Fq$
-\end{itemize}
-
-A valid computation satisfies all constraints when variables are assigned appropriate values.
-
-\textbf{Witnesses and Hints:} In constraint systems, complex operations (e.g., field division, polynomial quotients) can be computed efficiently using \textit{witnesses} or \textit{hints}---auxiliary values provided by the prover but verified by constraints. For instance, to verify $a/b = c$:
-\begin{enumerate}
-\item Prover provides $c$ as a witness
-\item Verifier checks the constraint $b \cdot c = a$
-\end{enumerate}
-
-This approach transforms expensive operations into cheap verifications, fundamentally altering the cost model.
-
-\textbf{Examples of Constraint Systems:}
-\begin{itemize}
-\item \textbf{R1CS} (Rank-1 Constraint Systems)\cite{r1cs13}: Constraints of the form $(A\mathbf{v}) \circ (B\mathbf{v}) = (C\mathbf{v})$ where $\circ$ is element-wise multiplication
-\item \textbf{Plonkish}\cite{plnk19}: Gate-based constraints with custom gates and copy constraints
-\item \textbf{Cairo/AIR}\cite{cairo}: Algebraic Intermediate Representation with polynomial constraints over execution traces
-\end{itemize}
-
-\subsubsection{Cost Model}
-
-We measure computational cost in terms of \textit{constraints} (denoted by \textbf{C}), representing the fundamental unit of work in constraint systems. One constraint typically corresponds to one multiplication gate or one algebraic relation to verify.
+We measure computational cost in terms of \textit{constraints} (denoted by \textbf{C}), representing the fundamental unit of work in Rank-1 constraint systems. One constraint corresponds to one multiplication gate.
 
 \textbf{Basic Field Operations in $\Fq$:}
 \begin{itemize}
-\item \textbf{Addition/Subtraction:} 0C (constraints are linear, free to compose)
-\item \textbf{Multiplication:} 1C (one constraint)
-\item \textbf{Constant multiplication:} 0C (absorbed into constraint coefficients)
-\item \textbf{Division/Inversion:} 2C (one multiplication constraint + one equality check)
-\end{itemize}
-
-\textbf{Extension Field Operations:} For $\Fe{k}$ elements represented as $k$ coefficients in $\Fq$:
-\begin{itemize}
-\item \textbf{Addition:} 0C (component-wise, linear)
-\item \textbf{Multiplication:} Traditional approach requires $O(k^2)$ base field multiplications, but our polynomial verification reduces this significantly
-\item \textbf{Evaluation at point $x$:} $k \cdot 1C = kC$ (Horner's method: $k-1$ multiplications + $k-1$ additions)
+\item \textbf{Addition/Subtraction:} Free
+\item \textbf{Multiplication:} One constraint (1C)
+\item \textbf{Division/Inversion:} One multiplication + one equality check
 \end{itemize}
 
 \textbf{Commitment Overhead:} Beyond constraint costs, we account for \textit{calldata} or \textit{commitment overhead}---the number of field elements the prover must commit to (via Fiat-Shamir hashing in non-interactive proofs). For blockchain deployments, this overhead directly impacts transaction costs and is often the dominant factor.

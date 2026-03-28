@@ -43,7 +43,6 @@ type millerloopBLS377 struct {
 }
 
 func (circuit *millerloopBLS377) Define(api frontend.API) error {
-
 	res, err := sw_bls12377.MillerLoop(api, []sw_bls12377.G1Affine{circuit.P1, circuit.P2}, []sw_bls12377.G2Affine{circuit.Q1, circuit.Q2})
 
 	_ = res

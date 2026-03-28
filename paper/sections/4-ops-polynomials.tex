@@ -58,26 +58,6 @@ We now turn our attention to our primary contribution. Building upon Feltroidpri
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Strategic Polynomial Segmentation}
-
-A critical consideration in our design is managing polynomial degree growth. While consolidating operations into fewer polynomials reduces overhead, we must balance this against polynomial degree constraints to maintain verification efficiency.
-
-\subsubsection{Squaring operations and polynomial degree}
-
-Squaring operations \textbf{double the polynomial degree}. In traditional $\Fe{12}$ arithmetic, squaring operations are typically cheaper than general multiplications. However, in our polynomial verification framework, squaring the accumulator $F$ doubles the polynomial degree, making placement critical. When positioned after other operations, squaring becomes the most degree-expensive operation in the sequence.
-
-\subsubsection{Natural segmentation points}
-
-The optimal points to segment our unified polynomial are immediately \emph{before} squaring the accumulator. By making squaring the first operation in each polynomial segment, we:
-
-\begin{enumerate}
-    \item Minimize the degree growth impact—the squaring happens on a fresh polynomial of degree 11
-    \item Accumulate all subsequent multiplications at manageable degree increases
-    \item Maintain relatively uniform polynomial degrees across segments
-\end{enumerate}
-
-This observation naturally leads to segmenting operations at each Miller loop step boundary, where the accumulator $F$ is squared. The remaining operations are then segmented to match the degree profile of Miller loop step polynomials, ensuring balanced verification costs across all phases.
-
 \subsection{Unified Polynomial Framework}
 
 Any sequence of field operations in $\Fe{12}$\footnote{Elements need not have all 12 non-zero coefficients, but should align with the $\Fe{12}$ representation (e.g., sparse line functions).} can be expressed as a single polynomial equation of the form:
@@ -92,7 +72,7 @@ The Miller loop is comprised of steps for each individual bit, which in NAF (non
 
 To get a closer look into effectiveness of our scheme, we will make a real world application comparison for verification of three---pairing Miller loop which is common for verification of Groth16\cite{Gro16}.
 
-For the comparison equations below, $F \in \Fe{12}$ represents the Miller loop accumulator~\ref{pr:ml:sq} at the start of this bit operation, $L_1, L_2, L_3$ are the sparse line doublings~\ref{pr:ml:ldbl} $l_{T_i,T_i}(P_i)$ for the three pairs, $R(x) \in \Fe{12}$ is the remainder polynomial (the updated accumulator after this step), and $Q(x)$ is the quotient polynomial.
+\textbf{For the comparison equations below,}  $F \in \Fe{12}$ represents the Miller loop accumulator at the start of each bit operation (line~\ref{pr:ml:sq}). $L_* \in \text{Sparse}_{01379}$ are the sparse line function outputs---either doublings $l_{T_i,T_i}(P_i)$ or as clarified in the section---for the three pairs. $R(x) \in \Fe{12}$ is the remainder polynomial (the updated accumulator), and $Q(x)$ is the quotient polynomial.
 
 \subsubsection{Previous scheme}
 
@@ -304,6 +284,6 @@ $$A(x) = B(x) \cdot Q(x) + R(x)$$
 Our polynomials are of the form $P = A_1(x) \cdot A_2(x) \cdots A_n(x) - Q(x) \cdot P_{12}(x) - R(x)$
 where $\deg(R) \leq 11$ and $\deg(P) < 2^8$. For verifying the computation of $R$ with respect to $P_{12}$:
 
-\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$\footnote{For $k$-pair pairings, the maximum degree is approximately $88 + 18(k-3)$, remaining well below $2^8$ for most practical purposes. But can be increased to $2^{10}$ for many more pairs with negligible change in soundness.}. For the 254-bit BN254 field, $|\Fq| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
+\textbf{Soundness}: The soundness error is $\delta_s = \Pr[P(r) = 0] \leq \frac{d}{|\Fq|}$ where $d = \deg(P) < 2^8$\footnote{For $k$-pair pairings, the maximum degree is approximately $88 + 18(k-3)$, remaining well below $2^8$ for most practical purposes. But can be increased to $2^{10}$ for many more pairs with negligible change in soundness.}. For the 254-bit BN254 field, $|\Fe{r}| \approx 2^{254}$, so $\delta_s \leq 2^{-246}$.
 
 \textbf{Completeness}: If the prover is honest and provides correct $Q$ and $R$, then $P(x) = 0$ for all $x \in \Fq$. Thus, the verifier always accepts.
