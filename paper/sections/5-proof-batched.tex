@@ -94,16 +94,23 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$ via Algorithm~\ref{alg:evalpolyprod}, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
 
 \begin{algorithm}
-\caption{EvalPoly: Evaluate polynomial product minus remainder}
+\caption{EvalPoly: Evaluate polynomial product minus remainder via Horner's method}
 \label{alg:evalpolyprod}
 \begin{algorithmic}[1]
-\Require $R \in \Fq[x]$, $z \in \Fq$, $P_1, P_2, \ldots, P_n \in \Fq[x]$
-\Ensure $e \in \Fq = \prod_{i=1}^{n} P_i(z) - R(z)$
-\State $e \leftarrow P_1(z)$ \gComm{Initialize evaluation with first polynomial}
-\For{$i = 2$ to $n$} \gComm{Start from second polynomial}
-    \State $e \leftarrow e \cdot P_i(z)$ \gComm{Multiply polynomial evaluations into e}
+\Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
+\Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
+\Function{Horner}{$P = (p_0, p_1, \ldots, p_d),\ z$}
+    \State $v \leftarrow p_d$ \gComm{Start from leading coefficient}
+    \For{$k = d-1$ \textbf{downto} $0$}
+        \State $v \leftarrow v \cdot z + p_k$ \gComm{$d$ multiplications, $d$ additions total}
+    \EndFor
+    \State \Return $v$
+\EndFunction
+\State $e \leftarrow \Call{Horner}{P_1, z}$ \gComm{Evaluate first polynomial}
+\For{$i = 2$ to $n$}
+    \State $e \leftarrow e \cdot \Call{Horner}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}
 \EndFor
-\State $e \leftarrow e - R(z)$ \gComm{Subtract evaluation of R}
+\State $e \leftarrow e - \Call{Horner}{R, z}$ \gComm{Subtract remainder evaluation}
 \State \Return $e$
 \end{algorithmic}
 \end{algorithm}
