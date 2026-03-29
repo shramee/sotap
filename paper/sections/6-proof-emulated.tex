@@ -1,140 +1,76 @@
-\newcommand{\s}{\ensuremath{\textbf{b}}}
-\newcommand{\n}{\ensuremath{\textbf{n}}}
-
 \section{Full Pairing Proof for Emulated Fields}
+\label{sec:emulated}
 
-We have covered a comprehensive proving strategy for pairing computations. This section details a proof similar to the protocol from Section \ref{sec:iop} but tailored for field emulation contexts. These techniques are particularly useful when emulating a large 200+ bit field in another 200+ bit field, such as verifying BN254 pairings in systems with different native fields.
+When the prover's native field $\F_n$ differs from BN254's $\Fq$ (e.g.\ verifying BN254 pairings inside a Plonk circuit over a different curve), all $\Fq$ arithmetic must be emulated via multi-limb representations in $\F_n$. This section first summarizes gnark's deferred multiplication approach~\cite{gnark}, then describes our contribution: batching those deferred checks into a single evaluation consisting only of flat $\F_n$ multiplications and additions.
 
-\subsection{Field Emulation}
+\subsection{Deferred Emulated Multiplication in Gnark}
 
-Typically, field emulation involves representing elements of a field $\F_{e}$ via multiple \s-bit limbs in another field $\F_{n}$.
-The emulated field $\F_{e}$ operations are several times more expensive than native field $\F_{n}$ operations, as each emulated operation requires multiple native field operations to handle carries, reductions, and correctness checks.
+An element $a \in \F_e$ is represented by $\mathbf{n}$ limbs of $\mathbf{b}$ bits each in $\F_n$:
+$$a = \sum_{i=0}^{\mathbf{n}-1} a_i \cdot 2^{i \cdot \mathbf{b}}, \quad a_i \in \F_n$$
 
-Number of bits per limb, \s, is usually chosen such that $\s \cdot 2 < \log_2(p_2)$. This constraint ensures that the multiplication of two \s-bit limbs fits within a single $\F_{n}$ element, which is crucial for efficiency and avoiding overflow.
+The limb width satisfies $2\mathbf{b} < \log_2 p_n$ so that a product of two limbs fits in $\F_n$.
 
-On top of that a couple bits are left to allow accumulating multiple limb multiplications before reduction.
-For our case we'd expect $\log_2(p_2) - 2 \cdot \s > 10$.
+For a multiplication $a \cdot b \equiv r \pmod{p_e}$, the integer identity $a \cdot b = r + k \cdot p_e$ lifts to the \emph{carry-corrected polynomial check}~\cite{gnark}:
 
-\subsubsection{Limb representation}
+\begin{equation}
+  \label{eq:emul-mul}
+  a(X) \cdot b(X) = r(X) + k(X) \cdot p_e(X) + (2^{\mathbf{b}} - X) \cdot c(X)
+\end{equation}
 
-An element $a \in \F_{e}$ is represented as:
-$$a = (a_0, a_1, \ldots, a_{\n-1}) \text{ where } a = \sum_{i=0}^{\n-1} a_i \cdot 2^{i \cdot \s}$$
+where $a(X) = \sum_i a_i X^i$ is the limb polynomial, and $c(X)$ is a \emph{carry polynomial}. The term $(2^{\mathbf{b}} - X) \cdot c(X)$ encodes the schoolbook carry chain: it subtracts $2^{\mathbf{b}} c_i$ from coefficient $i$ (removing overflow) and adds $c_i$ to coefficient $i+1$ (propagating it to the next limb). The elements $a$ and $b$ \emph{need not be reduced} modulo $p_e$ beforehand---they only need to be limb-bounded---which is what makes deferred verification possible.
 
-with each limb $a_i \in \F_{n}$ satisfying $0 \leq a_i < 2^\s$.
+Gnark's approach~\cite{gnark}: at each multiplication call site, compute $r, k, c$ via hint and return $r$ immediately; store the tuple $(a, b, r, k, c)$ for a later batch check. This defers all emulated multiplication costs to a single verification phase, avoiding redundant reduction steps.
 
-\subsubsection{Emulated multiplication}
+\subsection{Our Contribution: RLC Batching into a Flat Check}
 
-Let's consider this multiplication in emulated field $\F_{e}$:
+Gnark batches its deferred checks using a single-round challenge. Our contribution is to integrate this into the hierarchical IOP from Section~\ref{sec:iop}, and observe that the resulting batched check reduces entirely to \textbf{flat $\F_n$ multiplications and additions}---no limb arithmetic, no carries, no emulated operations whatsoever.
 
-\begin{align*}
-    a \cdot b &= r \mod e \\
-    &\text{This can be rewritten as} \text{,} \\
-    a \cdot b &= r + q \cdot e \\
-    \text{or} &\text{ for $x = 2^\s$ (limb size),} \\
-    a(x) \cdot b(x) &= r(x) + q(x) \cdot e(x)
-\end{align*}
+Given $m$ deferred tuples $\{(a_i, b_i, r_i, k_i, c_i)\}$ and a challenge $z_2 \xleftarrow{\$} \F_n$, we form accumulated polynomials:
+$$K_{\text{acc}}(X) = \sum_{i=0}^{m-1} z_2^i \cdot k_i(X), \qquad C_{\text{acc}}(X) = \sum_{i=0}^{m-1} z_2^i \cdot c_i(X)$$
 
-\subsubsection{Polynomial representation}
+The verifier samples $x_2 \xleftarrow{\$} \F_n$ and checks:
 
-For verification purposes, we associate each element with a polynomial:
-\[a(X) = \sum_{i=0}^{n-1} a_i \cdot X^i\]
+\begin{equation}
+  \label{eq:emul-batched}
+  \underbrace{\sum_{i=0}^{m-1} z_2^i \bigl[a_i(x_2)\cdot b_i(x_2) - r_i(x_2)\bigr]}_{\text{LHS: flat } \F_n \text{ muls \& adds}} = \underbrace{K_{\text{acc}}(x_2) \cdot p_e(x_2) + (2^{\mathbf{b}} - x_2) \cdot C_{\text{acc}}(x_2)}_{\text{RHS: flat } \F_n \text{ muls \& adds}}
+\end{equation}
 
-This allows us to express field operations as polynomial relations that can be verified efficiently.
+This is the RLC of Eq.~\ref{eq:emul-mul} evaluated at $x_2$. Every term---the limb polynomial evaluations $a_i(x_2)$, $b_i(x_2)$, $r_i(x_2)$, $k_i(x_2)$, $c_i(x_2)$, the modulus evaluation $p_e(x_2)$, and the scalar $(2^{\mathbf{b}} - x_2)$---is a \textbf{flat scalar in $\F_n$}. The entire check is a sequence of $\F_n$ multiplications and additions; there is no emulated field arithmetic, no carry handling, and no limb-level bookkeeping at verification time. This is exactly the ``almost free'' check promised by the deferred approach.
 
-\subsection{Deferred Multiplication Verification}
+\subsection{Hierarchical Four-Round IOP}
 
-Inspired by gnark's approach~\cite{gnark}, instead of verifying each emulated field multiplication immediately, we defer the verification and batch all checks together. This is similar to our pairing-level batching strategy but applied at the field arithmetic level.
+Combining with Section~\ref{sec:iop} gives a four-round protocol:
 
-For a multiplication $a \cdot b = r$ in $\F_{e}$, we compute:
-\begin{itemize}
-    \item $r$ - the multiplication result reduced modulo $p_1$
-    \item $k$ - the quotient for integer multiplication $a \cdot b$ divided by $p_1$
-    \item $c$ - carry polynomial for handling limb overflow
-\end{itemize}
+\textbf{Level 1 (Rounds I--II):} Pairing-level polynomial equations over $\F_e$, treated as exact (emulated correctness deferred). Prover commits remainders $\mathcal{R}_\text{pair}$, receives $z_1$, returns $Q_{\text{acc,pair}}$.
 
-The correctness condition becomes:
-$$a(X) \cdot b(X) = r(X) + k(X) \cdot p_1(X) + (2^\s - X) \cdot c(X)$$
+\textbf{Level 2 (Rounds III--IV):} After pairing-level evaluation point $x_1$ is fixed, prover commits the field-level remainder array $\mathcal{R}_\text{field}$ (the $r_i$ limb arrays), receives $z_2$, and returns $K_{\text{acc}}$ and $C_{\text{acc}}$. Verifier checks Eq.~\ref{eq:emul-batched} at a freshly sampled $x_2$.
 
-where $p_1(X)$ is the polynomial representation of the emulated field modulus.
-
-\subsection{Hierarchical Protocol Structure}
-
-Our protocol now operates at two levels:
-
-\textbf{Level 1: Pairing Operations (Emulated Field)}
-\begin{itemize}
-    \item Round I: Prover commits remainders $\mathcal{R}_{\text{pairing}}$ for pairing polynomial equations
-    \item Round II: Verifier sends challenge $z_1$; Prover responds with $Q_{\text{acc,pairing}}$
-\end{itemize}
-
-\textbf{Level 2: Field Operations (Native Field)}
-\begin{itemize}
-    \item Round III: Prover commits remainders $\mathcal{R}_{\text{field}}$ for all emulated field multiplications
-    \item Round IV: Verifier sends challenge $z_2$; Prover responds with $Q_{\text{acc,field}}$
-\end{itemize}
-
-\subsection{Modified Algorithms}
-
-\subsubsection{PolyMulDiv for Emulated Fields}
-
-Algorithm \ref{alg:polymuldiv} is modified to defer multiplication verification. Instead of computing products directly in $\F_{e}$, each multiplication is:
-\begin{enumerate}
-    \item Computed via hint to get result $r$
-    \item Stored as a deferred check $(a, b, r, k, c)$
-    \item Added to the field-level verification batch $\mathcal{M}_{\text{field}}$
-\end{enumerate}
-
-\subsubsection{EvalPoly for Emulated Fields}
-
-Similarly, Algorithm \ref{alg:evalpolyprod} evaluates polynomials using emulated field arithmetic, with each multiplication generating a deferred check.
-
-\subsection{Four-Round Interactive Proof}
-
-\IOP{Two-Round Emulated Pairing IOP}{Verifier}{Prover}{
-    \RDoes{Computes pairings with Algorithm \ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
-    \RtoL{Round I: Commits \textit{pairing inputs} and remainders array $\mathcal{R}$}{2.5}
-    \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
-    \RDoes{Computes $Q_\text{acc}$ with Algorithm \ref{alg:rlc} using $\mathcal{Q}$ and $z$}{4.5}
-    \RtoL{Round II: Commit $Q_\text{acc}$}{5.5}
-    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm \ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm \ref{alg:evalpolyprod}}{6.5}
-    \RtoL{Round III: Commits $\mathcal{R}_{\text{field}}$}{8}
-    \LtoR{Challenge $z_2 \xleftarrow{\$} \F_{n}$}{9}
-    \RDoes{Computes $Q_{\text{acc,field}}$ using $z_2$}{10}
-    \RtoL{Round IV: Commits $Q_{\text{acc,field}}$}{11}
-    \LDoes{Samples $x_2 \xleftarrow{\$} \F_{n}$\\Verifies field-level polynomial identities\\Then verifies pairing-level polynomial identities}{12}
+\IOP{Four-Round Emulated Pairing IOP}{Verifier}{Prover}{
+    \RDoes{Pairing computation with emulated $\F_e$; defers mul checks.\\ Prepares $\mathcal{R}_\text{pair}$, $\mathcal{Q}_\text{pair}$}{1}
+    \RtoL{Round I: Commits pairing inputs and $\mathcal{R}_\text{pair}$}{2.5}
+    \LtoR{Challenge $z_1 \xleftarrow{\$} \Fq$}{3.5}
+    \RDoes{Computes $Q_{\text{acc,pair}}$ from $\mathcal{Q}_\text{pair}$ and $z_1$}{4.5}
+    \RtoL{Round II: Commits $Q_{\text{acc,pair}}$}{5.5}
+    \LDoes{Samples $x_1 \xleftarrow{\$} \Fq$; checks pairing-level identities}{6.5}
+    \RtoL{Round III: Commits $\mathcal{R}_\text{field}$ (deferred mul remainders)}{8}
+    \LtoR{Challenge $z_2 \xleftarrow{\$} \F_n$}{9}
+    \RDoes{Computes $K_{\text{acc}}$, $C_{\text{acc}}$ from stored $k_i$, $c_i$ and $z_2$}{10}
+    \RtoL{Round IV: Commits $K_{\text{acc}}$, $C_{\text{acc}}$}{11}
+    \LDoes{Samples $x_2 \xleftarrow{\$} \F_n$; checks Eq.~\ref{eq:emul-batched} (flat $\F_n$)}{12}
     \LtoR{Accept/Reject}{13}
 }
 
-\subsection{Performance Analysis}
+\subsection{Security and Fiat-Shamir}
 
-\subsubsection{Comparison with Two-Round Protocol}
+\textbf{Soundness.} Each check (Eq.~\ref{eq:emul-mul}) is a polynomial identity of degree $2\mathbf{n}$ over $\F_n$. After RLC batching with challenge $(z_2, x_2)$, the bivariate Schwartz-Zippel lemma gives:
+$$\delta_{s,\text{field}} \leq \frac{(m-1) + 2\mathbf{n}}{|\F_n|}$$
+Combined with $\delta_{s,\text{pair}} \leq 2^{-245}$ (Section~\ref{sec:iop:soundness}), the total soundness $\delta_s \leq \delta_{s,\text{pair}} + \delta_{s,\text{field}}$ is negligible for $|\F_n| \approx 2^{254}$.
 
-While this protocol requires four rounds instead of two, it provides significant benefits in emulated field contexts:
-
-\begin{itemize}
-    \item \textbf{Reduced emulated field operations}: By deferring and batching field-level checks, we minimize expensive emulated arithmetic
-    \item \textbf{Native field verification}: The innermost verification happens in the native field $\F_{n}$, which is much cheaper
-    \item \textbf{Better limb utilization}: Deferred checking allows for more flexible limb width choices
-\end{itemize}
-
-\subsection{Security Analysis}
-
-The security analysis follows the same structure as Section \ref{sec:iop:soundness}, but now applied hierarchically:
-
-\textbf{Field-level soundness}: The probability of forging a field operation check is bounded by $\delta_{s,\text{field}} \leq \frac{m_{\text{field}} + d_{\text{field}}}{|\F_{n}|}$ where $m_{\text{field}}$ is the number of field operations and $d_{\text{field}}$ is the maximum polynomial degree.
-
-\textbf{Pairing-level soundness}: Given correct field operations, the pairing verification soundness is $\delta_{s,\text{pairing}} \leq \frac{67 + 256}{|\F_{n}|}$ as before.
-
-\textbf{Overall soundness}: By union bound, $\delta_s \leq \delta_{s,\text{field}} + \delta_{s,\text{pairing}}$.
-
-For typical parameters with $|\F_{n}| \approx 2^{254}$ and $m_{\text{field}} < 2^{15}$, this remains negligible.
-
-\subsection{Fiat-Shamir Transformation}
-
-The four-round protocol can be made non-interactive using Fiat-Shamir with a hash function $H$:
+\textbf{Fiat-Shamir} makes this non-interactive with sequential hashes:
 \begin{align*}
-z_1 &= H(\text{pairing inputs}, \mathcal{R}_{\text{pairing}}) \\
-x_1 &= H(z_1, Q_{\text{acc,pairing}}) \\
-z_2 &= H(x_1, \mathcal{R}_{\text{field}}) \\
-x_2 &= H(z_2, Q_{\text{acc,field}})
+z_1 = H(\text{pairing inputs},\ \mathcal{R}_\text{pair}), \quad &
+x_1 = H(z_1,\ Q_{\text{acc,pair}}) \\
+z_2 = H(x_1,\ \mathcal{R}_\text{field}), \quad &
+x_2 = H(z_2,\ K_{\text{acc}},\ C_{\text{acc}})
 \end{align*}
+Each challenge is bound to all prior transcript elements, preserving the temporal ordering that prevents retroactive adjustment of committed values.
