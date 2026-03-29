@@ -1,5 +1,5 @@
 \begin{abstract}
-Elliptic curve pairings are fundamental to modern zero-knowledge proof systems, including Groth16, PLONK, and KZG polynomial commitments. In bidding-based execution environments (Ethereum VM, BitVM, blockchain smart contracts) where users compete for limited computational resources through gas fees, and in arithmatized computation systems (R1CS, Plonkish, Cairo AIR) where each computational step imposes significant prover overhead, the complexity of pairings computation remains a practical problem.
+Elliptic curve pairings are fundamental to modern zero-knowledge proof systems, including Groth16, PLONK, and KZG polynomial commitments. In resource-constrained execution environments (Ethereum VM, BitVM, blockchain smart contracts) where computation is metered by gas fees, and in arithmetized computation systems (R1CS, Plonkish, Cairo AIR) where each computational step imposes significant prover overhead, the cost of pairing computation remains a practical bottleneck.
 
 We present a public-coin interactive proof system that consolidates the Miller loop iterations and final exponentiation into a single polynomial relation. The relation can then be verified as polynomial identities greatly reducing the pairing costs.
 

@@ -2,36 +2,13 @@
 
 \subsection{Target Environments}
 
-Our polynomial batching approach delivers maximum impact in constraint-based environments where traditional optimization strategies fall short. These environments share key characteristics that make our techniques particularly effective:
-
-\textbf{Arithmetized Computation Models:} Systems like Cairo VM, R1CS, and Plonkish arithmetization benefit most from our approach. In these environments, field inversions cost nearly the same as multiplications (2C vs 1C), while polynomial verification through Schwartz-Zippel becomes remarkably efficient. Our batching transforms hundreds of individual field operations into single polynomial verifications.
-
-\textbf{Calldata-Constrains Blockchains:} Ethereum Layer 2s, Bitcoin sidechains, and other blockchain VMs impose limits on transaction calldata. Our 77\% reduction in commitment overhead directly translates to fitting more proofs within transaction limits—enabling applications previously impossible due to size constraints.
-
-\textbf{Recursive Proof Systems:} In recursive SNARK/STARK compositions where pairings verify inner proofs, our optimizations compound at each recursion level. The 37\% overall speedup enables deeper recursion trees and more complex proof compositions within practical time bounds.
-
-\textbf{Zero-Knowledge Virtual Machines (ZKVMs):} Systems like RISC Zero, SP1, and Jolt that emulate general computation benefit from our unified polynomial framework, as they naturally express operations as constraint systems where our batching excels.
+Our approach delivers maximum impact in constraint-based environments where inversions are cheap and calldata is expensive. \textbf{Arithmetized systems} (Cairo VM, R1CS, Plonkish) benefit because Schwartz-Zippel evaluation is efficient and field inversions cost only 2C. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) benefit most directly: the 77\% commitment reduction means more proofs fit within transaction size limits. \textbf{Recursive proof systems} benefit because the savings compound at each recursion level. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework.
 
 \subsection{Implementation and Performance}
 
-Table~\ref{tab:main_performance} presents measurements from Garaga's production Cairo implementation on Starknet, demonstrating that our theoretical predictions (from section \ref{sec:ops:comp-analysis}) closely match real-world performance.
+Table~\ref{tab:main_performance} presents measurements from Garaga's production Cairo implementation on Starknet. Our theoretical analysis (Section~\ref{sec:op:comp:our}) predicted 46\% constraint reduction and 75\% commitment reduction per zero-bit step. The measured end-to-end results for 3-pair BN254 Miller loop are: \textbf{45\% MULMOD reduction} (14,456$\to$7,975), \textbf{77\% POSEIDON reduction} (3,758$\to$876), and \textbf{53\% VM cycle reduction}.
 
-For 3-pairing Miller loop verification (standard in Groth16), our theoretical analysis (Section~\ref{sec:op:comp:our}) for a single bit operation predicted:
-\begin{itemize}
-\item 47\% constraint reduction (76C $\rightarrow$ 40C per operation)
-\item 75\% commitment reduction (48 $\rightarrow$ 12 $\mathbb{F}_p$ elements)
-\end{itemize}
-
-The measured results for Miller Loop validate these predictions:
-\begin{itemize}
-\item \textbf{45\% reduction} in field multiplications (14,456 $\rightarrow$ 7,975 MULMOD)
-\item \textbf{77\% reduction} in hash operations (3,758 $\rightarrow$ 876 POSEIDON)
-\item \textbf{53\% reduction} in total execution VM CPU cycles (236,382 $\rightarrow$ 110,666)
-\end{itemize}
-
-The close alignment validates our polynomial batching analysis. The hash reduction exceeds our prediction because non-zero bit operations save more commitments and also the associated Fiat-Shamir challenge derivations.
-
-\textbf{Calldata and Fiat-Shamir:} For Miller loop operations, POSEIDON hash reductions improve  from 54\% (n=1) to 69\% (n=2) to 77\% (n=3). This occurs because traditional  approaches require $O(k \cdot n)$ commitments where $k$ is the Miller loop length and $n$ is the number of pairings, while our consolidated polynomial approach requires only $O(k)$ commitments regardless of $n$. Details in Table~\ref{tab:main_performance}
+The hash reduction slightly exceeds the per-step prediction because non-zero bits save even more commitments (two line functions instead of one per pair). The commitment savings also scale with $n$: traditional schemes require $O(k \cdot n)$ Fiat-Shamir commitments; our scheme requires only $O(k)$, independent of the number of pairs.
 
 \begin{table*}[t]
 \centering
@@ -85,20 +62,16 @@ Three pairs & 16,484 & 11,287 & 20,669 & 15,420 & 5,421 & 3,167 & 32.7\% \\
 \end{tabular}
 \end{table*}
 
-\subsection{Gnark, the current state of the art}
-For comparison, Gnark, which is considered the current state of the art for field emulation, reports the following constraints for BN254 pairings: single-pair pairing requires 960,784 R1CS constraints, while the Miller loop alone requires 311,672 R1CS constraints.
-Our optimized implementation achieves 53,130 steps for a single Miller loop and 155,366 steps for a complete pairing, representing a significant improvement in algorithmic efficiency for the verifier.
+\subsection{Comparison with State of the Art}
 
-We intend to implement our protocol over Gnark to enable significant improvements for recursive BN254 SNARKs. However, these two challenges need to be addressed:
-\begin{enumerate}
-    \item In Gnark, hashes can only be batched once per circuit—this poses a challenge for our IOP implementation from Section 5, which requires multiple rounds of Fiat-Shamir hashing.
-    \item Achieving the same level of hashing improvements requires computing a GKR verification in-circuit. This necessitates further research on the viability of multiple GKR proofs or the exposure of partial hash state finalizations.
-\end{enumerate}
+For reference, Gnark---currently the leading framework for field emulation in R1CS---reports 960,784 constraints for a single BN254 pairing and 311,672 for the Miller loop alone. Our Cairo implementation achieves 53,130 steps for a single Miller loop and 155,366 for a complete pairing, reflecting a fundamentally different algorithmic approach rather than just implementation tuning.
+
+The key structural difference is that Gnark verifies each emulated $\Fe{12}$ multiplication individually inside the circuit, while our scheme batches all polynomial verification into a single bivariate check outside the inner circuit---with only the remainder polynomials committed to. This is why our commitment overhead (POSEIDON hashes) drops by 77\% while constraint counts drop by a more modest 45\%: we are eliminating a different class of cost.
+
+Porting our IOP to Gnark is a direction for future work. The main challenge is that Gnark circuits allow only a single hash batching point, while our two-round IOP requires two sequential Fiat-Shamir challenges. One approach is an in-circuit GKR proof for the inner verification; we leave this as an open problem.
 
 \subsection{Final Remarks}
 
-This work demonstrates that reimagining classical algorithms through the lens of constraint-based computation models can yield substantial improvements. By treating entire computational phases as unified polynomial relations rather than sequences of field operations, we achieved performance gains that make previously impractical applications feasible.
+We have shown that choosing the right granularity for polynomial identity testing---entire Miller loop steps rather than individual multiplications---yields substantial and measurable improvements. The key technique, collapsing a composite multi-operand product into a single Euclidean division check, is simple to implement and broadly applicable to other multi-step cryptographic computations in arithmetized environments.
 
-Our techniques, now deployed in production through Garaga on Starknet, have already enabled new privacy-preserving applications on blockchain platforms. As zero-knowledge proofs become increasingly central to blockchain scalability and privacy, optimizations like ours that dramatically reduce verification costs will be essential for widespread adoption.
-
-The success of our polynomial batching approach suggests that many other cryptographic primitives may benefit from similar reconceptualization in constraint-based environments. We hope this work inspires further research into domain-specific optimizations that exploit the unique characteristics of arithmetized computation models.
+Our implementation in Garaga is deployed on Starknet and has already enabled proof verification workloads previously infeasible on-chain. We hope this work encourages further exploration of polynomial batching granularity as a design axis for constraint-system implementations.

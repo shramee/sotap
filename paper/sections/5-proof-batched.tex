@@ -1,64 +1,32 @@
-\section{Full Pairing Proof with Quotients batching}
+\section{Full Pairing Proof with Quotient Batching}
 \label{sec:iop}
 
-Now that we have covered the core construction behind our contribution, let's take a holistic view of verification of a pairing computation with an interactive proof system. While the construction above works beautifully on its own, we can further optimize the protocol by batching all polynomial verifications into a two round interactive proof.
+We now combine the polynomial equations from Section~\ref{sec:op-polys} into a complete two-round public-coin interactive proof, further reducing verification cost by batching all quotients into a single accumulated polynomial.
 
-\subsection{Batching Polynomial Identity Testing} \label{sec:iop:batching}
+\subsection{Batching Polynomial Identity Testing}\label{sec:iop:batching}
 
-The whole process of polynomial verification can be batched into a single polynomial verification.
-
-The prover can commit all $R$s for all $n$ equations involved in pairing computation in the first interaction and receive a random challenge $z$. The challenge $z$ can then be used to batch all the $Q$s into a single polynomial as a consecutive powers random linear combination like this,
-
-$$Q_\text{acc} = \sum_{i=0}^{n - 1}z^i \cdot Q_i(z)$$
-
-The verifier then prepares a new challenge $c$ and checks,
-
-$$\sum_{i=0}^{n - 1}z^i \cdot A_i(c) \cdot B_i(c) \cdots X_i(c) = \sum_{i=0}^{n-1}{z^i \cdot R_i(c) + Q_\text{acc}(c) \cdot P_{12}(c)}$$
-
-or,
+All $n$ polynomial equations from Section~\ref{sec:op-polys} are batched into a single verification. The prover commits to remainders $\{R_i\}_{i=0}^{n-1}$ and receives challenge $z$. Using $z$, the prover forms the accumulated quotient $Q_\text{acc} = \sum_{i=0}^{n-1} z^i \cdot Q_i$. The verifier then samples a second challenge point $c$ and checks:
 
 \begin{equation}
     \label{eq:iop-batched}
     \sum_{i=0}^{n - 1}z^i \cdot [A_i(c) \cdot B_i(c) \cdots X_i(c) - R_i(c)] = Q_\text{acc}(c) \cdot P_{12}(c)
 \end{equation}
 
-This reduces $n$ polynomial evaluations of degree ranging from 38 to 76 (as described in Tables~\ref{tbl:op:ml-0bit},~\ref{tbl:op:ml-nzbit},~\ref{tbl:op:ml-frob},~\ref{tbl:op:finx}) to a single polynomial of degree 76.
+This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:op:ml-0bit}--\ref{tbl:op:finx}) to a single evaluation of a degree-76 polynomial.
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equation described in Section~\ref{sec:op-polys}. Given input point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ as computed in~\cite{OPP24}, and internal parameter $W$ (the 27th root of unity), the prover runs the pairing computation while simultaneously performing Euclidean division (Algorithm~\ref{alg:polymuldiv}) at each step to produce the verification polynomials. This process is detailed in Algorithm~\ref{alg:2r:prover}. After receiving the challenge $z$ from the verifier, the prover computes the random linear combination (Algorithm~\ref{alg:rlc}) of all quotients $Q_i$ to produce $Q_\text{acc}$. Prover then sends $Q_\text{acc}$ and all remainders $R_i$ to the verifier.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv} (Algorithm~\ref{alg:polymuldiv}), which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
 
 \begin{algorithm}
-\caption{PolyMulDiv: Polynomial multiplication and Euclidean division}
+\caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
 \label{alg:polymuldiv}
 \begin{algorithmic}[1]
-\Require $P_1, P_2, \ldots, P_n \in \Fq[x]$
-\Statex Internal: Divisor $P_{12} \in \Fq[x]$
-\Ensure $Q, R \in \Fq[x]$ where $\deg(R) < \deg(P_{12})$ and $\prod_{i=1}^{n} P_i = Q \cdot P_{12} + R$
-\State $Q \leftarrow 0$, $R \leftarrow P_1$ \gComm{Initialize remainder with first polynomial, Q as 0}
-\For{$i = 2$ to $n$} \gComm{Start from second polynomial}
-    \State $R \leftarrow R \cdot P_i$ \gComm{Multiply polynomials into R}
-\EndFor
-\State $d_P \leftarrow \deg(P_{12})$, $d_R \leftarrow \deg(R)$, $\ell_P \leftarrow \text{leading\_coeff}(P_{12})$
-\While{$d_R \geq d_P$} \gComm{Euclidean division loop}
-\State $t \leftarrow \text{leading\_coeff}(R)/\ell_P \cdot x^{d_R - d_{P}}$
-\State $Q \leftarrow Q + t$, $R \leftarrow R - t \cdot P_{12}$, $d_R \leftarrow \deg(R)$
-\EndWhile
-\State \Return $(Q, R)$ \gComm{Quotient and Remainder with $\deg(R) < \deg(P_{12})$}
-\end{algorithmic}
-\end{algorithm}
-
-\begin{algorithm}
-\caption{Random Linear Combination: Adjacent Powers}
-\label{alg:rlc}
-\begin{algorithmic}[1]
-\Require $P_1, P_2, \ldots, P_n \in \Fq[x]$, $z \in \Fq$
-\Ensure $\sum_{i=1}^{n} z^{i-1} P_i(z)$
-\State $P_\text{acc} \leftarrow P_1$ \gComm{Initialize $P_\text{acc}$ with first polynomial}
-\For{$i = 2$ to $n$} \gComm{Start from second polynomial}
-    \State $P_\text{acc} \leftarrow P_\text{acc} + z^{i-1} P_i(z)$
-\EndFor
-\State \Return $P_\text{acc}$
+\Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
+\Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+\State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
+\State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
+\State \Return $(Q, R)$
 \end{algorithmic}
 \end{algorithm}
 
@@ -123,7 +91,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each polynomial equ
 
 \subsection{Verifier's Algorithms}
 
-The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue witness $c$ from~\cite{OPP24}, the internal parameter $W$ (the 27th root of unity), computed remainders $\mathcal{R}$ for each polynomial equation described in Section~\ref{sec:op-polys} and $Q_\text{acc}$ from the prover. The verifier retains the challenge $c$ from the first round. Using these values, the verifier performs a pairing computation with polynomial evaluations (Algorithm~\ref{alg:evalpolyprod}) at each step, as detailed in Algorithm~\ref{alg:2r:verifier}. After each evaluation, the verifier attempts to reconstruct RLC $Q_\text{acc}$ the same way as the prover did, And checks the final equality described in Equation~\ref{eq:iop-batched} on page \pageref{eq:iop-batched}.
+The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$ via Algorithm~\ref{alg:evalpolyprod}, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
 
 \begin{algorithm}
 \caption{EvalPoly: Evaluate polynomial product minus remainder}
@@ -202,16 +170,13 @@ The verifier receives point pairs $P \in \G_1$ and $Q \in \G_2$, the residue wit
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Interactive proof}
-
-Let's look into how the algorithms describe above come together to prove and verify a pairing computation.
-We will go through the two-round public-coin interactive proof system in this section and in the next section we will see how to convert it into a non-interactive proof using Fiat-Shamir transformation.
+\subsection{Interactive Proof}
 
 \IOP{Two-Round Pairing IOP}{Verifier}{Prover}{
     \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
     \RtoL{Round I: Commits \textit{pairing inputs} and remainders array $\mathcal{R}$}{2.5}
     \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
-    \RDoes{Computes $Q_\text{acc}$ with Algorithm~\ref{alg:rlc} using $\mathcal{Q}$ and $z$}{4.5}
+    \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{4.5}
     \RtoL{Round II: Commit $Q_\text{acc}$}{5.5}
     \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.5}
     \LtoR{Accept/Reject}{8}
@@ -219,18 +184,14 @@ We will go through the two-round public-coin interactive proof system in this se
 
 \subsection{Fiat-Shamir Transformation}
 
-The Fiat-Shamir transformation\cite{fiatshamir} converts an interactive proof into a non-interactive one by replacing the verifier's random challenge with a hash of the protocol transcript.
+Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
 
-This protocol, instantiated using the Fiat-Shamir transformation with hash function $H$ modeled as a random oracle, achieves knowledge soundness of $\delta_s + 3(m^2 + 1)2^{-\lambda}$\cite{IOP-NI}, where $\delta_s$ is the soundness error for the interactive protocol (see Section~\ref{sec:iop:soundness}), and $m$ is the number of hash queries performed (two for our protocol), and $\lambda$ is the hash output length.
-
-\subsection{Non-interactive proof}
-
-Let's look at what the protocol looks like after applying Fiat-Shamir transformation.
+\subsection{Non-Interactive Proof}
 
 \IOP{Non-interactive proof}{Verifier}{Prover}{
     \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
     \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$}{2}
-    \RDoes{Computes $Q_\text{acc}$ with Algorithm~\ref{alg:rlc} using $\mathcal{Q}$ and $z$}{2.8}
+    \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{2.8}
     \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$}{4}
     \LDoes{Recomputes $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$ for RLC}{5}
     \LDoes{Derives evaluation point $x = H(z, Q_\text{acc})$}{5.8}
@@ -247,41 +208,22 @@ Table~\ref{tab:main_performance}.
 
 \subsection{Security Analysis}
 
-We analyze the security of our random linear combination batching scheme against a malicious prover attempting to produce an incorrect remainder.
+We analyze soundness against a malicious prover who submits an incorrect remainder $R_j' = R_j + \Delta_j$, $\Delta_j \neq 0$.
 
-\subsubsection{Attack Model}
+\subsubsection{Algebraic Impossibility of Forgery}
 
-Consider a prover attempting to cheat by submitting an incorrect remainder $R_j' \neq R_j$ within the commitment array $\mathcal{R}$. The prover commits to $\mathcal{R}'$ containing $R_j'$, after which the challenge $z$ is derived (via Fiat-Shamir) from this commitment or received from the verifier in interactive setting. We have $\Delta_j$ as:
-$$\Delta_j = R_j' - R_j \neq 0 \text{, and } \deg(\Delta_j) \leq \deg(R_j)$$
+Consider a malicious prover attempting to cheat by submitting an incorrect remainder $R_j' = R_j + \Delta_j$, where $\Delta_j \neq 0$ and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$. Since $z$ is obtained after the commitment to $\mathcal{R}$, the prover cannot adjust other $R_k$ to compensate for $\Delta_j$. To successfully deceive the verifier, the prover must find a valid forged quotient $Q'_\text{acc} \in \Fq[x]$ such that:
+$$ \sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12} $$
 
-\subsubsection{Verifier's checks}
-
-For the verifier's check to pass with the incorrect remainder, the following equation must hold:
-$$\sum_{i=0}^{s} z^i(A_i - R_i') \stackrel{?}{=} Q_\text{acc} \cdot P_{12}$$
-
-Substituting $R_j' = R_j + \Delta_j$ reveals an imbalance:
-$$\sum_{i=0}^{s} z^i(A_i - R_i) - z^j\Delta_j = Q_\text{acc} \cdot P_{12}$$
-
-\subsubsection{Absorbing $\Delta$ in $\mathcal{R}$}
-
-Absorbing $\Delta_j$ into the remainders array $\mathcal{R}$ would require the knowledge of $z$ before committing to $\mathcal{R}$. However, since $z$ is derived from the commitment of $\mathcal{R}$ itself (in non-interactive setting) or received after committing to $\mathcal{R}$ (in interactive setting), this temporal ordering prevents the prover from adjusting $\mathcal{R}$ based on $z$, making it impossible to absorb $\Delta_j$ into another $R_k$ in $\mathcal{R}$.
-
-\subsubsection{Absorbing $\Delta$ in $Q_\text{acc}$}
-
-Rearranging:
-$$\sum_{i=0}^{s} z^i(A_i - R_i) = Q_\text{acc} \cdot P_{12} + z^j\Delta_j$$
-
-For the proof to be accepted, the prover must find a polynomial $Q'_\text{acc}$ satisfying:
+Substituting $R_j' = R_j + \Delta_j$ and rearranging the terms yields the required relation for the forged quotient:
 \begin{align*}
 Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} + z^j\Delta_j \\
 Q'_\text{acc} &= Q_\text{acc} + \frac{z^j\Delta_j}{P_{12}}
 \end{align*}
 
-Here $P_{12}$ is irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$, so we have $\deg(\Delta_j) < \deg(P_{12})$ for all valid $j$. And since $\deg(\Delta_j) < \deg(P_{12})$, the division $z^j \cdot \Delta_j/P_{12}$ yields a rational function, not a polynomial. When you divide a polynomial of degree lesser than the divisor you get a rational function. So it is \textbf{information-theoretically impossible} to find the polynomial $Q'_\text{acc}$.
+Because $P_{12}$ is an irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq 11 < 12$, the fraction $z^j\Delta_j / P_{12}$ yields a rational function, not a polynomial. Consequently, no valid polynomial $Q'_\text{acc} \in \Fq[x]$ can exist that satisfies the verifier's equation. Algebraic forgery is thus \textbf{information-theoretically impossible}.
 
-Thus, no polynomial $Q'_\text{acc} \in \mathbb{F}_q[x]$ exists that satisfies the verifier's equation with the incorrect remainder $R_j'$.
-
-\subsubsection{Soundness} \label{sec:iop:soundness}
+\subsubsection{Soundness}\label{sec:iop:soundness}
 
 As seen above, algebraic forgery is impossible. Therefore, security reduces to analysing the probability that a malicious prover succeeds through random chance.
 
