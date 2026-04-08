@@ -1,0 +1,184 @@
+% ============================================================
+% Section: Polynomial Ring Toolkit
+% ============================================================
+
+\section{Polynomial Ring Toolkit}
+\label{sec:polyring}
+
+The protocol of Section~\ref{sec:iop} is packaged as a reusable toolkit in
+the \texttt{emulated} package of gnark~\cite{gnaF}, parameterised by any
+emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any modulus
+polynomial $P \in \Fq[x]$. The toolkit operates in a recursive proof
+setting where the prover's computations are performed outside the circuit
+via \texttt{hints} (Section~\ref{sec:polyring:hints}). And verifier's checks
+are implemented as constraints inside the circuit.
+
+% ----------------------------------------------------------
+\subsection{Ring Representation}
+\label{sec:polyring:rep}
+
+A ring element is essentially a coefficient slice \texttt{[]*Element[T]} in
+ascending degree order. A \texttt{nil} entry is treated as zero by
+\texttt{InnerProductNoReduce}---the term is skipped entirely---so sparse
+polynomials carry no wasted constraint variables.
+
+The optional \texttt{modEvalFn} of type
+$\texttt{EvalFnType[T]} = ([\texttt{*Element[T]}]) \to \texttt{*Element[T]}$
+allows handling small-integer coefficients efficiently by multiplying by the small positive
+integer first and negating afterwards, rather than multiplying by the
+full-width field representative $q - c$.
+
+\subsubsection*{Example: BN254 $\mathbb{F}_{p^{12}}$}
+\label{sec:polyring:rep:sparse}
+
+$P_{12}(x) = x^{12} - 18x^6 + 82$ has nine zero coefficients (stored as
+\texttt{nil}) and two small non-zero ones. The \texttt{modEvalFn} computes
+$P_{12}(\alpha) = \texttt{MulConst}(\alpha^0, 82) + \texttt{Neg}(\texttt{MulConst}(\alpha^6, 18)) + \alpha^{12}$,
+keeping intermediate values small instead of multiplying by $q - 18$.
+
+% ----------------------------------------------------------
+\subsection{Hint Functions}
+\label{sec:polyring:hints}
+
+Hints allow defining computations outside of a circuit. A hint defines an
+annotated function in the circuit at compile time. Inputs and outputs are
+injected at the solving time. We define these two hints to implement the 
+prover's steps in the two-round protocol of Section~\ref{sec:iop:interactive}.
+
+\paragraph{\texttt{polyRingMulHint}} implements \textsc{PolyMulDiv}
+(Algorithm~\ref{alg:polymuldiv}): it multiplies the input polynomials, divides
+by $P$ to obtain $(Q, R)$, and serialises the result as
+$\texttt{nbQTerms} \mid Q\text{ limbs} \mid \texttt{nbRemTerms} \mid R\text{ limbs}$.
+Inputs are packed as $\texttt{nbBits} \mid \texttt{nbLimbs} \mid \texttt{nbPoly} \mid q \mid \text{inputs} \mid P$,
+where each polynomial is prefixed by its term count.
+
+\paragraph{\texttt{quotientsRLCHint}} computes the accumulated quotient
+$Q_{\mathrm{acc}}[j] = \sum_{i} z^i \cdot Q_i[j] \bmod q$ coefficient-wise,
+corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
+Batching all quotients into a single $Q_{\mathrm{acc}}$ is the key saving: only
+one polynomial is committed instead of $s$, giving the 75\% calldata reduction
+noted in Section~\ref{sec:op:comp:our}.
+
+% ----------------------------------------------------------
+\subsection{API}
+\label{sec:polyring:api}
+
+\subsubsection*{Register a ring group.}
+
+\begin{verbatim}
+group := f.NewPolyRingCheck(mod, modEvalFn)
+\end{verbatim}
+
+Creates a \texttt{PolyRingGroupChecks[T]}, appends it to the field's deferred
+check list, and returns a handle shared by all multiplications under the same
+modulus. Pass \texttt{nil} for \texttt{modEvalFn} to use the dense fallback.
+Multiple groups with different moduli can coexist in one circuit.
+
+
+\subsubsection*{Submit a multiplication.}
+\begin{verbatim}
+rem, err := f.MulPolyRings(group, A, B, C, ...)
+\end{verbatim}
+Computes $R = (\prod_j A_j) \bmod P$ via \texttt{polyRingMulHint} outside the
+circuit, range-checks $R$'s limbs inside (\texttt{packLimbs} with
+\texttt{strict=true}), and registers the check $(A,B,C;\,R;\,Q)$ in
+\texttt{group}. The quotient $Q$ is not range-checked; it is consumed only by
+the RLC hint outside the circuit. The returned \texttt{rem} is a fully reduced
+\texttt{*Poly[T]} and can be fed directly into the next \texttt{MulPolyRings}
+call.
+
+\subsubsection*{Deferred verification.}
+\begin{verbatim}
+f.performDeferredRingChecks(api)    // called once at circuit finalisation
+\end{verbatim}
+Implements Equation~\eqref{eq:iop-batched} via two \texttt{Committer.Commit}
+calls (producing challenges $z$ and $x$) and one \texttt{AssertIsEqual} per
+group. No in-circuit work beyond remainder range-checks is performed until
+this point.
+
+% ----------------------------------------------------------
+\subsection{Usage in Practice}
+\label{sec:polyring:usage}
+
+Register the ring group once at initialisation:
+
+\begin{verbatim}
+fp, _ := emulated.NewField[emulated.BN254Fp](api)
+modPoly := fp.MakePoly([]any{82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1})
+ring := fp.NewPolyRingCheck(modPoly, nil)
+\end{verbatim}
+
+\texttt{MakePoly} accepts Go integer literals and maps zeros to \texttt{nil},
+so the slice is sparse from construction.
+
+Each Miller-loop step then calls:
+\begin{verbatim}
+rem, _ = f.MulPolyRings(ring, f, f, L1, L2, L3)
+\end{verbatim}
+and \texttt{performDeferredRingChecks} is invoked once by the gnark backend at
+finalisation, running the full two-round protocol of Section~\ref{sec:iop}.
+
+% ----------------------------------------------------------
+\subsection{Protocol and Code Flow}
+\label{sec:polyring:flow}
+
+The following paragraphs trace each step of the two-round protocol
+(Section~\ref{sec:iop:interactive}) to the concrete function that implements it.
+
+The verifier is essentially the circuit which encodes all the operations into constraints which can be later verified. The prover is essentially the computation done outside the circuit via \texttt{hints}.
+
+\subsubsection*{Prover computes $Q_i, R_i$ (Algorithm~\ref{alg:2r:prover})}
+%
+Each \texttt{MulPolyRings} calls \texttt{polyRingMulHint}, results are provided on call, $Q, R$
+for the operation stored.
+
+\subsubsection*{Round~I: commit to $\{R_i\}$, receive challenge $z$}
+%
+\texttt{performDeferredRingChecks} collects all $R_i$ limbs across all groups
+and calls \texttt{Committer.Commit} to obtain $z$ in the circuit.
+
+\subsubsection*{Prover forms $Q_{\mathrm{acc}} = \sum_i z^i Q_i$ (Algorithm~\ref{alg:2r:prover})}
+%
+$z$ from the circuit is passed to \texttt{quotientsRLCHint}, accumulating quotients coefficient-wise in $\bmod\,q$ arithmetic.
+
+\subsubsection*{Round~II: commit to $Q_{\mathrm{acc}}$, receive challenge $x$}
+%
+The $Q_{\mathrm{acc}}$ limbs (together with $z$) are collected and passed to
+\texttt{Committer.Commit} to obtain $x$.
+
+\subsubsection*{Verifier evaluates each polynomial at $x$ (Algorithm~\ref{alg:evalpolyprod})}
+%
+\texttt{evalPolyWithChallenge} calls \texttt{InnerProductNoReduce} over the
+pre-computed power vector $\{x^i\}$; the result is memoised in
+\texttt{Poly.evaluation} to avoid re-evaluation.
+
+\paragraph{Verifier checks Equation~\eqref{eq:iop-batched}: $\sum_i z^i(\prod_j A_{i,j}(x) - R_i(x)) = Q_{\mathrm{acc}}(x)\cdot P(x)$.}
+\texttt{InnerProductNoReduce} on the per-check defects weighted by $\{z^i\}$
+gives \texttt{lhs}; \texttt{MulNoReduce} of $Q_{\mathrm{acc}}(x)$ and $P(x)$
+(via \texttt{modEvalFn} or the dense fallback) gives \texttt{rhs};
+\texttt{AssertIsEqual(lhs, rhs)} closes the circuit.
+
+
+% ----------------------------------------------------------
+\subsection{Implementation Details and Performance}
+\label{sec:polyring:performance}
+
+\subsubsection{Schoolbook vs Horner's Method for Polynomial Evaluation}
+\label{sec:emulated:flat}
+
+Horner's method for evaluations across emulated elements causes a linear increase in the limbs count per coefficient.
+This necessitates reductions after each multiplication.
+Instead, we cache powers of the evaluation point $x$ in $\mathcal{X} = (x^0, x^1, \ldots, x^d)$ and evaluate each polynomial as an inner product of $\mathcal{X}$ and the coefficient array $\mathbf{F}$:
+$$\mathcal{X} \cdot \mathbf{F} = \mathcal{X}_0 \cdot F_0 + \mathcal{X}_1 \cdot F_1 + \cdots + \mathcal{X}_d \cdot F_d$$
+
+In the emulated field context, \textsc{Eval} in Algorithm~\ref{alg:evalpolyprod} is replaced by this inner product with $\mathcal{X}$. This allows us to use the inner product optimization described below.
+
+\subsubsection{Native field operations for inner products}
+
+Modular reductions can be deferred or entirely elided for operations expressible as inner products, such as polynomial evaluations and random linear combinations. This optimization leverages the capacity headroom provided by representing small emulated limbs (e.g., 64-bit limbs) within a significantly larger native field element.
+
+\paragraph{Deferred Reduction:} Intermediate scalars are permitted to grow over the integers $\mathbb{Z}$ during limb-wise multiplications and linear accumulations.
+
+\paragraph{Preservation of Identity:} Algebraic identities are strictly preserved provided the maximum accumulated limb magnitude remains bounded below the native characteristic $p$.
+
+\paragraph{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
