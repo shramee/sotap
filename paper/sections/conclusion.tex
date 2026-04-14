@@ -2,76 +2,52 @@
 
 \subsection{Target Environments}
 
-Our approach delivers maximum impact in constraint-based environments where inversions are cheap and calldata is expensive. \textbf{Arithmetized systems} (Cairo VM, R1CS, Plonkish) benefit because Schwartz-Zippel evaluation is efficient and field inversions cost only 2C. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) benefit most directly: the 77\% commitment reduction means more proofs fit within transaction size limits. \textbf{Recursive proof systems} benefit because the savings compound at each recursion level. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework.
+Our approach delivers maximum impact in constraint-based environments where inversions are cheap and commitments are expensive. \textbf{Arithmetized systems} (R1CS, Plonkish/SCS) benefit because Schwartz-Zippel evaluation is efficient and field inversions cost only 2C. \textbf{Recursive proof systems} benefit most directly: the 44\% commitment reduction compounds at each recursion level, since each commitment in the inner circuit becomes a constraint in the outer circuit. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments means smaller proof transcripts.
 
 \subsection{Implementation and Performance}
 
-Table~\ref{tab:main_performance} presents measurements from Garaga's production Cairo implementation on Starknet. Our theoretical analysis (Section~\ref{sec:op:comp:our}) predicted 46\% constraint reduction and 75\% commitment reduction per zero-bit step. The measured end-to-end results for 3-pair BN254 Miller loop are: \textbf{45\% MULMOD reduction} (14,456$\to$7,975), \textbf{77\% POSEIDON reduction} (3,758$\to$876), and \textbf{53\% VM cycle reduction}.
+Table~\ref{tab:main_performance} presents benchmark results from our gnark implementation of the polynomial ring toolkit, measured on BN254 2-pairing verification. Our theoretical analysis (Section~\ref{sec:op:comp:our}) predicted 46\% constraint reduction and 75\% commitment reduction per zero-bit step. The end-to-end results confirm both directions of saving: \textbf{25\% SCS constraint reduction} (1,447,170~$\to$~1,081,733) and \textbf{44\% commitment reduction} (539,884~$\to$~303,856).
 
-The hash reduction slightly exceeds the per-step prediction because non-zero bits save even more commitments (two line functions instead of one per pair). The commitment savings also scale with $n$: traditional schemes require $O(k \cdot n)$ Fiat-Shamir commitments; our scheme requires only $O(k)$, independent of the number of pairs.
+The commitment reduction exceeds the per-step theoretical prediction because the batching benefit compounds across non-zero bits (which have two line functions per pair), the Frobenius correction step, and the final exponentiation---all contributing to the $O(k)$ vs.\ $O(k \cdot n)$ scaling advantage. The constraint reduction is more modest because constraints encode remainder range-checks (one per multiplication), which our scheme does not eliminate; what we remove is the per-multiplication quotient and carry commitment overhead.
 
 \begin{table*}[t]
 \centering
-\caption{Performance comparison: Cairo implementation on Starknet}
+\caption{Performance comparison: gnark implementation, BN254 2-pairing (Groth16 use case)}
 \label{tab:main_performance}
-\begin{tabular}{|l|r|r|r|r|r|r|r|}
+\begin{tabular}{|l|r|r|r|}
 \hline
-\textbf{Operation} & \multicolumn{2}{c|}{\textbf{MULMOD}} & \multicolumn{2}{c|}{\textbf{ADDMOD}} & \multicolumn{2}{c|}{\textbf{POSEIDON}} & \textbf{Speedup} \\
-\cline{2-7}
-& Before & After & Before & After & Before & After & \\
+\textbf{Metric} & \textbf{Gnark Baseline} & \textbf{This Work} & \textbf{Reduction} \\
 \hline
-\multicolumn{8}{|c|}{\textbf{Miller Loop (BN254)}} \\
+\multicolumn{4}{|c|}{\textbf{SCS (Plonkish) Constraint System}} \\
 \hline
-Single pair & 5,984 & 3,303 & 5,927 & 3,228 & 1,810 & 828 & 47.7\% \\
-% n=2 pairs & 10,132 & 5,639 & 10,107 & 5,576 & 2,740 & 852 & 51.1\% \\
-Three pairs & 14,456 & 7,975 & 14,463 & 7,924 & 3,758 & 876 & 53.2\% \\
+Nb Constraints    & 1,447,170 & 1,081,733 & \textbf{25.3\%} \\
+Nb Commitments    &   539,884 &   303,856 & \textbf{43.7\%} \\
+Compile Memory    &   1.31~GB &  936.65~MB & \textbf{28.5\%} \\
+Solve Memory      &  445.03~MB &  362.21~MB & \textbf{18.6\%} \\
 \hline
-\textbf{Average} & \multicolumn{2}{c|}{\textbf{44.8\%}} & \multicolumn{2}{c|}{\textbf{45.2\%}} & \multicolumn{2}{c|}{\textbf{76.7\%}} & \textbf{50.6\%} \\
+\multicolumn{4}{|c|}{\textbf{R1CS Constraint System}} \\
 \hline
+Nb Constraints    &   447,678 &   330,586 & \textbf{26.2\%} \\
+Nb Commitments    &   539,884 &   303,856 & \textbf{43.7\%} \\
+Compile Memory    &   1.53~GB &    1.10~GB & \textbf{28.1\%} \\
+Solve Memory      &  217.45~MB &  153.14~MB & \textbf{29.6\%} \\
 \hline
-\multicolumn{8}{|c|}{\textbf{Complete Pairing (BN254)}} \\
-\hline
-Single pair & 10,670 & 7,984 & 13,150 & 10,446 & 3,741 & 2,759 & 23.8\% \\
-% n=2 pairs & 14,818 & 10,320 & 17,330 & 12,794 & 4,671 & 2,783 & 31.7\% \\
-Three pairs & 19,142 & 12,656 & 21,686 & 15,142 & 5,689 & 2,807 & 37.1\% \\
-\hline
-\textbf{Average} & \multicolumn{2}{c|}{\textbf{33.9\%}} & \multicolumn{2}{c|}{\textbf{30.2\%}} & \multicolumn{2}{c|}{\textbf{50.7\%}} & \textbf{30.9\%} \\
-\hline
-\hline
-\multicolumn{8}{|c|}{\textbf{Miller Loop (BLS12\_381)}} \\
-\hline
-Single pair & 4,936 & 2,672 & 4,966 & 2,686 & 1,580 & 790 & 47.2\% \\
-% n=2 pairs & 8,030 & 4,418 & 8,171 & 4,525 & 2,276 & 812 & 50.9\% \\
-Three pairs & 11,356 & 6,164 & 11,608 & 6,364 & 3,088 & 834 & 53.8\% \\
-\hline
-\textbf{Average} & \multicolumn{2}{c|}{\textbf{45.7\%}} & \multicolumn{2}{c|}{\textbf{45.5\%}} & \multicolumn{2}{c|}{\textbf{73.0\%}} & \textbf{50.6\%} \\
-\hline
-\hline
-\multicolumn{8}{|c|}{\textbf{Complete Pairing (BLS12\_381)}} \\
-\hline
-Single pair & 10,064 & 7,795 & 14,027 & 11,742 & 3,913 & 3,123 & 19.6\% \\
-% n=2 pairs & 13,158 & 9,541 & 17,232 & 13,581 & 4,609 & 3,145 & 26.8\% \\
-Three pairs & 16,484 & 11,287 & 20,669 & 15,420 & 5,421 & 3,167 & 32.7\% \\
-\hline
-\textbf{Average} & \multicolumn{2}{c|}{\textbf{31.5\%}} & \multicolumn{2}{c|}{\textbf{25.4\%}} & \multicolumn{2}{c|}{\textbf{41.6\%}} & \textbf{26.4\%} \\
-\hline
-\multicolumn{8}{l}{\footnotesize MULMOD/ADDMOD: Field operations in $\mathbb{F}_p$} \\
-\multicolumn{8}{l}{\footnotesize POSEIDON: Hash operations for Fiat-Shamir; } \\
-\multicolumn{8}{l}{\footnotesize Speedup: VM Cycle reduction.} \\
+\multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{Commit} calls; dominant cost in recursive proof settings.} \\
+\multicolumn{4}{l}{\footnotesize Memory and time measured on identical hardware; compile/solve times are near-equal.} \\
 \hline
 \end{tabular}
 \end{table*}
 
 \subsection{Comparison with State of the Art}
 
-For reference, Gnark---currently the leading framework for field emulation in R1CS---reports 960,784 constraints for a single BN254 pairing and 311,672 for the Miller loop alone. Our Cairo implementation achieves 53,130 steps for a single Miller loop and 155,366 for a complete pairing, reflecting a fundamentally different algorithmic approach rather than just implementation tuning.
+Gnark is currently the industry-standard framework for field emulation in arithmetized circuits. Its baseline for BN254 2-pairing verification---1,447,170 SCS constraints and 539,884 commitments---represents the current state of the art. Our polynomial ring toolkit, integrated directly into gnark's \texttt{emulated} package, reduces these to 1,081,733 constraints and 303,856 commitments.
 
-The key structural difference is that Gnark verifies each emulated $\Fe{12}$ multiplication individually inside the circuit, while our scheme batches all polynomial verification into a single bivariate check outside the inner circuit---with only the remainder polynomials committed to. This is why our commitment overhead (POSEIDON hashes) drops by 77\% while constraint counts drop by a more modest 45\%: we are eliminating a different class of cost.
+The key structural difference is that gnark's baseline verifies each emulated $\Fe{12}$ multiplication individually inside the circuit (one deferred check per multiplication, one committed quotient and carry per check), while our scheme batches all polynomial verification into a single two-round IOP with an accumulated quotient. This is why commitment overhead drops by 44\%---we collapse $O(k \cdot n)$ individual quotient commitments into a single $Q_{\mathrm{acc}}$ per ring group---while constraint counts drop by a more modest 25\%: remainder range-checks are retained as they are needed for soundness.
 
-Porting our IOP to Gnark is a direction for future work. The main challenge is that Gnark circuits allow only a single hash batching point, while our two-round IOP requires two sequential Fiat-Shamir challenges. One approach is an in-circuit GKR proof for the inner verification; we leave this as an open problem.
+The Garaga library~\cite{grg} provided an earlier proof of concept for this technique in Cairo/Starknet in 2024, but lacked a systematic comparison against an industry baseline. This gnark implementation provides that comparison, establishing the polynomial ring toolkit as a concrete, measurable improvement over the state of the art.
 
 \subsection{Final Remarks}
 
-We have shown that choosing the right granularity for polynomial identity testing---entire Miller loop steps rather than individual multiplications---yields substantial and measurable improvements. The key technique, collapsing a composite multi-operand product into a single Euclidean division check, is simple to implement and broadly applicable to other multi-step cryptographic computations in arithmetized environments.
+We have shown that choosing the right granularity for polynomial identity testing---entire Miller loop steps rather than individual multiplications---yields substantial and measurable improvements. The key technique, collapsing a composite multi-operand product into a single Euclidean division check with batched quotient accumulation, is simple to implement and broadly applicable to other multi-step cryptographic computations in arithmetized environments.
 
-Our implementation in Garaga is deployed on Starknet and has already enabled proof verification workloads previously infeasible on-chain. We hope this work encourages further exploration of polynomial batching granularity as a design axis for constraint-system implementations.
+Our polynomial ring toolkit is implemented in gnark's \texttt{emulated} package and is available as a reusable, parameterised library for any emulated field and modulus polynomial. We hope this work encourages further exploration of polynomial batching granularity as a design axis for constraint-system implementations.

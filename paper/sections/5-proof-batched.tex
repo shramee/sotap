@@ -206,12 +206,7 @@ Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$
     \LtoR{Accept/Reject}{8.3}
 }
 
-\textbf{Concrete Fiat-Shamir costs:} In our Cairo implementation, each 
-POSEIDON hash invocation costs approximately 25-30 Cairo steps. Our batching 
-strategy reduces the number of hash operations from $O(k \cdot n)$ to $O(k)$ 
-where $k$ is the Miller loop length and $n$ is the number of pairings. For 
-BN254 with $k=66$ and $n=3$, this yields the 77\% reduction observed in 
-Table~\ref{tab:main_performance}.
+\textbf{Concrete commitment costs:} In gnark, each Fiat-Shamir challenge is produced by a \texttt{Committer.Commit} call, which contributes to the circuit's commitment count---the dominant overhead in recursive proof settings. Our batching strategy reduces the number of \texttt{Commit} calls from $O(k \cdot n)$ to $O(k)$, where $k$ is the Miller loop length and $n$ is the number of pairings. For BN254 2-pairing verification, this yields the 44\% reduction in total commitments observed in Table~\ref{tab:main_performance}.
 
 \subsection{Security Analysis}
 

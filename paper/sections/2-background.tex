@@ -49,7 +49,7 @@ This probabilistic bound becomes negligible for cryptographically sized fields w
 
 \subsection{Computation Models}
 
-While we specifically implement our library in Cairo, we map our MULMOD operation to a constraint (denoted by \textbf{C}) to maintain compatibility with the Rank-1 Constraint System (R1CS) model to benchmark against established literature. In R1CS~\cite{Gro16}, prover complexity is dominated by multiplication gates while additions are free. In the Cairo VM, this corresponds to the Algebraic Intermediate Representation (AIR) where operations are verified through polynomial constraints. To synchronize our data with the benchmarks provided by El Housni~\cite{PR1CS22}, we define our cost metric based on field multiplications.
+We implement and benchmark our toolkit in gnark~\cite{gnark}, the industry-standard Go library for arithmetized circuit development, targeting both SCS (Sparse Constraint System, the native Plonkish backend) and R1CS constraint systems. We map each field multiplication to a constraint (denoted by \textbf{C}) to maintain compatibility with the R1CS model used in established literature. In R1CS~\cite{Gro16}, prover complexity is dominated by multiplication gates while additions are free. To synchronize our theoretical analysis with the benchmarks provided by El Housni~\cite{PR1CS22}, we define our cost metric based on field multiplications.
 
 \subsubsection{R1CS Cost Model}
 
