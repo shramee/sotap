@@ -91,10 +91,11 @@ call.
 \begin{verbatim}
 f.performDeferredRingChecks(api)    // called once at circuit finalisation
 \end{verbatim}
-Implements Equation~\eqref{eq:iop-batched} via two \texttt{Committer.Commit}
-calls (producing challenges $z$ and $x$) and one \texttt{AssertIsEqual} per
-group. No in-circuit work beyond remainder range-checks is performed until
-this point.
+Implements Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit}
+calls~\cite{gnarkcommit} (producing challenges $z$ and $x$) and one \texttt{AssertIsEqual} per
+group. Gnark derives $z = \mathsf{MiMC}(\mathsf{root})$ from the first call and $x = \mathsf{MiMC}(z)$
+from the second, chaining the challenges across rounds (see Section~\ref{sec:iop:noninteractive}).
+No in-circuit work beyond remainder range-checks is performed until this point.
 
 % ----------------------------------------------------------
 \subsection{Usage in Practice}
@@ -135,7 +136,9 @@ for the operation stored.
 \subsubsection*{Round~I: commit to $\{R_i\}$, receive challenge $z$}
 %
 \texttt{performDeferredRingChecks} collects all $R_i$ limbs across all groups
-and calls \texttt{Committer.Commit} to obtain $z$ in the circuit.
+and calls \texttt{api.Commit} to obtain $z$ in the circuit. Internally, gnark folds
+all committed limbs into a global linear combination $\mathsf{root}$ and derives
+$z = \mathsf{MiMC}(\mathsf{root})$~\cite{gnarkcommit}.
 
 \subsubsection*{Prover forms $Q_{\mathrm{acc}} = \sum_i z^i Q_i$ (Algorithm~\ref{alg:2r:prover})}
 %
@@ -143,8 +146,9 @@ $z$ from the circuit is passed to \texttt{quotientsRLCHint}, accumulating quotie
 
 \subsubsection*{Round~II: commit to $Q_{\mathrm{acc}}$, receive challenge $x$}
 %
-The $Q_{\mathrm{acc}}$ limbs (together with $z$) are collected and passed to
-\texttt{Committer.Commit} to obtain $x$.
+The $Q_{\mathrm{acc}}$ limbs are passed to a second \texttt{api.Commit} call.
+Gnark chains the hash: $x = \mathsf{MiMC}(z)$, binding $x$ to the full transcript
+including all $R_i$ and $Q_{\mathrm{acc}}$~\cite{gnarkcommit}.
 
 \subsubsection*{Verifier evaluates each polynomial at $x$ (Algorithm~\ref{alg:evalpolyprod})}
 %
