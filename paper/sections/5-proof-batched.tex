@@ -213,53 +213,82 @@ In gnark, each \texttt{api.Commit} call registers committed variables in the con
 
 \subsection{Security Analysis}
 
-We analyze soundness against a malicious prover who submits an incorrect remainder $R_j' = R_j + \Delta_j$, $\Delta_j \neq 0$.
+Throughout this section, $z, x \in \mathbb{F}_q$ denote field element challenges (scalars),
+while polynomials are elements of $\mathbb{F}_q[x]$ with $x$ as the formal indeterminate.
+In particular, $z^j$ is a scalar coefficient, not a polynomial term.
 
-\subsubsection{Algebraic Impossibility of Forgery}
+\subsubsection{Algebraic Intuition}\label{sec:iop:alg-intuition}
 
-Consider a malicious prover attempting to cheat by submitting an incorrect remainder $R_j' = R_j + \Delta_j$, where $\Delta_j \neq 0$ and $\deg(\Delta_j) \leq \deg(R_j) \leq 11$. Since $z$ is obtained after the commitment to $\mathcal{R}$, the prover cannot adjust other $R_k$ to compensate for $\Delta_j$. To successfully deceive the verifier, the prover must find a valid forged quotient $Q'_\text{acc} \in \Fq[x]$ such that:
-$$ \sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12} $$
+Before the formal soundness proof it is instructive to consider why an incorrect
+remainder is difficult to hide.  Suppose a malicious prover corrupts exactly one remainder:
+$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[x]$, $\Delta_j \neq 0$,
+$\deg(\Delta_j) \leq 11$.  Since $z$ is obtained \emph{after} the commitment to
+$\mathcal{R}$, the prover cannot adjust any other $R_k$ to compensate for $\Delta_j$.
+To successfully deceive the verifier, the prover must find a valid forged quotient
+$Q'_\text{acc} \in \mathbb{F}_q[x]$ satisfying
 
-Substituting $R_j' = R_j + \Delta_j$ and rearranging the terms yields the required relation for the forged quotient:
+$$\sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12}$$
+
+All $R_i' = R_i$ except for $R_j' = R_j + \Delta_j$. Substituting $R_j' = R_j + \Delta_j$ gives
 \begin{align*}
-Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} + z^j\Delta_j \\
-Q'_\text{acc} &= Q_\text{acc} + \frac{z^j\Delta_j}{P_{12}}
+Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} - z^j\Delta_j(x) \\
+Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
+Here $z^j \in \mathbb{F}_q$ is a nonzero scalar (with overwhelming probability over the
+choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[x]$ is a nonzero polynomial of degree
+at most~$11$.  Since $P_{12}$ is irreducible of degree~$12$ and
+$\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
+divide $z^j\Delta_j$ in $\mathbb{F}_q[x]$; hence $z^j\Delta_j/P_{12}$ is not a
+polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[x]$ can satisfy the
+equation for this single-corruption case.
 
-Because $P_{12}$ is an irreducible polynomial with $\deg(P_{12}) = 12$, and $\deg(\Delta_j) \leq 11 < 12$, the fraction $z^j\Delta_j / P_{12}$ yields a rational function, not a polynomial. Consequently, no valid polynomial $Q'_\text{acc} \in \Fq[x]$ can exist that satisfies the verifier's equation. Algebraic forgery is thus \textbf{information-theoretically impossible}.
+
+The same degree argument extends immediately to an adversary who corrupts
+\emph{multiple} remainders: for any scalar $z$, the weighted sum
+$\sum_i z^i \Delta_i(x)$ is still a polynomial in $x$ of degree at most~$11$
+(since each $z^i$ is a scalar and each $\deg(\Delta_i) \leq 11$), so it cannot
+be divisible by $P_{12}$ of degree~$12$ unless it is the zero polynomial, which
+requires every $\Delta_i = 0$.  The formal soundness proof below re-derives this
+uniformly via Schwartz-Zippel.
+
 
 \subsubsection{Soundness}\label{sec:iop:soundness}
 
-As seen above, algebraic forgery is impossible. Therefore, security reduces to analysing the probability that a malicious prover succeeds through random chance.
+\begin{theorem}[Soundness]\label{thm:soundness}
+Let $n$ be the number of polynomial equations batched via a random linear combination into the bivariate polynomial identity:
+$$P_{\mathrm{final}}(z, x) = \sum_{i=0}^{n-1} z^i \cdot \Bigl[\prod_{j} P_{i,j}(x) - R_i(x)\Bigr] - Q_{\mathrm{acc}}(x) \cdot P_{12}(x) = 0$$
+Let the maximum degree in $x$ of the polynomial products be $d_x < 2^8$. For a prover committing to incorrect remainders, the probability of successful forgery $\delta_s$ over randomly chosen $(z,x) \in \mathbb{F}_q^2$ is bounded by:
+$$\delta_s \leq \frac{n - 1 + d_x}{|\mathbb{F}_q|}$$
+\end{theorem}
 
-Our random linear combination batching scheme (as described in Section~\ref{sec:iop:batching}) effectively converts our univariate polynomial verifications into a single bivariate polynomial identity test:
-
-$$
-P_\text{final}(z, x) = \sum_{i=0}^{n - 1} z^i \cdot [\prod_{j} P_{i,j}(x) - R_i(x)] - Q_\text{acc}(x) \cdot P_{12}(x)
-$$
-
-
-If a prover commits to incorrect remainder(s), $P_{\text{err}}$ becomes a non-zero bivariate polynomial with:
+\begin{proof}
+If the prover commits to an incorrect remainder $R_i(x)$, the evaluation yields a non-zero error polynomial $P_{\mathrm{err}}(z, x)$. The structure of $P_{\mathrm{final}}(z, x)$ establishes the following degree bounds for $P_{\mathrm{err}}(z, x)$:
 \begin{itemize}
-    \item Degree in $z$: at most $n-1$ (from the RLC structure)
-    \item Degree in $x$: less than $2^8$ (from the polynomial products)
+    \item \textbf{Degree in $z$:} at most $n - 1$ (due to the $z^i$ weighting).
+    \item \textbf{Degree in $x$:} at most $d_x < 2^8$ (due to the polynomial products).
 \end{itemize}
+By the Schwartz-Zippel lemma, the probability that the non-zero polynomial $P_{\mathrm{err}}$ evaluates to zero is bounded by the sum of its maximum degrees divided by the field size:
+$$\Pr[P_{\mathrm{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\mathrm{err}}) + \deg_x(P_{\mathrm{err}})}{|\mathbb{F}_q|} \leq \frac{n - 1 + d_x}{|\mathbb{F}_q|}$$
+\end{proof}
 
-By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}), the probability that $P_{\text{err}}$ evaluates to zero at randomly chosen $(z, x) \in \mathbb{F}_q^2$ is bounded by:
+\textbf{Concrete parameters for BN254}: With $n = 67$ equations and $d_x \leq 256$:
+$$\delta_s \leq \frac{66 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}.$$
 
-$$\delta_s = \Pr[P_{\text{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\text{err}}) + \deg_x(P_{\text{err}})}{|\mathbb{F}_q|} \leq \frac{n + 2^8}{|\mathbb{F}_q|}$$
-
-\textbf{Concrete parameters for BN254}: With $n = 67$ equations (66 Miller loop steps plus 1 final exponentiation equation) and $|\mathbb{F}_q| \approx 2^{254}$:
-
-$$\delta_s \leq \frac{67 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}$$
-
-\textbf{Non-interactive proof via Fiat-Shamir}: When transformed into a non-interactive proof with Fiat-Shamir under random oracle model, the knowledge soundness error becomes~\cite{IOP-NI}:
-
+\textbf{Non-interactive proof via Fiat-Shamir}: Under the random oracle model the
+knowledge soundness error becomes~\cite{IOP-NI}:
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
+where $m = 2$ (hash queries) and $\lambda = 254$ (hash output length), giving
+$$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}.$$
 
-where $m = 2$ (hash queries) and $\lambda = 254$ (hash output length). Thus:
-
-$$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}$$
+\begin{remark}[Correctness of polynomial evaluation]\label{rem:overflow}
+Theorem~\ref{thm:soundness} assumes that the verifier evaluates all polynomials at the
+challenge point $x$ without arithmetic error.  The circuit implementation uses the
+deferred-reduction inner-product optimisation of Section~\ref{sec:polyring:performance}
+(Section~\ref{sec:emulated:flat}), which accumulates limb-wise products over $\mathbb{Z}$
+before a single final reduction.  Correctness of this optimisation requires that no
+intermediate limb value reaches the native field characteristic $p$.  We verify this
+bound concretely for BN254 in Lemma~\ref{lem:overflow} (Section~\ref{sec:emulated:flat}).
+\end{remark}
 
 \subsubsection{Completeness}
 
