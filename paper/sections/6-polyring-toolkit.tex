@@ -55,9 +55,6 @@ where each polynomial is prefixed by its term count.
 \paragraph{\texttt{quotientsRLCHint}} computes the accumulated quotient
 $Q_{\mathrm{acc}}[j] = \sum_{i} z^i \cdot Q_i[j] \bmod q$ coefficient-wise,
 corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
-Batching all quotients into a single $Q_{\mathrm{acc}}$ is the key saving: only
-one polynomial is committed instead of $s$, giving the 75\% calldata reduction
-noted in Section~\ref{sec:op:comp:our}.
 
 % ----------------------------------------------------------
 \subsection{API}

@@ -193,6 +193,9 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
 
+\paragraph{Gnark's multi-commitment mechanism.}
+In gnark, each \texttt{api.Commit} call registers committed variables in the constraint system; the two sequential calls in our protocol produce the two challenges $z$ and $x$ via gnark's multi-round commitment scheme~\cite{gnarkcommit,BellingCCS23}.
+
 \subsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
 \IOP{Non-interactive proof}{Verifier}{Prover}{
@@ -206,7 +209,7 @@ Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$
     \LtoR{Accept/Reject}{8.3}
 }
 
-\textbf{Concrete commitment costs:} In gnark, each Fiat-Shamir challenge is produced by a \texttt{Committer.Commit} call, which contributes to the circuit's commitment count---the dominant overhead in recursive proof settings. Our batching strategy reduces the number of \texttt{Commit} calls from $O(k \cdot n)$ to $O(k)$, where $k$ is the Miller loop length and $n$ is the number of pairings. For BN254 2-pairing verification, this yields the 44\% reduction in total commitments observed in Table~\ref{tab:main_performance}.
+\textbf{Concrete commitment costs:} In gnark, each call to \texttt{api.Commit} registers committed variables in the constraint system; the precise prover overhead depends on the backend (Groth16 or Plonk)~\cite{gnarkcommit,BellingCCS23}.
 
 \subsection{Security Analysis}
 
