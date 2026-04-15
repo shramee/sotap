@@ -60,7 +60,7 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 \subsection{API}
 \label{sec:polyring:api}
 
-\subsubsection*{Register a ring group.}
+\subsubsection*{Register a ring group}
 
 \begin{verbatim}
 group := f.NewPolyRingCheck(mod, modEvalFn)
@@ -72,7 +72,7 @@ modulus. Pass \texttt{nil} for \texttt{modEvalFn} to use the dense fallback.
 Multiple groups with different moduli can coexist in one circuit.
 
 
-\subsubsection*{Submit a multiplication.}
+\subsubsection*{Submit a multiplication}
 \begin{verbatim}
 rem, err := f.MulPolyRings(group, A, B, C, ...)
 \end{verbatim}
@@ -84,7 +84,24 @@ the RLC hint outside the circuit. The returned \texttt{rem} is a fully reduced
 \texttt{*Poly[T]} and can be fed directly into the next \texttt{MulPolyRings}
 call.
 
-\subsubsection*{Deferred verification.}
+\subsubsection*{Accumulate a product chain}
+\begin{verbatim}
+acc := f.NewPolyRingAccumulator(group, targetDeg)
+acc.Mul(A)
+acc.Mul(B)
+acc.Sqr()       // enqueues (A·B)² without multiplying yet
+rem := acc.Eval()
+\end{verbatim}
+\texttt{PolyRingAccumulator} maintains a queue of polynomial factors representing
+the deferred product $\prod_i \mathtt{state}_i$. Calling \texttt{Mul} appends a
+factor; calling \texttt{Sqr} duplicates every current factor so that the next
+\texttt{Eval} computes $(\prod_i \mathtt{state}_i)^2$. When \texttt{targetDeg} is
+set, \texttt{Eval} is triggered automatically whenever the accumulated degree
+would exceed the bound, keeping intermediate products within a manageable degree
+before the final \texttt{MulPolyRings} call. Without a target degree all
+operations are deferred until \texttt{Eval} is called explicitly.
+
+\subsubsection*{Deferred verification}
 \begin{verbatim}
 f.performDeferredRingChecks(api)    // called once at circuit finalisation
 \end{verbatim}
@@ -183,3 +200,14 @@ Modular reductions can be deferred or entirely elided for operations expressible
 \paragraph{Preservation of Identity:} Algebraic identities are strictly preserved provided the maximum accumulated limb magnitude remains bounded below the native characteristic $p$.
 
 \paragraph{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
+
+\begin{lemma}[Overflow safety for BN254 pairing polynomials]\label{lem:overflow}
+With 4-limb, 64-bit emulated arithmetic and $d \leq 256$, each result-limb accumulates
+at most $4(d{+}1) \leq 1028$ products of two $2^{64}$-bounded values, giving a maximum
+limb magnitude of $1028 \times 2^{128} < 2^{138}$.
+For the $Q_{\mathrm{acc}}(x)\cdot P_{12}(x)$ product, the sparse $P_{12}$ (3 nonzero
+coefficients, largest $82 < 2^7$) raises this to $< 2^{146}$.
+Since $2^{146} \ll p \approx 2^{254}$, no intermediate limb reaches the native
+characteristic, so the deferred single-element reduction is safe for all polynomial
+evaluations in BN254 pairing verification.
+\end{lemma}

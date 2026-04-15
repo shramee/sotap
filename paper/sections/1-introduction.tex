@@ -21,9 +21,11 @@ In such contexts, an efficient proof system for pairing correctness can replace 
 We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual extension field operations~\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
-\item \textbf{29\% reduction} in SCS constraints (1,447,170~$\to$~1,026,241 for BN254 2-pairing)
-\item \textbf{48\% reduction} in commitments (539,884~$\to$~281,518), the dominant cost in recursive proof systems
-\item \textbf{34\% reduction} in compile-time memory and \textbf{44\%} in solver memory
+\item \textbf{39\% reduction} in SCS constraints (1,890,771~$\to$~1,158,194 for BN254 Groth16 simulation)
+\item \textbf{60\% reduction} in commitments (739,198~$\to$~295,946)
+\item $\sim$\textbf{42\% reduction} in compile-time memory and up to \textbf{52\%} in solver memory
 \end{itemize}
 
 Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate commitments.
+
+As a reusable artefact of independent interest, we also contribute a \textbf{polynomial ring toolkit} for gnark's emulated arithmetic package. The toolkit packages the two-round interactive proof system into a clean API: a single \texttt{NewPolyRingCheck} call registers a modulus, \texttt{MulPolyRings} submits multiplications with deferred verification, and \texttt{performDeferredRingChecks} closes the circuit with two \texttt{api.Commit} challenges. Atop this, the \texttt{PolyRingAccumulator} provides a higher-level interface for building product chains: factors are enqueued via \texttt{Mul}, squarings via \texttt{Sqr}, and the accumulated product is evaluated lazily through \texttt{Eval}, with optional automatic degree-bounding to keep intermediate products manageable.

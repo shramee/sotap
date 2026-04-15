@@ -66,24 +66,6 @@ We measure computational cost in terms of \textit{constraints} (denoted by \text
 
 \subsubsection{Cost Model Comparison}
 
-Table \ref{tab:cost_comparison} contrasts costs between native implementations and constraint systems:
-
-\begin{table}[h]
-\centering
-\caption{Cost comparison: Native vs Constraint-based computation}
-\label{tab:cost_comparison}
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Operation} & \textbf{Native Cost} & \textbf{Constraint Cost} & \textbf{Ratio} \\
-\hline
-$\Fq$ Multiplication & 1$\times$ & 1C & 1$\times$ \\
-$\Fq$ Inversion & 100$\times$ & 2C & $\approx$50$\times$ cheaper \\
-$\Fe{12}$ Multiplication & 50$\times$ & 54C (traditional) & Similar \\
-$\Fe{12}$ Multiplication & 50$\times$ & 39C (our method) & Better \\
-\hline
-\end{tabular}
-\end{table}
-
-\textbf{Key Insight:} Operations that are traditionally expensive (inversions, divisions) become cheap in constraint systems when computed via witnesses. This inverts traditional optimization priorities: we can afford inversions to save multiplications, enabling affine coordinate systems and other techniques impractical in native implementations.
+Operations that are traditionally expensive (inversions, divisions) become cheap in constraint systems when computed via witnesses. This inverts traditional optimization priorities: we can afford inversions to save multiplications, enabling affine coordinate systems and other techniques impractical in native implementations.
 
 Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.

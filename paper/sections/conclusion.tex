@@ -2,16 +2,27 @@
 
 \subsection{Target Environments}
 
-Our approach delivers maximum impact in constraint-based environments where inversions are cheap and commitments are expensive. \textbf{Arithmetized systems} (R1CS, Plonkish/SCS) benefit because Schwartz-Zippel evaluation is efficient and field inversions cost only 2C. \textbf{Recursive proof systems} benefit most directly: the 44\% commitment reduction compounds at each recursion level, since each commitment in the inner circuit becomes a constraint in the outer circuit. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments means smaller proof transcripts.
+Our approach delivers maximum impact in constraint-based environments where inversions are cheap and commitments are expensive. \textbf{Arithmetized systems} (R1CS, Plonkish/SCS) benefit because Schwartz-Zippel evaluation is efficient and field inversions cost only 2C. \textbf{Recursive proof systems} benefit most directly: the 60\% commitment reduction compounds at each recursion level, since each commitment in the inner circuit becomes a constraint in the outer circuit. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments means smaller proof transcripts.
 
 \subsection{Implementation and Performance}
 
-Table~\ref{tab:main_performance} presents benchmark results from our gnark implementation of the polynomial ring toolkit, measured on BN254 2-pairing verification. Our theoretical analysis (Section~\ref{sec:op:comp:our}) predicted 46\% constraint reduction and 75\% commitment reduction per zero-bit step. The end-to-end results confirm both directions of saving: \textbf{29\% SCS constraint reduction} (1,447,170~$\to$~1,026,241) and \textbf{48\% commitment reduction} (539,884~$\to$~281,518), with strong secondary improvements across compile-time memory ($\sim$34\%) and solver memory ($\sim$44\% SCS, $\sim$37\% R1CS).
+Table~\ref{tab:main_performance} presents benchmark results from our gnark implementation of the polynomial ring toolkit, measured on a Groth16 verification simulation on BN254. Our theoretical analysis (Section~\ref{sec:op:comp:our}) predicted 46\% constraint reduction and 75\% commitment reduction per zero-bit step. The end-to-end results confirm both directions of saving: \textbf{39\% SCS constraint reduction} (1,890,771~$\to$~1,158,194) and \textbf{60\% commitment reduction} (739,198~$\to$~295,946), with strong secondary improvements across compile-time memory ($\sim$42--43\%) and solver memory ($\sim$26\% SCS, $\sim$52\% R1CS).
+
+\paragraph{Benchmark circuit.}
+Both implementations were evaluated against the identical \texttt{Groth16Simulation} circuit\footnote{Circuit definition: \url{https://gist.github.com/shramee/6b02bea91e25634108338b9bce384e5e}}, which faithfully models the pairing checks performed during Groth16 proof verification:
+\begin{itemize}
+  \item \textbf{Step~1:} A 2-pair fixed-$\mathbb{G}_2$ pairing check $e(P_1,Q_1)\cdot e(P_2,Q_2)=1$, where both $\mathbb{G}_2$ points use precomputed line evaluations (\texttt{PairingCheck} with fixed $Q$).
+  \item \textbf{Step~2:} A single in-circuit Miller loop $\mathrm{ML}(P_3,Q_3)$ combined with a Miller loop result $f$ computed \emph{outside} the circuit, followed by a final-exponentiation-equals-one assertion (\texttt{AssertMillerLoopAndFinalExpIsOne}).
+\end{itemize}
+This structure directly mirrors real Groth16 verification: the two fixed-$\mathbb{G}_2$ pairings correspond to the key-pair checks, while the combined inside/outside Miller loop models the proof-element pairing with a partially precomputed contribution.
+
+The \textbf{gnark baseline} numbers were obtained by running \texttt{BenchmarkGroth16Simulation} against the upstream gnark \texttt{emulated} package (\texttt{github.com/consensys/gnark}). The \textbf{This Work} numbers were obtained from the same benchmark file compiled against our fork\footnote{Our implementation: \url{https://github.com/mistcash/tiny-gnark/tree/ppp}}, which replaces the per-multiplication deferred checks in the \texttt{emulated} package with the polynomial ring toolkit described in this paper. No changes to the circuit definition or test harness were required; only the underlying \texttt{emulated} arithmetic backend differs between the two runs.
+The Garaga library~\cite{grg} provided an earlier proof of concept for this technique in Cairo/Starknet (2024) but lacked a systematic comparison against an industry baseline; this work provides that comparison against gnark, the standard framework for field emulation in arithmetized circuits.
 
 
 \begin{table*}[t]
 \centering
-\caption{Performance comparison: gnark implementation, BN254 2-pairing}
+\caption{Performance comparison: gnark implementation, Groth16 simulation on BN254 (2 fixed-point pairings + 1 full pairing + 1 $\mathbb{F}_{p^{12}}$ mul)}
 \label{tab:main_performance}
 \begin{tabular}{|l|r|r|r|}
 \hline
@@ -19,35 +30,28 @@ Table~\ref{tab:main_performance} presents benchmark results from our gnark imple
 \hline
 \multicolumn{4}{|c|}{\textbf{SCS (Plonkish) Constraint System}} \\
 \hline
-Nb Constraints    & 1,447,170 & 1,026,241 & \textbf{29.1\%} \\
-Nb Commitments    &   539,884 &   281,518 & \textbf{47.9\%} \\
-Compile Time      &  559.95~ms &  371.37~ms & \textbf{33.7\%} \\
-Compile Memory    &   1.31~GB &  870.37~MB & \textbf{33.6\%} \\
-Solve Time        &  386.94~ms &  275.94~ms & \textbf{28.7\%} \\
-Solve Memory      &  445.03~MB &  250.39~MB & \textbf{43.7\%} \\
+Nb Constraints    & 1,890,771 & 1,158,194 & \textbf{38.7\%} \\
+Nb Commitments    &   739,198 &   295,946 & \textbf{60.0\%} \\
+Compile Time      &  775.64~ms &  406.71~ms & \textbf{47.6\%} \\
+Compile Memory    &   1.77~GB &    1.03~GB & \textbf{41.8\%} \\
+Solve Time        &  479.61~ms &  356.42~ms & \textbf{25.7\%} \\
+Solve Memory      &  510.36~MB &  376.57~MB & \textbf{26.2\%} \\
 \hline
 \multicolumn{4}{|c|}{\textbf{R1CS Constraint System}} \\
 \hline
-Nb Constraints    &   447,678 &   313,274 & \textbf{30.0\%} \\
-Nb Commitments    &   539,884 &   281,518 & \textbf{47.9\%} \\
-Compile Time      &  577.13~ms &  367.95~ms & \textbf{36.2\%} \\
-Compile Memory    &   1.53~GB &    1.02~GB & \textbf{33.3\%} \\
-Solve Time        &  240.96~ms &  162.77~ms & \textbf{32.4\%} \\
-Solve Memory      &  217.45~MB &  137.40~MB & \textbf{36.8\%} \\
+Nb Constraints    &   588,013 &   353,881 & \textbf{39.8\%} \\
+Nb Commitments    &   739,198 &   295,946 & \textbf{60.0\%} \\
+Compile Time      &  780.40~ms &  423.09~ms & \textbf{45.8\%} \\
+Compile Memory    &   2.09~GB &    1.19~GB & \textbf{43.1\%} \\
+Solve Time        &  320.84~ms &  214.73~ms & \textbf{33.1\%} \\
+Solve Memory      &  330.54~MB &  158.51~MB & \textbf{52.0\%} \\
 \hline
-\multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{api.Commit} calls.} \\
-\multicolumn{4}{l}{\footnotesize All measurements on BN254 2-pairing verification.} \\
+\multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{api.Commit} calls. Hardware: Apple M3 Pro (\texttt{goarch:arm64}).} \\
+\multicolumn{4}{l}{\footnotesize Circuit benchmarked: \url{https://gist.github.com/shramee/6b02bea91e25634108338b9bce384e5e}} \\
+\multicolumn{4}{l}{\footnotesize Our implementation: \url{https://github.com/mistcash/tiny-gnark/tree/ppp}} \\
 \hline
 \end{tabular}
 \end{table*}
-
-\subsection{Comparison with State of the Art}
-
-Gnark is currently the industry-standard framework for field emulation in arithmetized circuits. Its baseline for BN254 2-pairing verification---1,447,170 SCS constraints and 539,884 commitments---represents the current state of the art. Our polynomial ring toolkit, integrated directly into gnark's \texttt{emulated} package, reduces these to 1,026,241 SCS constraints ($-$29\%) and 281,518 commitments ($-$48\%), with solve time and memory dropping by 29--44\% depending on the backend.
-
-The key structural difference is that gnark's baseline verifies each emulated $\Fe{12}$ multiplication individually inside the circuit (one deferred check per multiplication, one committed quotient and carry per check), while our scheme batches all polynomial verification into a single two-round IOP with an accumulated quotient. This is why commitment overhead drops by 44\%---we collapse $O(k \cdot n)$ individual quotient commitments into a single $Q_{\mathrm{acc}}$ per ring group---while constraint counts drop by a more modest 29\%: remainder range-checks are retained as they are needed for soundness.
-
-The Garaga library~\cite{grg} provided an earlier proof of concept for this technique in Cairo/Starknet in 2024, but lacked a systematic comparison against an industry baseline. This gnark implementation provides that comparison, establishing the polynomial ring toolkit as a concrete, measurable improvement over the state of the art.
 
 \subsection{Final Remarks}
 
