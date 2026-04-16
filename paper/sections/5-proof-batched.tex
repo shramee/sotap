@@ -189,7 +189,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
     \LtoR{Accept/Reject}{8}
 }
 
-\subsection{Fiat-Shamir Transformation}
+\subsection{Fiat-Shamir Transformation} \label{sec:iop:fs}
 
 Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
 
@@ -267,14 +267,14 @@ If the prover commits to an incorrect remainder $R_i(x)$, the evaluation yields 
     \item \textbf{Degree in $z$:} at most $n - 1$ (due to the $z^i$ weighting).
     \item \textbf{Degree in $x$:} at most $d_x < 2^8$ (due to the polynomial products).
 \end{itemize}
-By the Schwartz-Zippel lemma, the probability that the non-zero polynomial $P_{\mathrm{err}}$ evaluates to zero is bounded by the sum of its maximum degrees divided by the field size:
+By the Schwartz-Zippel lemma, the probability that the non-zero polynomial $P_{\mathrm{err}}$ evaluates to zero is bounded by the total degree divided by the field size:
 $$\Pr[P_{\mathrm{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\mathrm{err}}) + \deg_x(P_{\mathrm{err}})}{|\mathbb{F}_q|} \leq \frac{n - 1 + d_x}{|\mathbb{F}_q|}$$
 \end{proof}
 
 \textbf{Concrete parameters for BN254}: With $n = 67$ equations and $d_x \leq 256$:
 $$\delta_s \leq \frac{66 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}.$$
 
-\textbf{Non-interactive proof via Fiat-Shamir}: Under the random oracle model the
+\textbf{Non-interactive proof via Fiat-Shamir} \label{sec:iop:soundness:fs}: From Section~\ref{sec:iop:fs}, under the random oracle model the
 knowledge soundness error becomes~\cite{IOP-NI}:
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
 where $m = 2$ (hash queries) and $\lambda = 254$ (hash output length), giving

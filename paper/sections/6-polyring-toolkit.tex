@@ -13,6 +13,8 @@ setting where the prover's computations are performed outside the circuit
 via \texttt{hints} (Section~\ref{sec:polyring:hints}). And verifier's checks
 are implemented as constraints inside the circuit.
 
+The code is available at \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}.
+
 % ----------------------------------------------------------
 \subsection{Ring Representation}
 \label{sec:polyring:rep}
@@ -57,8 +59,7 @@ $Q_{\mathrm{acc}}[j] = \sum_{i} z^i \cdot Q_i[j] \bmod q$ coefficient-wise,
 corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 % ----------------------------------------------------------
-\subsection{API}
-\label{sec:polyring:api}
+\subsection{API}~\label{sec:polyring:api}
 
 \subsubsection*{Register a ring group}
 
@@ -195,19 +196,27 @@ In the emulated field context, \textsc{Eval} in Algorithm~\ref{alg:evalpolyprod}
 
 Modular reductions can be deferred or entirely elided for operations expressible as inner products, such as polynomial evaluations and random linear combinations. This optimization leverages the capacity headroom provided by representing small emulated limbs (e.g., 64-bit limbs) within a significantly larger native field element.
 
-\paragraph{Deferred Reduction:} Intermediate scalars are permitted to grow over the integers $\mathbb{Z}$ during limb-wise multiplications and linear accumulations.
+\textbf{Deferred Reduction:} Intermediate scalars are permitted to grow over the integers $\mathbb{Z}$ during limb-wise multiplications and linear accumulations.
 
-\paragraph{Preservation of Identity:} Algebraic identities are strictly preserved provided the maximum accumulated limb magnitude remains bounded below the native characteristic $p$.
+\textbf{Preservation of Identity:} Algebraic identities are strictly preserved provided the maximum accumulated limb magnitude remains bounded below the native characteristic $p$.
 
-\paragraph{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
+\textbf{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
 
-\begin{lemma}[Overflow safety for BN254 pairing polynomials]\label{lem:overflow}
-With 4-limb, 64-bit emulated arithmetic and $d \leq 256$, each result-limb accumulates
-at most $4(d{+}1) \leq 1028$ products of two $2^{64}$-bounded values, giving a maximum
-limb magnitude of $1028 \times 2^{128} < 2^{138}$.
-For the $Q_{\mathrm{acc}}(x)\cdot P_{12}(x)$ product, the sparse $P_{12}$ (3 nonzero
-coefficients, largest $82 < 2^7$) raises this to $< 2^{146}$.
-Since $2^{146} \ll p \approx 2^{254}$, no intermediate limb reaches the native
-characteristic, so the deferred single-element reduction is safe for all polynomial
-evaluations in BN254 pairing verification.
+\begin{lemma}[Overflow safety for deferred reduction]\label{lem:overflow}
+Let $\Fq$ be emulated with limbs of width $b$ bits inside a native field $\mathbb{F}_p$.
+Consider evaluating a degree-$d$ polynomial via an inner product over the cached
+power vector $\mathcal{X}$.
+Since limbs are accumulated independently, each result-limb is a sum of $d+1$
+products of two $b$-bit values, so its magnitude is bounded by $\beta = 2^{2b + \lceil\log_2(d+1)\rceil}$.
+
+The deferred single-element reduction is safe whenever $\beta < \log_2 p$.
 \end{lemma}
+
+\begin{corollary}[BN254 pairing instantiation]\label{cor:overflow-bn254}
+For BN254 pairing verification: $b=64$, $d \leq 256$, and $p \approx 2^{254}$.
+Then
+\[
+  \beta \;=\; 2 \cdot 64 + \lceil\log_2 257\rceil \;=\; 128 + 9 \;=\; 137 \;<\; 254,
+\]
+so the deferred reduction is safe.
+\end{corollary}
