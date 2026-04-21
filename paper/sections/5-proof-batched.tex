@@ -99,13 +99,9 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \begin{algorithmic}[1]
 \Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
 \Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
-\Function{Eval}{$P = (p_0, p_1, \ldots, p_d),\ z$} \gComm{Uses Horner's method}
-    \State $v \leftarrow p_d$ \gComm{Start from leading coefficient}
-    \For{$k = d-1$ \textbf{downto} $0$}
-        \State $v \leftarrow v \cdot z + p_k$ \gComm{$d$ multiplications, $d$ additions total}
-    \EndFor
-    \State \Return $v$
-\EndFunction
+\State \textbf{function} \texttt{Eval} ({$P = (p_0, p_1, \ldots, p_d),\ z$}): \Return ($evaluation \in \Fq$)
+\State \gText{~~~~Uses Horner's method, body not included for brevity}
+
 \State $e \leftarrow \Call{Eval}{P_1, z}$ \gComm{Evaluate first polynomial}
 \For{$i = 2$ to $n$}
     \State $e \leftarrow e \cdot \Call{Eval}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}

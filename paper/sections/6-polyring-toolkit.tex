@@ -13,7 +13,7 @@ setting where the prover's computations are performed outside the circuit
 via \texttt{hints} (Section~\ref{sec:polyring:hints}). And verifier's checks
 are implemented as constraints inside the circuit.
 
-The code is available at \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}.
+Refer to our fork at \url{https://anonymous.4open.science/r/tiny-gnark-DDCD} for code.
 
 % ----------------------------------------------------------
 \subsection{Ring Representation}
@@ -61,60 +61,29 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 % ----------------------------------------------------------
 \subsection{API}~\label{sec:polyring:api}
 
-\subsubsection*{Register a ring group}
-
-\begin{verbatim}
-group := f.NewPolyRingCheck(mod, modEvalFn)
-\end{verbatim}
-
-Creates a \texttt{PolyRingGroupChecks[T]}, appends it to the field's deferred
-check list, and returns a handle shared by all multiplications under the same
-modulus. Pass \texttt{nil} for \texttt{modEvalFn} to use the dense fallback.
-Multiple groups with different moduli can coexist in one circuit.
-
-
-\subsubsection*{Submit a multiplication}
-\begin{verbatim}
-rem, err := f.MulPolyRings(group, A, B, C, ...)
-\end{verbatim}
-Computes $R = (\prod_j A_j) \bmod P$ via \texttt{polyRingMulHint} outside the
-circuit, range-checks $R$'s limbs inside (\texttt{packLimbs} with
-\texttt{strict=true}), and registers the check $(A,B,C;\,R;\,Q)$ in
-\texttt{group}. The quotient $Q$ is not range-checked; it is consumed only by
-the RLC hint outside the circuit. The returned \texttt{rem} is a fully reduced
-\texttt{*Poly[T]} and can be fed directly into the next \texttt{MulPolyRings}
-call.
-
-\subsubsection*{Accumulate a product chain}
-\begin{verbatim}
-acc := f.NewPolyRingAccumulator(group, targetDeg)
-acc.Mul(A)
-acc.Mul(B)
-acc.Sqr()       // enqueues (A·B)² without multiplying yet
-rem := acc.Eval()
-\end{verbatim}
-\texttt{PolyRingAccumulator} maintains a queue of polynomial factors representing
-the deferred product $\prod_i \mathtt{state}_i$. Calling \texttt{Mul} appends a
-factor; calling \texttt{Sqr} duplicates every current factor so that the next
-\texttt{Eval} computes $(\prod_i \mathtt{state}_i)^2$. When \texttt{targetDeg} is
-set, \texttt{Eval} is triggered automatically whenever the accumulated degree
-would exceed the bound, keeping intermediate products within a manageable degree
-before the final \texttt{MulPolyRings} call. Without a target degree all
-operations are deferred until \texttt{Eval} is called explicitly.
-
-\subsubsection*{Deferred verification}
-\begin{verbatim}
-f.performDeferredRingChecks(api)    // called once at circuit finalisation
-\end{verbatim}
-Implements Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit}
-calls~\cite{gnarkcommit} (producing challenges $z$ and $x$) and one \texttt{AssertIsEqual} per
-group. Gnark derives $z = \mathsf{MiMC}(\mathsf{root})$ from the first call and $x = \mathsf{MiMC}(z)$
-from the second, chaining the challenges across rounds (see Section~\ref{sec:iop:noninteractive}).
-No in-circuit work beyond remainder range-checks is performed until this point.
+The toolkit exposes three entry points.
+\texttt{NewPolyRingCheck} registers a ring group (modulus $P$ plus an optional
+small-coefficient evaluator) and returns a handle shared by every multiplication
+under that modulus; multiple groups with different moduli may coexist.
+\texttt{MulPolyRings} computes $R = (\prod_j A_j) \bmod P$ outside the circuit
+via \texttt{polyRingMulHint}, range-checks $R$'s limbs inside, and enqueues the
+check $(A_j; R; Q)$ in the group; for longer product chains
+a \texttt{PolyRingAccumulator} wrapper automatically triggers intermediate
+reductions when the accumulated degree exceeds a configurable bound.
+At circuit finalisation, \texttt{performDeferredRingChecks} implements
+Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit}
+calls~\cite{gnarkcommit} (producing challenges $z$ and $x$) and one
+\texttt{AssertIsEqual} per group, so no in-circuit work beyond remainder
+range-checks is performed until this point. Full API signatures and a
+step-by-step code walkthrough are available in the repository.\footnote{%
+\url{https://anonymous.4open.science/r/tiny-gnark-DDCD}}
 
 % ----------------------------------------------------------
-\subsection{Usage in Practice}
+
+\subsection{Usage}
 \label{sec:polyring:usage}
+
+\subsubsection*{Core API}
 
 Register the ring group once at initialisation:
 
@@ -122,61 +91,21 @@ Register the ring group once at initialisation:
 fp, _ := emulated.NewField[emulated.BN254Fp](api)
 modPoly := fp.MakePoly([]any{82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1})
 ring := fp.NewPolyRingCheck(modPoly, nil)
-\end{verbatim}
-
-\texttt{MakePoly} accepts Go integer literals and maps zeros to \texttt{nil},
-so the slice is sparse from construction.
-
-Each Miller-loop step then calls:
-\begin{verbatim}
+// Each Miller-loop step then calls:
 rem, _ = f.MulPolyRings(ring, f, f, L1, L2, L3)
 \end{verbatim}
 and \texttt{performDeferredRingChecks} is invoked once by the gnark backend at
 finalisation, running the full two-round protocol of Section~\ref{sec:iop}.
 
-% ----------------------------------------------------------
-\subsection{Protocol and Code Flow}
-\label{sec:polyring:flow}
+\subsubsection*{Accumulate a product chain}
 
-The following paragraphs trace each step of the two-round protocol
-(Section~\ref{sec:iop:interactive}) to the concrete function that implements it.
-
-The verifier is essentially the circuit which encodes all the operations into constraints which can be later verified. The prover is essentially the computation done outside the circuit via \texttt{hints}.
-
-\subsubsection*{Prover computes $Q_i, R_i$ (Algorithm~\ref{alg:2r:prover})}
-%
-Each \texttt{MulPolyRings} calls \texttt{polyRingMulHint}, results are provided on call, $Q, R$
-for the operation stored.
-
-\subsubsection*{Round~I: commit to $\{R_i\}$, receive challenge $z$}
-%
-\texttt{performDeferredRingChecks} collects all $R_i$ limbs across all groups
-and calls \texttt{api.Commit} to obtain $z$ in the circuit. Internally, gnark folds
-all committed limbs into a global linear combination $\mathsf{root}$ and derives
-$z = \mathsf{MiMC}(\mathsf{root})$~\cite{gnarkcommit}.
-
-\subsubsection*{Prover forms $Q_{\mathrm{acc}} = \sum_i z^i Q_i$ (Algorithm~\ref{alg:2r:prover})}
-%
-$z$ from the circuit is passed to \texttt{quotientsRLCHint}, accumulating quotients coefficient-wise in $\bmod\,q$ arithmetic.
-
-\subsubsection*{Round~II: commit to $Q_{\mathrm{acc}}$, receive challenge $x$}
-%
-The $Q_{\mathrm{acc}}$ limbs are passed to a second \texttt{api.Commit} call.
-Gnark chains the hash: $x = \mathsf{MiMC}(z)$, binding $x$ to the full transcript
-including all $R_i$ and $Q_{\mathrm{acc}}$~\cite{gnarkcommit}.
-
-\subsubsection*{Verifier evaluates each polynomial at $x$ (Algorithm~\ref{alg:evalpolyprod})}
-%
-\texttt{evalPolyWithChallenge} calls \texttt{InnerProductNoReduce} over the
-pre-computed power vector $\{x^i\}$; the result is memoised in
-\texttt{Poly.evaluation} to avoid re-evaluation.
-
-\paragraph{Verifier checks Equation~\eqref{eq:iop-batched}: $\sum_i z^i(\prod_j A_{i,j}(x) - R_i(x)) = Q_{\mathrm{acc}}(x)\cdot P(x)$.}
-\texttt{InnerProductNoReduce} on the per-check defects weighted by $\{z^i\}$
-gives \texttt{lhs}; \texttt{MulNoReduce} of $Q_{\mathrm{acc}}(x)$ and $P(x)$
-(via \texttt{modEvalFn} or the dense fallback) gives \texttt{rhs};
-\texttt{AssertIsEqual(lhs, rhs)} closes the circuit.
-
+\begin{verbatim}
+acc := f.NewPolyRingAccumulator(group, targetDeg)
+acc.Mul(A)
+acc.Mul(B)
+acc.Sqr()       // enqueues (A·B)² without multiplying yet
+rem := acc.Eval()
+\end{verbatim}
 
 % ----------------------------------------------------------
 \subsection{Implementation Details and Performance}

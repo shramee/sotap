@@ -1,5 +1,15 @@
 \section{Conclusion}
 
+We have shown that choosing the right granularity for polynomial identity
+testing---entire Miller loop steps rather than individual field
+multiplications---yields substantial and measurable improvements in
+arithmetized pairing verification.
+The key technique, collapsing a composite multi-operand product into a single
+Euclidean division check with batched quotient accumulation, is simple to
+implement and broadly applicable to other multi-step cryptographic computations
+in arithmetized environments.
+
+
 \begin{table*}[t]
 \centering
 \caption{Performance improvements in Garaga: Cairo implementation on Starknet}
@@ -96,3 +106,25 @@ Solve Memory      &  330.54~MB &  158.51~MB & \textbf{52.0\%} \\
 \hline
 \end{tabular}
 \end{table*}
+
+\subsection{Further Work}
+
+Several natural extensions of this work remain open. First, our framework 
+could be extended to additional curves: \textbf{BLS12--381} for applications 
+requiring higher security than BN254, and \textbf{BW6--761} for recursive 
+proof chain verification on Ethereum.
+
+A further direction is exploring the technique for native field pairings, such 
+as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the 
+trade-off between batching savings and commitment costs warrants dedicated 
+analysis.
+
+Rather than targeting a specific pairing, we designed this as a general 
+polynomial ring toolkit, which opens additional avenues for exploration. One 
+promising direction is larger batches that fold multiple Miller loop steps into 
+a single polynomial verification. This strategy works well in Garaga
+implementation. But is not pursued in our implementation because in Gnark implementation
+polynomial evaluations are cheap, while the extra evaluation challenge powers required to handle 
+degree doubling from cross-step squarings require in place reductions. Finally, the underlying 
+technique generalizes beyond pairings to any setting involving repeated 
+operations over the same polynomial rings in arithmetized environments.
