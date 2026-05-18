@@ -1,9 +1,0 @@
-\section{Related Work}
-
-The landscape of efficient pairing verification in constraint systems has evolved through three key contributions that our work directly builds upon.
-
-\begin{enumerate}
-	\item El Housni's \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} established the theoretical framework for optimizing pairings in arithmetized environments, introducing efficient Miller loop formulas in affine coordinates and sparse line function representations. This work inverts the usual cost model: inversions become cheap (2C) while multiplications remain the dominant cost.
-	\item Feltroidprime~\cite{FXFM23} introduced polynomial identity testing for $\Fe{12}$ arithmetic via the Schwartz-Zippel lemma. Each multiplication $A \cdot B$ is expressed as $A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)$ and verified at a single random point, with the quotients $Q$ batched via random linear combination. Our work applies the same polynomial framework but at a coarser granularity: entire Miller loop steps rather than individual multiplications, eliminating intermediate remainder commitments entirely.
-	\item Novakovic and Eagen's \textbf{On Proving Pairings}~\cite{OPP24} showed that final exponentiation can be replaced by a residue witness check, reducing final exponentiation cost by over 85\% for BN254. We integrate their residue witness $c$ directly into our polynomial step equations (Section~\ref{sec:op:ml-nzbit}), unifying the Miller loop and final exponentiation into the same polynomial verification framework.
-\end{enumerate}
