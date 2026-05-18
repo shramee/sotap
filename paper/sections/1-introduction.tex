@@ -1,31 +1,47 @@
 \section{Introduction}
 
-Blockchain technology continues to mature with improving scalability and infrastructure. However, privacy remains a significant barrier to entry for many users and applications. Zero-knowledge proofs (ZKPs) have emerged as a powerful solution to this challenge.
+Bilinear pairings on elliptic curves are a fundamental building block 
+of modern cryptography, underlying SNARK constructions such as 
+Groth16~\cite{Gro16} and PLONK~\cite{plnk19}, the KZG polynomial 
+commitment scheme~\cite{kzg10}, and BLS signatures~\cite{bls05}. 
+While native pairing computation is well-studied and highly optimised, 
+a different challenge arises when a pairing must be verified 
+\emph{inside another proving system}---that is, when the pairing 
+computation itself becomes a statement to be proved in an arithmetised 
+circuit.
 
-\subsection{Motivation}
-
-Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
-
-However, \textbf{pairings are computationally intensive}. This creates critical bottlenecks in two important deployment contexts:
-
-\begin{enumerate}
-\item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive during peak network congestion.
-
-\item \textbf{Arithmetized computation systems} (R1CS~\cite{r1cs13}, Plonkish~\cite{plnk19}, Cairo AIR~\cite{cairo21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
-\end{enumerate}
-
-In such contexts, an efficient proof system for pairing correctness can replace expensive native execution inside the constrained environment.
+This setting arises naturally in \textbf{proof recursion}, where one 
+SNARK verifies another, and more broadly whenever a verifier is 
+itself constrained: in resource-metered execution environments, in 
+on-chain verification, and in any arithmetised computation system 
+(R1CS~\cite{r1cs13}, Plonkish~\cite{plnk19}, AIR~\cite{cairo21}) 
+where each $\mathbb{F}_{q^{12}}$ operation translates into many 
+constraints. In these contexts, the cost of expressing a pairing as 
+a circuit dominates verification, and reducing it has been the 
+subject of a substantial line of work.
 
 \subsection{Our Contribution}
 
 We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual extension field operations~\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
-\item \textbf{39\% reduction} in SCS constraints (1,890,771~$\to$~1,158,194 for BN254 Groth16 simulation)
-\item \textbf{60\% reduction} in commitments (739,198~$\to$~295,946)
+\item \textbf{39\% reduction} in Plonkish constraints (1,890,771~$\to$~1,158,194 for BN254 Groth16 simulation)
+\item \textbf{60\% reduction} in communication complexity (739,198~$\to$~295,946)
 \item $\sim$\textbf{42\% reduction} in compile-time memory and up to \textbf{52\%} in solver memory
 \end{itemize}
 
 Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate commitments.
 
-As a reusable artefact of independent interest, we also contribute a \textbf{polynomial ring toolkit} for gnark's emulated arithmetic package. The toolkit packages the two-round interactive proof system into a clean API: a single \texttt{NewPolyRingCheck} call registers a modulus, \texttt{MulPolyRings} submits multiplications with deferred verification, and \texttt{performDeferredRingChecks} closes the circuit with two \texttt{api.Commit} challenges. Atop this, the \texttt{PolyRingAccumulator} provides a higher-level interface for building product chains: factors are enqueued via \texttt{Mul}, squarings via \texttt{Sqr}, and the accumulated product is evaluated lazily through \texttt{Eval}, with optional automatic degree-bounding to keep intermediate products manageable.
+As a reusable artefact of independent interest, we also contribute a polynomial ring toolkit for gnark's emulated arithmetic package. The toolkit instantiates the two-round interactive proof system generically: it is parameterised by an arbitrary modulus polynomial $P \in \mathbb{F}_q[x]$ and an emulated base field, so the same construction applies to pairing verification on any curve and, more broadly, to any computation that reduces to multiplications in $\mathbb{F}_q[x]/\langle P \rangle$. Multiplications submitted to the toolkit are verified lazily: the prover's quotient and remainder are computed outside the circuit, and the resulting polynomial-identity check is deferred to circuit finalisation, where all checks under a common modulus are batched into a single Schwartz–Zippel test against two Fiat–Shamir challenges.
+
+\subsection{Related Work}
+
+The landscape of efficient pairing verification in constraint systems has evolved through three key contributions that our work directly builds upon.
+
+El Housni's \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} established the theoretical framework for optimizing pairings in arithmetized environments, introducing efficient Miller loop formulas in affine coordinates and sparse line function representations. This work inverts the usual cost model: inversions become cheap (2C) while multiplications remain the dominant cost.
+
+Feltroidprime~\cite{FXFM23} introduced polynomial identity testing for $\Fe{12}$ arithmetic via the Schwartz-Zippel lemma. Each multiplication $A \cdot B$ is expressed as $A(x) \cdot B(x) = Q(x) \cdot P_{12}(x) + R(x)$ and verified at a single random point, with the quotients $Q$ batched via random linear combination. Our work applies the same polynomial framework but at a coarser granularity: entire Miller loop steps rather than individual multiplications, eliminating intermediate remainder commitments entirely.
+
+Novakovic and Eagen's \textbf{On Proving Pairings}~\cite{OPP24} showed that final exponentiation can be replaced by a residue witness check, reducing final exponentiation cost by over 85\% for BN254. We integrate their residue witness $c$ directly into our polynomial step equations (Section~\ref{sec:op:ml-nzbit}), unifying the Miller loop and final exponentiation into the same polynomial verification framework.
+
+These works provide the baseline for our construction. Our work introduces optimizations that further reduce constraint counts beyond the cumulative gains of these existing techniques.

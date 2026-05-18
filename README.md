@@ -11,31 +11,18 @@ MIST.cash — FOCBB
 <b>Abstract</b>
 </p>
 
-In this paper, we examine recent advances in the efficient proof of correctness for ellip-
-tic curve pairing computations. Rather than focusing on the raw computation of pairings
-themselves, our work centers on practical, sound, and high-performance techniques for prov-
-ing that a pairing computation has been performed correctly—an essential step in modern
-zero-knowledge proof (ZKP) systems. These techniques are foundational for SNARK-based
-proof verification, especially in applications where succinctness and scalability matter, such
-as public blockchains.
-Our target use case involves zero-knowledge statements for moderately sized problems
-(around one million constraints). So we focus our benchmarks on the Groth16 proof sys-
-tem [2] instantiated with the BN254 curve as used in Ethereum. The theoretical advances
-presented in this work are, however, broadly applicable to any pairing-based cryptographic
-system. Throughout this paper, we systematically present and benchmark a series of ad-
-vances in proof strategies: from recent state-of-the-art pairings, to new field extension arith-
-metic, to optimized proof verification techniques including refined Miller loop and final
-exponentiation steps.
-We introduce each technique, explain its motivation and implementation, and directly
-compare its performance against the previous generation, highlighting measurable improve-
-ments at every stage. Our roadmap provides insight for future applications and paves the
-way towards efficient, sound, and scalable ZK-SNARK verification for real-world use cases.
+In this work, we consider the setting where elliptic curve pairings need to be performed within another proving system. This appears in proof recursion where a proof verifies other proofs, or when pairing-based protocols like BLS (Boneh-Lynn-Shacham) signatures or KZG commitments are used within a proof. We show a construction that simultaneously reduces arithmetic circuit depth and communication complexity.
+
+We present \emph{a two-round public-coin interactive proof system} that consolidates the Miller loop iterations and final exponentiation into unified polynomial relations, verified as polynomial identities over $\mathbb{F}_q[x]$. This construction significantly reduces computational overhead across R1CS, Plonkish and AIR-based systems. We prove knowledge soundness $\delta_s \leq 2^{-245}$ for a three-pair optimal ate multi-pairing on BN254 curve.
+
+As our \emph{second contribution} we present a generalised construction of our core technique, parameterised by an arbitrary modulus polynomial, designed for easy application across various protocols and schemes beyond pairings that utilize polynomial ring multiplications.
+
+We demonstrate the practical efficacy of our construction across R1CS, Plonkish, and AIR arithmetisations on BN254 and BLS12-381, with implementations in gnark---the open-source zk-SNARK ecosystem---and in Garaga, the standard library for pairing-based ZK proof verification on Cairo, a leading AIR-based CPU architecture.
 
 ## Structure
 
-- `code/` - Code for implementations and benchmarks
-- `paper/` - LaTeX source files for the research paper
-- `results/` - Experimental results and data
+- `paper/` - LaTeX source files for the paper
+- `bench/` - Benchmarking code
 
 ## Building the Paper
 
@@ -66,38 +53,75 @@ Results are available in [results/](./results) directory.
 - Go 1.19+ 
 - gnark library
 
-## Benchmarks
-
+## Benchmarks Garaga
+```
 Before implementation:
 
 | circuit                    | MULMOD | ADDMOD | POSEIDON | ~cycles |
 | -------------------------- | ------ | ------ | -------- | ------- |
-| Miller n=1 BLS12_381       | 4936   | 4966   | 1580     | 90154   |
-| Miller n=2 BLS12_381       | 8030   | 8171   | 2276     | 141734  |
 | Miller n=3 BLS12_381       | 11356  | 11608  | 3088     | 198070  |
-| MultiPairing n=1 BLS12_381 | 10064  | 14027  | 3913     | 217841  |
-| MultiPairing n=2 BLS12_381 | 13158  | 17232  | 4609     | 269421  |
 | MultiPairing n=3 BLS12_381 | 16484  | 20669  | 5421     | 325757  |
-| Miller n=1 BN254           | 5984   | 5927   | 1810     | 101558  |
-| Miller n=2 BN254           | 10132  | 10107  | 2740     | 167298  |
 | Miller n=3 BN254           | 14456  | 14463  | 3758     | 236382  |
-| MultiPairing n=1 BN254     | 10670  | 13150  | 3741     | 203854  |
-| MultiPairing n=2 BN254     | 14818  | 17330  | 4671     | 269594  |
 | MultiPairing n=3 BN254     | 19142  | 21686  | 5689     | 338678  |
 
 New results:
 
 | circuit                    | MULMOD | ADDMOD | POSEIDON | ~cycles |
 | -------------------------- | ------ | ------ | -------- | ------- |
-| Miller n=1 BLS12_381       | 2672   | 2686   | 790      | 47588   |
-| Miller n=2 BLS12_381       | 4418   | 4525   | 812      | 69558   |
 | Miller n=3 BLS12_381       | 6164   | 6364   | 834      | 91528   |
-| MultiPairing n=1 BLS12_381 | 7795   | 11742  | 3123     | 175215  |
-| MultiPairing n=2 BLS12_381 | 9541   | 13581  | 3145     | 197185  |
 | MultiPairing n=3 BLS12_381 | 11287  | 15420  | 3167     | 219155  |
-| Miller n=1 BN254           | 3303   | 3228   | 828      | 53130   |
-| Miller n=2 BN254           | 5639   | 5576   | 852      | 81898   |
 | Miller n=3 BN254           | 7975   | 7924   | 876      | 110666  |
-| MultiPairing n=1 BN254     | 7984   | 10446  | 2759     | 155366  |
-| MultiPairing n=2 BN254     | 10320  | 12794  | 2783     | 184134  |
 | MultiPairing n=3 BN254     | 12656  | 15142  | 2807     | 212902  |
+```
+
+## Benchmarks Gnark
+
+```
+----------------------------------------
+        GNARK BASE BENCHMARK
+----------------------------------------
+
+goos: darwin
+goarch: arm64
+pkg: github.com/consensys/gnark/std/algebra/emulated/sw_bn254
+cpu: Apple M3 Pro
+BenchmarkGroth16Simulation
+BenchmarkGroth16Simulation/compile_scs
+BenchmarkGroth16Simulation/compile_scs-12                      2         775639125 ns/op        1767674616 B/op  9739433 allocs/op
+    g16_simulation_test.go:178: nb commitments: 739198, scs size: 50245511 (bytes), nb constraints 1890771, nbInstructions: 1961583
+BenchmarkGroth16Simulation/solve_scs
+BenchmarkGroth16Simulation/solve_scs-12                        3         479610014 ns/op        510358354 B/op   4762353 allocs/op
+BenchmarkGroth16Simulation/compile_r1cs
+BenchmarkGroth16Simulation/compile_r1cs-12                     2         780398875 ns/op        2091155060 B/op 18979147 allocs/op
+    g16_simulation_test.go:204: nb commitments: 739198, r1cs size: 40080665 (bytes), nb constraints 588013, nbInstructions: 658825
+BenchmarkGroth16Simulation/solve_r1cs
+BenchmarkGroth16Simulation/solve_r1cs-12                       4         320837448 ns/op        330537186 B/op   3772976 allocs/op
+PASS
+ok      github.com/consensys/gnark/std/algebra/emulated/sw_bn254        10.938s
+
+
+----------------------------------------
+         THIS WORK BENCHMARK
+----------------------------------------
+
+goos: darwin
+goarch: arm64
+pkg: github.com/consensys/gnark/std/algebra/emulated/sw_bn254
+cpu: Apple M3 Pro
+BenchmarkGroth16Simulation
+BenchmarkGroth16Simulation/compile_scs
+BenchmarkGroth16Simulation/compile_scs-12                      3         406713917 ns/op        1029059832 B/op  6041293 allocs/op
+    g16_simulation_test.go:178: nb commitments: 295946, scs size: 27893950 (bytes), nb constraints 1158194, nbInstructions: 1196936
+BenchmarkGroth16Simulation/solve_scs
+BenchmarkGroth16Simulation/solve_scs-12                        3         356417264 ns/op        376566120 B/op   2466802 allocs/op
+BenchmarkGroth16Simulation/compile_r1cs
+BenchmarkGroth16Simulation/compile_r1cs-12                     3         423090320 ns/op        1190704520 B/op 10771092 allocs/op
+    g16_simulation_test.go:204: nb commitments: 295946, r1cs size: 21254062 (bytes), nb constraints 353881, nbInstructions: 392625
+BenchmarkGroth16Simulation/solve_r1cs
+BenchmarkGroth16Simulation/solve_r1cs-12                       5         214731150 ns/op        158506558 B/op   1501978 allocs/op
+PASS
+ok      github.com/consensys/gnark/std/algebra/emulated/sw_bn254        10.117s
+
+----------------------------------------
+       Conducted on 2026-04-15
+```
