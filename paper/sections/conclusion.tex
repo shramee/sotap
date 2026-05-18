@@ -70,13 +70,13 @@ Both implementations are evaluated against the same gnark circuit\footnote{Circu
 
 \textbf{Step~2:} A single in-circuit Miller loop $\mathrm{ML}(P_3,Q_3)$ combined with a Miller loop result $f$ computed \emph{outside} the circuit, followed by a final-exponentiation-equals-one assertion (\texttt{AssertMillerLoopAndFinalExpIsOne}).
 
-This structure simulates constraints for a real Groth16 verification: the two fixed-$\mathbb{G}_2$ pairings, one full pairing, and one $\mathbb{F}_{p^{12}}$ multiplication. These recreate the four pairing operations with fixed trusted setup points.
+This structure simulates constraints for a real Groth16 verification: the two fixed-$\mathbb{G}_2$ pairings, one full pairing, and one $\mathbb{F}_{q^{12}}$ multiplication. These recreate the four pairing operations with fixed trusted setup points.
 
 \textbf{The gnark baseline} numbers were obtained by running the benchmark function against the upstream gnark \texttt{emulated} package (\texttt{github.com/consensys/gnark}). The \textbf{This Work} numbers were obtained from the same benchmark file compiled against our fork, which replaces the per-multiplication deferred checks in the \texttt{emulated} package with the polynomial ring toolkit described in this paper. No changes to the circuit definition or test harness were required; only the underlying \texttt{emulated} arithmetic backend differs between the two runs.
 
 \begin{table*}[t]
 \centering
-\caption{Performance comparison: gnark implementation, Groth16 simulation on BN254 (2 fixed-point pairings + 1 full pairing + 1 $\mathbb{F}_{p^{12}}$ mul)}
+\caption{Performance comparison: gnark implementation, Groth16 simulation on BN254 (2 fixed-point pairings + 1 full pairing + 1 $\mathbb{F}_{q^{12}}$ mul)}
 \label{tab:main_performance}
 \begin{tabular}{|l|r|r|r|}
 \hline
