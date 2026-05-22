@@ -1,15 +1,19 @@
-<h1>Efficient Verification of Pairing Computation<br />
-<small>Schwartz-Zippel Lemma for Miller Loop</small>
+<h1 align="center">
+Pairing Proofs and Polynomial Ring Relations
 </h1>
+<p align="center">
+Shramee Srivastav <br/>
+[<a href="https://orcid.org/0009-0009-7208-3478">0009-0009-7208-3478</a>]<br/>
+MIST.cash, Shhtarknet<br/>
+shramee@proton.me <br/>
+</p>
+<p align="center">
+May 16, 2026
+</p>
 
-<p align="center">
-Shramee Srivastav
-<br/>
-MIST.cash — FOCBB
-</p>
-<p align="center">
-<b>Abstract</b>
-</p>
+<h3 align="center">
+Abstract
+</h3>
 
 In this work, we consider the setting where elliptic curve pairings need to be performed within another proving system. This appears in proof recursion where a proof verifies other proofs, or when pairing-based protocols like BLS (Boneh-Lynn-Shacham) signatures or KZG commitments are used within a proof. We show a construction that simultaneously reduces arithmetic circuit depth and communication complexity.
 
@@ -19,10 +23,13 @@ As our \emph{second contribution} we present a generalised construction of our c
 
 We demonstrate the practical efficacy of our construction across R1CS, Plonkish, and AIR arithmetisations on BN254 and BLS12-381, with implementations in gnark---the open-source zk-SNARK ecosystem---and in Garaga, the standard library for pairing-based ZK proof verification on Cairo, a leading AIR-based CPU architecture.
 
+### [Read the paper](paper/main.pdf)
+
 ## Structure
 
 - `paper/` - LaTeX source files for the paper
-- `bench/` - Benchmarking code
+- `benchmark/` - Benchmarking code
+- The protocol is implemented in gnark at [mistcash/tiny-gnark `ppp` branch](https://github.com/mistcash/tiny-gnark/blob/ppp/std/math/emulated/field_polyring.go).
 
 ## Building the Paper
 
@@ -36,22 +43,9 @@ pdflatex main.tex
 pdflatex main.tex
 ```
 
-## Running Experiments
-
-```bash
-cd experiments
-go run main.go
-```
-
-## Results
-
-Results are available in [results/](./results) directory.
-
 ## Dependencies
 
 - LaTeX distribution (TeXLive, MiKTeX, etc.)
-- Go 1.19+ 
-- gnark library
 
 ## Benchmarks Garaga
 ```
@@ -73,6 +67,7 @@ New results:
 | Miller n=3 BN254           | 7975   | 7924   | 876      | 110666  |
 | MultiPairing n=3 BN254     | 12656  | 15142  | 2807     | 212902  |
 ```
+Courtesy @feltroidprime https://github.com/keep-starknet-strange/garaga/pull/129/changes#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R121-R122
 
 ## Benchmarks Gnark
 
@@ -125,3 +120,5 @@ ok      github.com/consensys/gnark/std/algebra/emulated/sw_bn254        10.117s
 ----------------------------------------
        Conducted on 2026-04-15
 ```
+
+Tests run across stock [gnark](https://github.com/Consensys/gnark) and [mistcash/tiny-gnark/tree/ppp](https://github.com/mistcash/tiny-gnark/tree/ppp): https://gist.github.com/shramee/6b02bea91e25634108338b9bce384e5e
