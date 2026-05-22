@@ -1,3 +1,5 @@
+\newcommand{\InlineFor}[2]{\State \textbf{for} #1 \textbf{do} #2}
+
 \section{Pairing Operations as Polynomials}
 
 Algorithm~\ref{alg:pairing} gives the pairing computation combining El Housni's R1CS optimizations~\cite{PR1CS22} with Novakovic-Eagen's residue witness technique~\cite{OPP24}. The 27th root of unity $W$ scales the Miller loop output $f$ to be a cubic residue (see~\cite{OPP24} §4.3); if $f$ is not already a cubic residue, multiplying by $W^w$, $w\in\{1,2\}$ corrects this.
@@ -5,65 +7,68 @@ Algorithm~\ref{alg:pairing} gives the pairing computation combining El Housni's 
 Our contribution is to express each step of this algorithm as a single multi-operand polynomial product verified via the Schwartz-Zippel lemma, rather than as a sequence of individual binary multiplications as in~\cite{FXFM23}.
 
 \begin{algorithm}
-\caption{Optimal Ate pairing with Residue witness check}
-\label{alg:pairing}
-\begin{algorithmic}[1]
-\Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$
-\Statex $\text{Internal } W, W^2 \in \Fe{12}$ \Comment{$W$ is 27th root of unity}
-\Ensure $a_{opt}(Q, P)$
-\State Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
-\State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
-\State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
+    \caption{Optimal Ate Multi-Pairing with Residue witness check}
+    \label{alg:multipairing}
+    \begin{algorithmic}[1]
+    \Require Vectors $\vec{P} = (P_1, \dots, P_N) \in \G_1^N$, $\vec{Q} = (Q_1, \dots, Q_N) \in \G_2^N$, $c \in \Fe{12}, w \in \{0,1,2\}$
+    \Statex $\text{Internal } W, W^2 \in \Fe{12}$ \Comment{$W$ is 27th root of unity}
+    \Ensure $\prod_{k=1}^N a_{opt}(Q_k, P_k)$
+    \State Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
+    \State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
+    \State $f \leftarrow c^{-1}$ \Comment{Initialize with inverse residue witness}
 
-\State $T \leftarrow Q$ \gComm{$T_i$ for each pair for multi-pairing}
+    \InlineFor {$k = 1$ to $N$} {$T_k \leftarrow Q_k$}
 
-\color{gray}
-\Statex \small{Every operation involving $T, P \text{ or } Q$ is repeated for $T_i, P_i \text{ and } Q_i$ for multi-pairing.}
-\color{black}
+    \Statex
 
-\Statex
+    \For{$i = L - 2$ to $0$}
+        \State $f \leftarrow f^2$ \label{pr:ml:sq}
+        \State $f \leftarrow f \cdot \prod_{k=1}^N l_{T_k,T_k}(P_k)$ \label{pr:ml:ldbl}
 
-\For{$i = L - 2$ to $0$}
-    \State $f \leftarrow f^2$ \label{pr:ml:sq}
-    \State $f \leftarrow f \cdot l_{T,T}(P)$ \gComm{Repeat for $T_i, P_i$}  \label{pr:ml:ldbl}
-    \State $T \leftarrow [2]T$ \gComm{Repeat for $T_i$}
-    \If{$s_i = 1$}
-        \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness}\label{pr:ml:rw1bit}
-        \State $f \leftarrow f \cdot l_{T,Q}(P)$ \gComm{Repeat for $T_i, Q_i, P_i$}\label{pr:ml:ladd1bit}
-        \State $T \leftarrow T + Q$ \gComm{Repeat for $T_i, Q_i$}
-    \ElsIf{$s_i = -1$}
-        \State $f \leftarrow f \cdot c$ \Comment{Residue witness}\label{pr:ml:rw-1bit}
-        \State $f \leftarrow f \cdot l_{T,-Q}(P)$ \gComm{Repeat for $T_i, -Q_i, P_i$}\label{pr:ml:ladd-1bit}
-        \State $T \leftarrow T - Q$ \gComm{Repeat for $T_i, -Q_i$}
+        \InlineFor {$k = 1$ to $N$} {$T_k \leftarrow [2]T_k$}
+
+        \If{$s_i = 1$}
+            \State $f \leftarrow f \cdot c^{-1}$ \Comment{Residue witness}\label{pr:ml:rw1bit}
+            \State $f \leftarrow f \cdot \prod_{k=1}^N l_{T_k,Q_k}(P_k)$ \label{pr:ml:ladd1bit}
+            \InlineFor {$k = 1$ to $N$} {$T_k \leftarrow T_k + Q_k$}
+
+        \ElsIf{$s_i = -1$}
+            \State $f \leftarrow f \cdot c$ \Comment{Residue witness}\label{pr:ml:rw-1bit}
+            \State $f \leftarrow f \cdot \prod_{k=1}^N l_{T_k,-Q_k}(P_k)$ \label{pr:ml:ladd-1bit}
+            \InlineFor {$k = 1$ to $N$} {$T_k \leftarrow T_k - Q_k$}
+
+        \EndIf
+    \EndFor
+    \Statex
+
+    \InlineFor {$k = 1$ to $N$} {$Q_{1,k} \leftarrow \pi_p(Q_k)$, $Q_{2,k} \leftarrow \pi_p^2(Q_k)$}
+
+    \State $f \leftarrow f \cdot \prod_{k=1}^N l_{T_k,Q_{1,k}}(P_k)$ \label{pr:ml:pi1}
+
+    \InlineFor {$k = 1$ to $N$} {$T_k \leftarrow T_k + Q_{1,k}$}
+
+    \State $f \leftarrow f \cdot \prod_{k=1}^N l_{T_k,-Q_{2,k}}(P_k)$ \label{pr:ml:pi2}
+
+    \Statex
+    \If{$w = 1$}
+        \State $f \leftarrow f \cdot W$ \label{pr:ml:27r}
+    \ElsIf{$w = 2$}
+        \State $f \leftarrow f \cdot W^2$ \label{pr:ml:27r2}
     \EndIf
-\EndFor
-\Statex
-\State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$ \gComm{Repeat for $Q_{1i}, T_i$}
-\State $f \leftarrow f \cdot l_{T,Q_1}(P)$ \gComm{Repeat for $Q_{1i}, T_i, P_i$}\label{pr:ml:pi1}
-\State $T \leftarrow T + Q_1$  \gComm{Repeat for $Q_{1i}, T_i$}
-\State $f \leftarrow f \cdot l_{T,-Q_2(Q)}(P)$ \gComm{Repeat for $Q_i, T_i, P_i$}\label{pr:ml:pi2}
 
-\If{$w = 1$}
-    \State $f \leftarrow f \cdot W$ \label{pr:ml:27r}
-\ElsIf{$w = 2$}
-    \State $f \leftarrow f \cdot W^2$ \label{pr:ml:27r2}
-\EndIf
+    \State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$}\label{pr:ml:fe}
 
-\State $f \leftarrow f \cdot c^{-q} \cdot c^{q^2} \cdot c^{-q^3}$ \Comment{Uses Frobenius maps, Negative exponents use $c^{-1}$}\label{pr:ml:fe}
+    \Statex
 
-\Statex
-
-\State \Return $f$
-\end{algorithmic}
+    \State \Return $f$
+    \end{algorithmic}
 \end{algorithm}
 
 \subsection{Comparative Analysis~\label{sec:ops:comp-analysis}}
 
 We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C.
 
-\subsubsection{Previous scheme}
-
-Adapting~\cite{FXFM23} to lines \ref{pr:ml:sq}--\ref{pr:ml:ldbl} of Algorithm \ref{alg:pairing} for a 3-pair Miller loop gives:
+Adapting~\cite{FXFM23} to lines \ref{pr:ml:sq}--\ref{pr:ml:ldbl} of Algorithm~\ref{alg:pairing} chains four binary multiplications, each producing an intermediate remainder that must be committed:
 
 \begin{align*}
     F(x) \cdot F(x) &\stackrel{?}{=} Q_1(x) \cdot P_{12}(x) + T_1(x) \\
@@ -72,44 +77,31 @@ Adapting~\cite{FXFM23} to lines \ref{pr:ml:sq}--\ref{pr:ml:ldbl} of Algorithm \r
     T_3(x) \cdot L_3(x) &\stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)
 \end{align*}
 
-Evaluating $F$, $T_1$–$T_3$, $R$ costs 12C each and $L_1$–$L_3$ cost 4C each; all four remainder polynomials require commitment. \textbf{Total: 76C and 48 $\Fq$ commitments} ($4 \times 12$).
+Each of the five polynomial evaluations ($F$, $T_1$--$T_3$, $R$) costs 12C and each line costs 4C, with all four remainders requiring commitment: \textbf{76C and 48 $\Fq$ commitments}.
 
-\subsubsection{Our scheme}\label{sec:op:comp:our}
+Our scheme collapses this into a single identity:\label{sec:op:comp:our}
 
-Our scheme consolidates lines \ref{pr:ml:sq}--\ref{pr:ml:ldbl} into a single polynomial identity:
+$$F(x)^2 \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
 
-$$F(x) \cdot F(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) \stackrel{?}{=} Q(x) \cdot P_{12}(x) + R(x)$$
-
-By eliminating intermediate $T_*$ polynomials, only $R$ requires commitment. \textbf{Total: 41C and 12 $\Fq$ commitments} ($2 \times 12\text{C} + 3 \times 4\text{C} + 5\text{C}$).
-
-\hspace{0cm}
-
-This results in \textbf{46\% fewer constraints} and a \textbf{75\% reduction in commitments}. When verifying ZK proofs on-chain, commitment savings are often more critical than constraint savings, due to the calldata costs associated with transmitting polynomial hints.
-
-
-\subsubsection{Performance Comparison}
-
-Table \ref{tab:miller_loop_comparison} compares the computational costs and commitment overhead between the schemes for a single 0-bit Miller loop operation with 3 pairs.
+Only $R$ requires commitment, and only $F$ and $R$ need full 12C evaluation; the three sparse lines cost 4C each: \textbf{41C and 12 $\Fq$ commitments} --- a \textbf{46\% constraint reduction} and \textbf{75\% fewer commitments}. The comparison across all three schemes is summarised in Table~\ref{tab:miller_loop_comparison}.
 
 \begin{table}[h]
 \centering
-\caption{3-Pair Miller loop 0-bit constraints comparison}
+\caption{3-pair Miller loop zero-bit step comparison}
 \label{tab:miller_loop_comparison}
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Scheme} & \textbf{Constraints} & \textbf{$\Fq$ Commitments} & \textbf{Improvement} \\
+\textbf{Scheme} & \textbf{Constraints} & \textbf{$\Fq$ Commitments} & \textbf{vs baseline} \\
 \hline
-\cite{PR1CS22} & 132C & --- & Baseline \\
+\cite{PR1CS22} & 132C & --- & --- \\
 \hline
-\cite{FXFM23} & 76C* & 48 & 42\% \\
+\cite{FXFM23} & 76C & 48 & $-$42\% \\
 \hline
-\textbf{Our scheme} & \textbf{41C}* & \textbf{12} & \textbf{69\%} \\
+\textbf{Ours} & \textbf{41C} & \textbf{12} & $-$\textbf{69\%} \\
 \hline
-\multicolumn{4}{|c|}{} \\
-\multicolumn{4}{|l|}{\cite{PR1CS22}: 1 square (36C) + 3 sparse mul (3$\times$30C) = 132C} \\
-\multicolumn{4}{|l|}{\cite{FXFM23}: 5 evals (5$\times$12C) + 3 line evals (3$\times$4C) + 4 muls (4$\times$1C) = 76C} \\
-\multicolumn{4}{|l|}{Our scheme: 2 evals (2$\times$12C) + 3 line evals (3$\times$4C) + 5C (muls + RLC) = 41C} \\
-\multicolumn{4}{|l|}{*Costs exclude Fiat-Shamir commitment overhead} \\
+\multicolumn{4}{|l|}{\footnotesize \cite{PR1CS22}: $36\text{C} + 3\times30\text{C} = 132\text{C}$} \\
+\multicolumn{4}{|l|}{\footnotesize \cite{FXFM23}: $5\times12\text{C} + 3\times4\text{C} + 4\text{C} = 76\text{C}$} \\
+\multicolumn{4}{|l|}{\footnotesize Ours: $2\times12\text{C} + 3\times4\text{C} + 5\text{C} = 41\text{C}$\quad (excl.\ Fiat-Shamir overhead)} \\
 \hline
 \end{tabular}
 \end{table}
@@ -117,137 +109,47 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 
 \subsection{Operation Polynomials}\label{sec:op-polys}
 
-Our implementation uses different polynomials for different bits in the Miller loop. Let us walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
+We now state the verification equation for each step of Algorithm~\ref{alg:pairing} in a 3-pairing configuration (as used in Groth16 verification). All equations share the form $\text{LHS} = R(x) + Q(x) \cdot P_{12}(x)$; the quotient $Q$ is amortized across all steps via batching (Section~\ref{sec:iop:batching}).
 
-\subsubsection{Miller loop: Zero Bit Equation}\label{sec:op:ml-0bit}
+\subsubsection{Zero-bit step}\label{sec:op:ml-0bit}
 
-As seen in \ref{sec:op:comp:our} for zero bit operations (line \ref{pr:ml:sq} and \ref{pr:ml:ldbl}  with three $l_{T,T}(P)$ lines in Algorithm \ref{alg:pairing}), the verification equation is:
+Lines~\ref{pr:ml:sq}--\ref{pr:ml:ldbl}: one squaring and three doubling lines.
 
 \begin{equation}\label{eq:op:0b}
 F^2(x) \cdot L_1(x) \cdot L_2(x) \cdot L_3(x) = R(x) + Q(x) \cdot P_{12}(x)
 \end{equation}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|l|c|c|}
-\hline
-\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
-\hline
-$F \in \Fe{12}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
-\hline
-$L_1, L_2, L_3 \in \text{Sparse}_{01379}$  & The line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
-\hline
-$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
-\hline
-\textbf{Total constraints} & \multicolumn{2}{|c|}{36C Evals, 4C Muls and 1C RLC} & \textbf{41} \\
-\hline
-Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $38$ & $39$ \\
-\hline
-\end{tabular}
-\caption{Zero bit operation polynomial components}\label{tbl:op:ml-0bit}
-\end{table}
+$F, R \in \Fe{12}$ (12 coefficients each); $L_1, L_2, L_3 \in \text{Sparse}_{01379}$ (4 coefficients each). \textbf{Cost: 41C, 12 commitments.}
 
-\subsubsection{Miller loop: Non-Zero Bit Equation}\label{sec:op:ml-nzbit}
+\subsubsection{Non-zero bit step}\label{sec:op:ml-nzbit}
 
-For non-zero bit operations(lines \ref{pr:ml:rw1bit}, \ref{pr:ml:ladd1bit}, \ref{pr:ml:rw-1bit}, \ref{pr:ml:ladd-1bit} with three pairs of lines in Algorithm \ref{alg:pairing}), the Miller loop performs both doubling and addition steps. So for each pair we have two $\text{Sparse}_{01379}$ lines. The verification equation becomes:
+Lines~\ref{pr:ml:rw1bit}--\ref{pr:ml:ladd-1bit}: squaring, residue witness, and both doubling and addition lines for each pair.
 
 \begin{equation}\label{eq:op:n0b}
-F^2(x) \cdot W(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot L_{\text{d3}}(x) \cdot L_{\text{a1}}(x) \cdot L_{\text{a2}}(x) \cdot L_{\text{a3}}(x) = R(x) + Q(x) \cdot P_{12}(x)
+F^2(x) \cdot W^{\pm1}(x) \cdot L_{\text{d1}}(x) \cdot L_{\text{d2}}(x) \cdot L_{\text{d3}}(x) \cdot L_{\text{a1}}(x) \cdot L_{\text{a2}}(x) \cdot L_{\text{a3}}(x) = R(x) + Q(x) \cdot P_{12}(x)
 \end{equation}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|l|c|c|}
-\hline
-\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
-\hline
-$F \in \Fe{12}$ & Miller loop accumulator & $11 \times 2 = 22$ & $12$ \\
-\hline
-$L_{\text{d1}}, L_{\text{d2}}, L_{\text{d3}} \in \text{Sparse}_{01379}$ & Doubling line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
-\hline
-$L_{\text{a1}}, L_{\text{a2}}, L_{\text{a3}} \in \text{Sparse}_{01379}$ & Addition line functions & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\\hline
-$W \text{ or } W^{-1} \in \Fe{12}$ & Residue witness & $11$ & $12$ \\
-\hline
-$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
-\hline
-\textbf{Total constraints} & \multicolumn{2}{|c|}{60C Evals, 8C Muls and 1C RLC} & \textbf{69} \\
-\hline
-Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $76$ & $77$ \\
-\hline
-\end{tabular}
-\caption{Non-zero bit operation polynomial components}\label{tbl:op:ml-nzbit}
-\end{table}
+$W^{-1}$ is used for negative bits; the equation structure is identical. $W \in \Fe{12}$ encapsulates the equivalence class relationship from~\cite{OPP24}. \textbf{Cost: 69C, 12 commitments.}
 
-The residue witness $W$ encapsulates the equivalence class relationship established by Novakovic and Eagen's final exponentiation elimination.
-The inverse of $W$ is used for negative bits, this just changes the coefficients the equation remains the same.
+\subsubsection{Frobenius correction step}\label{sec:op:ml-frob}
 
-\subsubsection{Miller loop: Frobenius mapping Equation}\label{sec:op:ml-frob}
-
-The correction step finalizes the Miller loop by incorporating the Frobenius endomorphism corrections (lines \ref{pr:ml:pi1} and \ref{pr:ml:pi2} in Algorithm \ref{alg:pairing}). Again, we have two $\text{Sparse}_{01379}$ lines for each pair, for $\pi_p$ and $-\pi_p^2$ mappings, without any squaring of the accumulator. The verification equation becomes:
+Lines~\ref{pr:ml:pi1}--\ref{pr:ml:pi2}: no squaring; two sparse correction lines per pair for the $\pi_p$ and $-\pi_p^2$ mappings.
 
 \begin{equation}\label{eq:op:fm}
 F(x) \cdot L_{1\pi}(x) \cdot L_{2\pi}(x) \cdot L_{3\pi}(x) \cdot L_{1\pi^2}(x) \cdot L_{2\pi^2}(x) \cdot L_{3\pi^2}(x) = R(x) + Q(x) \cdot P_{12}(x)
 \end{equation}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|l|c|c|}
-\hline
-\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
-\hline
-$F \in \Fe{12}$ & Miller loop accumulator & $11$ & $12$ \\
-\hline
-$L_{1\pi}, L_{2\pi}, L_{3\pi} \in \text{Sparse}_{01379}$ & $\pi_p$ correction lines & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
-\hline
-$L_{1\pi^2}, L_{2\pi^2}, L_{3\pi^2} \in \text{Sparse}_{01379}$ & $-\pi_p^2$ correction lines & $9 \times 3 = 27$ & $4 \times 3 = 12$ \\
-\hline
-$R \in \Fe{12}$ & Remainder, The result & $11$ & $12$ \\
-\hline
-\textbf{Total constraints} & \multicolumn{2}{|c|}{48C Evals, 6C Muls and 1C RLC} & \textbf{55} \\
-\hline
-Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $54$ & $55$ \\
-\hline
-\end{tabular}
-\caption{Correction step polynomial components}\label{tbl:op:ml-frob}
-\end{table}
+\textbf{Cost: 55C, 12 commitments.}
 
-\subsubsection{Final Exponentiation Equation}\label{sec:op:finx}
+\subsubsection{Final exponentiation step}\label{sec:op:finx}
 
-The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
+Lines~\ref{pr:ml:27r}--\ref{pr:ml:fe}: cubic scaling and the Frobenius component ($q - q^2 + q^3$) of the final exponentiation, following~\cite{OPP24}. $R = 1$ for a valid pairing.
 
 \begin{equation}\label{eq:op:fx}
 F(x) \cdot c^{-q}(x) \cdot c^{q^2}(x) \cdot c^{-q^3}(x) \cdot W^w(x) = 1 + Q(x) \cdot P_{12}(x)
 \end{equation}
 
-where $w \in \{0, 1, 2\}$ determines the cubic root of unity scaling factor, and the Frobenius mappings are computed using the residue witness $c$ and its inverse and provided as input. Cubic root is sparse element with just 2 coefficients the degree ranging from 8 to 10 because of positioning of the coefficients. Our $R$ is now $1$ for a successful proof verification.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|l|c|c|}
-\hline
-\textbf{Polynomial} & \textbf{Description} & \textbf{Degree} & \textbf{Coefficients} \\
-\hline
-$F \in \Fe{12}$ & Final Miller loop result & $11$ & $12$ \\
-\hline
-$c^{-q} \in \Fe{12}$ & Residue witness Frobenius $-q$ & $11$ & $12$ \\
-\hline
-$c^{q^2} \in \Fe{12}$ & Residue witness Frobenius $q^2$ & $11$ & $12$ \\
-\hline
-$c^{-q^3} \in \Fe{12}$ & Residue witness Frobenius $-q^3$ & $11$ & $12$ \\
-\hline
-$W^w \in \Fe{12}$ & Cubic scale factor & $10$ & $2$ \\
-\hline
-$R = 1$ & Unity (constant) & $0$ & $1$ \\
-\hline
-\textbf{Total constraints} & \multicolumn{2}{|c|}{51C Evals, 4C Muls and 1C RLC} & \textbf{56} \\
-\hline
-Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{12}) + 1$ & $43$ & $44$ \\
-\hline
-\end{tabular}
-\caption{Final exponentiation polynomial components}\label{tbl:op:finx}
-\end{table}
-
-With this we have all the polynomials we need for verifying entire pairing operation. Next we will look into high level overview of pairing verification via an interactive oracle proof.
+$w \in \{0,1,2\}$ selects the cubic root of unity scaling; $W^w$ is sparse with 2 nonzero coefficients. The Frobenius images of $c$ are provided as prover inputs. \textbf{Cost: 56C, 12 commitments.}
 
 \subsection{Security}\label{sec:op-sec}
 
