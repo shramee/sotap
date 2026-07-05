@@ -59,7 +59,7 @@ Our contribution is to express each step of this algorithm as a single multi-ope
 
 \subsection{Comparative Analysis~\label{sec:ops:comp-analysis}}
 
-We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C.
+We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C. All compared schemes---\cite{PR1CS22}, \cite{FXFM23}, and ours---exploit this sparseness of the Miller line functions; the corresponding savings are included in every constraint count below.
 
 \subsubsection{Previous scheme}
 
