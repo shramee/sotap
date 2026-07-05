@@ -210,18 +210,18 @@ In gnark, each \texttt{api.Commit} call registers committed variables in the con
 \subsection{Security Analysis}
 
 Throughout this section, $z, x \in \mathbb{F}_q$ denote field element challenges (scalars),
-while polynomials are elements of $\mathbb{F}_q[x]$ with $x$ as the formal indeterminate.
+while polynomials are elements of $\mathbb{F}_q[X]$ with $X$ as the formal indeterminate.
 In particular, $z^j$ is a scalar coefficient, not a polynomial term.
 
 \subsubsection{Algebraic Intuition}\label{sec:iop:alg-intuition}
 
 Before the formal soundness proof it is instructive to consider why an incorrect
 remainder is difficult to hide.  Suppose a malicious prover corrupts exactly one remainder:
-$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[x]$, $\Delta_j \neq 0$,
+$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[X]$, $\Delta_j \neq 0$,
 $\deg(\Delta_j) \leq 11$.  Since $z$ is obtained \emph{after} the commitment to
 $\mathcal{R}$, the prover cannot adjust any other $R_k$ to compensate for $\Delta_j$.
 To successfully deceive the verifier, the prover must find a valid forged quotient
-$Q'_\text{acc} \in \mathbb{F}_q[x]$ satisfying
+$Q'_\text{acc} \in \mathbb{F}_q[X]$ satisfying
 
 $$\sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12}$$
 
@@ -231,11 +231,11 @@ Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} - z^j\Delta_j(x) \\
 Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
 Here $z^j \in \mathbb{F}_q$ is a nonzero scalar (with overwhelming probability over the
-choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[x]$ is a nonzero polynomial of degree
+choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[X]$ is a nonzero polynomial of degree
 at most~$11$.  Since $P_{12}$ is irreducible of degree~$12$ and
 $\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
-divide $z^j\Delta_j$ in $\mathbb{F}_q[x]$; hence $z^j\Delta_j/P_{12}$ is not a
-polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[x]$ can satisfy the
+divide $z^j\Delta_j$ in $\mathbb{F}_q[X]$; hence $z^j\Delta_j/P_{12}$ is not a
+polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[X]$ can satisfy the
 equation for this single-corruption case.
 
 
