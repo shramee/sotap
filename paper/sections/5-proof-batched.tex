@@ -189,23 +189,15 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
 
-\paragraph{Gnark's multi-commitment mechanism.}
-In gnark, each \texttt{api.Commit} call registers committed variables in the constraint system; the two sequential calls in our protocol produce the two challenges $z$ and $x$ via gnark's multi-round commitment scheme~\cite{gnarkcommit,BellingCCS23}.
+\subsubsection{Instantiating the random oracle.}
+The concrete commitment scheme---and hence the per-commitment overhead---depends on the execution environment; the protocol itself is agnostic to it. \textbf{In our CairoVM instantiation} (Table~\ref{tab:garaga_performance}), commitments are done via Poseidon hash~\cite{poseidon}. Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon sponge. $\Fq$ elements are represented by 96--bit limbs and 2 limbs are packed for in each \texttt{Felt252} Poseidon call. \textbf{In gnark}, each \texttt{api.Commit} call registers the committed variables in the constraint system and derives a challenge via gnark's multi-round commitment scheme~\cite{gnarkcommit,BellingCCS23}, which combines scalar multiplications with a MiMC~\cite{mimc} hash to avoid full in-circuit hashing; the residual prover overhead depends on the backend (Groth16 or Plonk). In every environment the per-commitment cost is nonzero, so reducing the \emph{absolute number} of committed elements---as our consolidation does (Section~\ref{sec:ops:comp-analysis})---directly reduces end-to-end cost regardless of the scheme; the two sequential \texttt{api.Commit} calls in our protocol produce the two challenges $z$ and $x$.
 
-\subsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
+\subsubsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
-\IOP{Non-interactive proof}{Verifier}{Prover}{
-    \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
-    \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$}{2}
-    \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{2.8}
-    \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$}{4}
-    \LDoes{Recomputes $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$ for RLC}{5}
-    \LDoes{Derives evaluation point $x = H(z, Q_\text{acc})$}{5.8}
-    \LDoes{Runs Algorithm~\ref{alg:2r:verifier} with $z$ and tests polynomial\\identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.8}
-    \LtoR{Accept/Reject}{8.3}
-}
+The non-interactive version closely follows the interactive protocol, but after computing $\mathcal{R}$ and $\mathcal{Q}$, instead of sending $\mathcal{R}$ to the verifier, the prover directly derives challenge $z = H(\text{\textit{pairing inputs}}, \mathcal{R})$ via the random oracle $H$ and computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$. And sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$ directly to the verifier.
 
-\textbf{Concrete commitment costs:} In gnark, each call to \texttt{api.Commit} registers committed variables in the constraint system; the precise prover overhead depends on the backend (Groth16 or Plonk)~\cite{gnarkcommit,BellingCCS23}.
+The verifier recomputes $z$ and derives evaluation point $x$ via the random oracle and runs Algorithm~\ref{alg:2r:verifier} to test polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}.
+
 
 \subsection{Security Analysis}
 
