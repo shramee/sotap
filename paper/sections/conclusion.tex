@@ -45,9 +45,9 @@ Before & After & Before & After & Before & After & Before & After \\
 
 \subsection{Applications and Impact}
 
-Our approach delivers maximum impact in resource-constrained execution environments where custom auxiliary data can be provided for cheaper verification. \textbf{Recursive proof systems} benefit the most greatly reducing outer circuit complexity from fewer commitments and operations. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments means smaller proof transcripts and associated calldata costs.
+Our approach delivers maximum impact in resource-constrained execution environments where custom auxiliary data can be provided for cheaper verification. \textbf{Recursive proof systems} benefit the most, greatly reducing outer circuit complexity through fewer commitments and operations. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments mean smaller proof transcripts and associated calldata costs.
 
-This is already implemented in-production in Garaga~\cite{grg} for CairoVM and is currently the standard for all pairing based ZK proofs on Starknet. The polynomial ring toolkit~\ref{sec:polyring} in gnark, submitted as a part of this work, will directly impact \texttt{evmprecompiles/ecpair} precompile via \texttt{AssertMillerLoopAndFinalExpIsOne}.
+This is already implemented in-production in Garaga~\cite{grg} for CairoVM and is currently the standard for all pairing based ZK proofs on Starknet. The polynomial ring toolkit (Section~\ref{sec:polyring}) in gnark, submitted as a part of this work, will directly impact the \texttt{evmprecompiles/ecpair} precompile via \texttt{AssertMillerLoopAndFinalExpIsOne}.
 
 \subsection{Implementation and Performance}
 
@@ -61,25 +61,21 @@ This work situates the same technique within gnark---the standard framework for
 field emulation in arithmetized circuits---providing a systematic benchmark against
 an industry baseline.
 
-Table~\ref{tab:main_performance} presents benchmark results from our gnark implementation of the polynomial ring toolkit, measured on a Groth16 verification simulation on BN254. The end-to-end results confirm both directions of saving: \textbf{39\% SCS constraint reduction} (1,890,771~$\to$~1,158,194) and \textbf{60\% commitment reduction} (739,198~$\to$~295,946), with strong secondary improvements across compile-time memory ($\sim$42--43\%) and solver memory ($\sim$26\% SCS, $\sim$52\% R1CS).
+In Table~\ref{tab:garaga_performance}, the \emph{Before} column is Garaga verifying each extension field multiplication individually via the polynomial identity testing of~\cite{FXFM23}; the \emph{After} column is Garaga using our consolidated relations. MULMOD/ADDMOD count modular field operations, COMMITS count Poseidon~\cite{poseidon} input commitments for Fiat-Shamir, and VM STEPS count CairoVM CPU cycles---together a low-level estimate of computational complexity inside the virtual machine.
+
+\paragraph{Our polynomial ring toolkit} implementation in gnark is benchmarked in Table~\ref{tab:main_performance}, measured via a 3-pairing product check (see below) on BN254 and BLS12--381. We compare our results against a \textbf{gnark baseline} using the upstream \texttt{emulated} package~\cite{gnark}, which represents the state-of-the-art for emulated pairings and includes the optimizations of~\cite{PR1CS22} and~\cite{OPP24}.
+
+The \textbf{This Work} numbers were obtained by compiling the exact same benchmark against our fork, replacing the baseline's extension field multiplications with our new toolkit. No changes were made to the circuit definition or test harness. Both implementations exploit the sparseness of the Miller line functions (Section~\ref{sec:ops:comp-analysis}).
 
 \paragraph{Benchmark circuit.}
-Both implementations are evaluated against the same gnark circuit\footnote{Circuit definition: \url{https://archive.org/download/ppprt_groth16_simulation_test}}, \\
-
-\textbf{Step~1:} A 2-pair fixed-$\mathbb{G}_2$ pairing check $e(P_1,Q_1)\cdot e(P_2,Q_2)=1$, where both $\mathbb{G}_2$ points use precomputed line evaluations (\texttt{PairingCheck} with fixed $Q$).
-
-\textbf{Step~2:} A single in-circuit Miller loop $\mathrm{ML}(P_3,Q_3)$ combined with a Miller loop result $f$ computed \emph{outside} the circuit, followed by a final-exponentiation-equals-one assertion (\texttt{AssertMillerLoopAndFinalExpIsOne}).
-
-This structure simulates constraints for a real Groth16 verification: the two fixed-$\mathbb{G}_2$ pairings, one full pairing, and one $\mathbb{F}_{p^{12}}$ multiplication. These recreate the four pairing operations with fixed trusted setup points.
-
-\textbf{The gnark baseline} numbers were obtained by running the benchmark function against the upstream gnark \texttt{emulated} package (\texttt{github.com/consensys/gnark}). The \textbf{This Work} numbers were obtained from the same benchmark file compiled against our fork, which replaces the per-multiplication deferred checks in the \texttt{emulated} package with the polynomial ring toolkit described in this paper. No changes to the circuit definition or test harness were required; only the underlying \texttt{emulated} arithmetic backend differs between the two runs.
+\label{sec:bench-circuit}
+Both implementations are evaluated against the same gnark circuit: a 3-pairing multi-pairing check $\prod_{i=1}^{3} e(P_i, Q_i) = 1$ via \texttt{PairingCheck}. This corresponds to the pairing workload of a Groth16 verification, which reduces to a product-of-pairings check over three variable pairs once the constant $e(\alpha, \beta)$ term from the trusted setup is folded in. The same 3-pairing configuration is used in the CairoVM benchmarks of Table~\ref{tab:garaga_performance}, allowing a like-for-like comparison across environments.
 
 \begin{table*}[t]
 \centering
 \caption{Performance comparison: gnark implementation, 3-pairing product check (Groth16 verification) on BN254 and BLS12--381}
 \label{tab:main_performance}
 \begin{tabular}{|l|r|r|r|}
-
 \hline
 \textbf{Metric} & \textbf{gnark Baseline} & \textbf{This Work} & \textbf{Reduction} \\
 \hline
@@ -101,7 +97,7 @@ Compile Memory    &   1.60~GB &    0.98~GB & \textbf{38.8\%} \\
 Solve Time        &  175.42~ms &  123.30~ms & \textbf{29.7\%} \\
 Solve Memory      &  173.26~MB &  112.68~MB & \textbf{35.0\%} \\
 \hline
-\multicolumn{4}{|c|}{\textbf{BLS12-381 -- SCS (Plonkish) Constraint System}} \\
+\multicolumn{4}{|c|}{\textbf{BLS12--381 -- SCS (Plonkish) Constraint System}} \\
 \hline
 Nb Constraints    & 1,784,247 & 1,191,033 & \textbf{33.2\%} \\
 Nb Commitments    &   660,160 &   300,032 & \textbf{54.5\%} \\
@@ -110,7 +106,7 @@ Compile Memory    &   1.48~GB &    0.97~GB & \textbf{34.5\%} \\
 Solve Time        &  180.05~ms &  111.71~ms & \textbf{38.0\%} \\
 Solve Memory      &  362.14~MB &  284.34~MB & \textbf{21.5\%} \\
 \hline
-\multicolumn{4}{|c|}{\textbf{BLS12-381 -- R1CS Constraint System}} \\
+\multicolumn{4}{|c|}{\textbf{BLS12--381 -- R1CS Constraint System}} \\
 \hline
 Nb Constraints    &   545,510 &   368,434 & \textbf{32.5\%} \\
 Nb Commitments    &   660,160 &   300,032 & \textbf{54.5\%} \\
@@ -121,7 +117,7 @@ Solve Memory      &  231.77~MB &  118.67~MB & \textbf{48.8\%} \\
 \hline
 \multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{api.Commit} calls. Hardware: Apple M3 Pro (\texttt{goarch:arm64}).} \\
 \multicolumn{4}{l}{\footnotesize BN254 Circuit: \url{https://tinyurl.com/ppprt-circuit-bn254}} \\
-\multicolumn{4}{l}{\footnotesize BLS12-381 Circuit: \url{https://tinyurl.com/ppprt-circuit-bls12-381}} \\
+\multicolumn{4}{l}{\footnotesize BLS12--381 Circuit: \url{https://tinyurl.com/ppprt-circuit-bls12-381}} \\
 \multicolumn{4}{l}{\footnotesize Our implementation: \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}} \\
 \hline
 \end{tabular}
@@ -129,22 +125,28 @@ Solve Memory      &  231.77~MB &  118.67~MB & \textbf{48.8\%} \\
 
 \subsection{Further Work}
 
-Several natural extensions of this work remain open. First, our framework 
-could be extended to additional curves: \textbf{BLS12--381} for applications 
-requiring higher security than BN254, and \textbf{BW6--761} for recursive 
-proof chain verification on Ethereum.
+Several natural extensions of this work remain open. First, our framework
+could be extended to additional curves beyond BN254 and BLS12--381, notably
+\textbf{BW6--761} for recursive proof chain verification on Ethereum.
 
-A further direction is exploring the technique for native field pairings, such 
-as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the 
-trade-off between batching savings and commitment costs warrants dedicated 
+A further direction is exploring the technique for native field pairings, such
+as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the
+trade-off between batching savings and commitment costs warrants dedicated
 analysis.
 
-Rather than targeting a specific pairing, we designed this as a general 
-polynomial ring toolkit, which opens additional avenues for exploration. One 
-promising direction is larger batches that fold multiple Miller loop steps into 
-a single polynomial verification. This strategy works well in Garaga
-implementation. But is not pursued in our implementation because in Gnark implementation
-polynomial evaluations are cheap, while the extra evaluation challenge powers required to handle 
-degree doubling from cross-step squarings require in place reductions. Finally, the underlying 
-technique generalizes beyond pairings to any setting involving repeated 
-operations over the same polynomial rings in arithmetized environments.
+% Finally, the underlying technique generalizes beyond pairings to any setting
+% involving repeated operations over the same polynomial rings in arithmetized
+% environments. A particularly promising instance is lattice-based cryptography
+% in ZK-SNARKs: schemes such as ML-KEM and ML-DSA operate in cyclotomic rings
+% $\mathbb{Z}_q[x]/(x^n + 1)$, and since our toolkit is parameterised by an
+% arbitrary modulus polynomial, the same deferred quotient-remainder
+% verification could batch the many ring multiplications arising when verifying
+% post-quantum primitives in-circuit. Notably, the small coefficient moduli of
+% these schemes do not affect soundness: each relation lifts to an integer
+% polynomial identity via a prover-supplied multiple of $q$, e.g.\
+% $a(x) \cdot b(x) = Q(x) \cdot (x^n + 1) + q \cdot K(x) + r(x)$ over
+% $\mathbb{Z}[x]$, and the challenge is sampled from the proof system's scalar
+% field, preserving the Schwartz-Zippel bound of Theorem~\ref{thm:soundness}.
+% With coefficient range checks bounding intermediate values below the native
+% characteristic (as in Lemma~\ref{lem:overflow}), the only added cost is the
+% witness polynomial $K$ per relation.
