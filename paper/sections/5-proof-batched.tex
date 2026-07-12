@@ -201,16 +201,28 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 \subsection{Fiat-Shamir Transformation} \label{sec:iop:fs}
 
-Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
-
-\subsubsection{Instantiating the random oracle.}
-The concrete commitment scheme---and hence the per-commitment overhead---depends on the execution environment; the protocol itself is agnostic to it. \textbf{In our CairoVM instantiation} (Table~\ref{tab:garaga_performance}), commitments are done via Poseidon hash~\cite{poseidon}. Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon sponge. $\Fq$ elements are represented by 96--bit limbs and 2 limbs are packed for in each \texttt{Felt252} Poseidon call. \textbf{In gnark}, each \texttt{api.Commit} call registers the committed variables in the constraint system and derives a challenge via gnark's multi-round commitment scheme~\cite{gnarkcommit,BellingCCS23}, which combines scalar multiplications with a MiMC~\cite{mimc} hash to avoid full in-circuit hashing; the residual prover overhead depends on the backend (Groth16 or Plonk). In every environment the per-commitment cost is nonzero, so reducing the \emph{absolute number} of committed elements---as our consolidation does (Section~\ref{sec:ops:comp-analysis})---directly reduces end-to-end cost regardless of the scheme; the two sequential \texttt{api.Commit} calls in our protocol produce the two challenges $z$ and $x$.
+Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ to the two-round protocol of Section~\ref{sec:iop:interactive} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ is the number of oracle queries (one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound.
 
 \subsubsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
-The non-interactive version closely follows the interactive protocol, but after computing $\mathcal{R}$ and $\mathcal{Q}$, instead of sending $\mathcal{R}$ to the verifier, the prover directly derives challenge $z = H(\text{\textit{pairing inputs}}, \mathcal{R})$ via the random oracle $H$ and computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$. And sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$ directly to the verifier.
+The prover runs Algorithm~\ref{alg:2r:prover} to obtain $(\mathcal{Q}, \mathcal{R})$, derives the challenge
+$$z = H(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R})$$
+from the transcript instead of receiving it, computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$, and outputs the proof $(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R},\, Q_\text{acc})$. The verifier recomputes $z$, derives the evaluation point $x = H(z,\, Q_\text{acc})$, and runs Algorithm~\ref{alg:2r:verifier}, testing the polynomial identities via Equation~\eqref{eq:iop-batched}.
 
-The verifier recomputes $z$ and derives evaluation point $x$ via the random oracle and runs Algorithm~\ref{alg:2r:verifier} to test polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}.
+The soundness bound of Theorem~\ref{thm:soundness} carries over because every prover-chosen value entering Equation~\eqref{eq:iop-batched} is absorbed before the challenge it must not depend on: $\mathcal{R}$ and the hinted witnesses $c, W^w$ before $z$, and $Q_\text{acc}$ with $z$ chained into the second query before $x$.
+
+\subsubsection{Instantiating the Random Oracle}\label{sec:iop:fs:ro}
+
+The protocol is agnostic to how $H$ is realised; what varies across execution environments is the cost of a \emph{commitment}, i.e.\ of absorbing one $\Fq$ element into the transcript. We therefore qualify the commitment counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
+
+\paragraph{CairoVM (Poseidon).} \label{sec:iop:fs:cairo}
+Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon~\cite{poseidon} sponge; $\Fq$ elements are represented by 96-bit limbs, with two limbs packed into each \texttt{Felt252} absorption. Both hashing cost and calldata therefore scale linearly with the number of committed elements, which is why the COMMITS column of Table~\ref{tab:garaga_performance} is reported alongside modular operations: halving the committed elements roughly halves the transcript-related share of VM steps and the hint calldata.
+
+\paragraph{gnark (\texttt{api.Commit}).} \label{sec:iop:fs:gnark}
+The two rounds map to the \textbf{two} sequential \texttt{api.Commit} calls in \texttt{performDeferredRingChecks} (Section~\ref{sec:polyring:mapping}): the first commits the limbs of the queued remainders and hinted witnesses, yielding $z$; the second commits $z$ together with the limbs of $Q_\text{acc}$, yielding $x$. The cost of \texttt{Commit} is backend-specific. In Groth16, gnark implements the commitment scheme of Belling et al.~\cite{BellingCCS23,gnarkcommit}: the committed wires are aggregated into a Pedersen-style $\G_1$ commitment, and the challenge is a hash-to-field of the commitment point, computed \emph{natively} by prover and verifier---no in-circuit hashing. Each \texttt{Commit} costs the prover two $\G_1$ MSMs of size equal to the number of committed wires (the commitment and its proof of knowledge); the proof grows by one $\G_1$ point per commitment plus a single proof of knowledge folded across commitments (64 bytes each, uncompressed); and verification gains one two-pairing product check, one hash-to-field, and one extra scalar multiplication and point addition in the public-input MSM.
+In PLONK, committed wires reuse the existing wire-commitment machinery, so the marginal overhead per commitment is lower still, but each committed wire adds a constraint.
+
+\paragraph{Impact.} The number of elements committed to determines hashing and calldata in CairoVM and the commitment-MSM size in gnark. Reducing the absolute number of committed elements, by 53\% through our consolidation (Section~\ref{sec:ops:comp-analysis}), directly reduces end-to-end cost regardless of the instantiation, without adding commitment rounds.
 
 
 \subsection{Security Analysis}
@@ -279,7 +291,7 @@ $$\delta_s \leq \frac{66 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}.$$
 \textbf{Non-interactive proof via Fiat-Shamir} \label{sec:iop:soundness:fs}: From Section~\ref{sec:iop:fs}, under the random oracle model the
 knowledge soundness error becomes~\cite{IOP-NI}:
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
-where $m = 2$ (hash queries) and $\lambda = 254$ (hash output length), giving
+where $m = 2$ (one query per round) and $\lambda = 254$ (challenge bit-length), giving
 $$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}.$$
 
 \begin{remark}[Correctness of polynomial evaluation]\label{rem:overflow}
