@@ -46,7 +46,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \color{black}
 
 \Statex
-\Statex \gText{Miller loop bits}
+\Statex \gText{Miller loop}
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \If{$s_i = 0$}
@@ -61,7 +61,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
     \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 \EndFor
 \Statex
-\Statex \gText{Miller loop Frobenius correction}
+
 
 \State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
@@ -91,25 +91,29 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 
 \subsection{Verifier's Algorithms}
 
-The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$ via Algorithm~\ref{alg:evalpolyprod}, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
+The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
 
-\begin{algorithm}
-\caption{EvalPoly: Evaluate polynomial product minus remainder via Horner's method}
-\label{alg:evalpolyprod}
-\begin{algorithmic}[1]
-\Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
-\Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
-\State \textbf{function} \texttt{Eval} ({$P = (p_0, p_1, \ldots, p_d),\ z$}): \Return ($evaluation \in \Fq$)
-\State \gText{~~~~Uses Horner's method, body not included for brevity}
+% \begin{algorithm}
+% \caption{EvalPoly: Evaluate polynomial product minus remainder via Horner's method}
+% \label{alg:evalpolyprod}
+% \begin{algorithmic}[1]
+% \Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
+% \Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
 
-\State $e \leftarrow \Call{Eval}{P_1, z}$ \gComm{Evaluate first polynomial}
-\For{$i = 2$ to $n$}
-    \State $e \leftarrow e \cdot \Call{Eval}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}
-\EndFor
-\State $e \leftarrow e - \Call{Eval}{R, z}$ \gComm{Subtract remainder evaluation}
-\State \Return $e$
-\end{algorithmic}
-\end{algorithm}
+% \State \textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)
+
+% \State \textbf{function} \texttt{Eval} ({$P = (p_0, p_1, \ldots, p_d),\ z$}): \Return ($evaluation \in \Fq$)
+
+% \State \gText{~~~~Uses Horner's method, body not included for brevity}
+
+% \State $e \leftarrow \Call{Eval}{P_1, z}$ \gComm{Evaluate first polynomial}
+% \For{$i = 2$ to $n$}
+%     \State $e \leftarrow e \cdot \Call{Eval}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}
+% \EndFor
+% \State $e \leftarrow e - \Call{Eval}{R, z}$ \gComm{Subtract remainder evaluation}
+% \State \Return $e$
+% \end{algorithmic}
+% \end{algorithm}
 
 \begin{algorithm}
 \caption{Pairing Verifier: Evaluating remainders}
@@ -118,6 +122,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$, $\mathcal{R} \text{ array of remainders}$, $Q_\text{acc} \in \Fq[x]$
 \Statex Internal: 27th root of unity, $W, W^2 \in \Fe{12}$, first round challenge, $z \xleftarrow{\$} \Fq$
 \Ensure $pairing(P, Q) \stackrel{?}{=} 1$
+
 \Statex Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
 
 \State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
@@ -130,29 +135,33 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \color{black}
 
 \Statex
-\Statex \gText{Miller loop bits}
+
+\State \textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)
+
+\Statex
+\Statex \gText{Miller loop}
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
     \If{$s_i = 0$}
-		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 \EndFor
 \Statex
-\Statex \gText{Miller loop Frobenius correction}
+
 \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
 \State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 
 \Statex
@@ -160,11 +169,11 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
 \If{$w = 0$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 1$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 2$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$
 \EndIf
 
 \Statex
@@ -181,7 +190,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
     \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
     \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{4.5}
     \RtoL{Round II: Commit $Q_\text{acc}$}{5.5}
-    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.5}
+    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$, Eq~\ref{eq:iop-batched}}{6.5}
     \LtoR{Accept/Reject}{8}
 }
 
