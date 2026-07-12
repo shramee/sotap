@@ -10,8 +10,8 @@ the \texttt{emulated} package of gnark~\cite{gnaF}, parameterised by any
 emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any modulus
 polynomial $P \in \Fq[x]$. The toolkit operates in a recursive proof
 setting where the prover's computations are performed outside the circuit
-via \texttt{hints} (Section~\ref{sec:polyring:hints}). And verifier's checks
-are implemented as constraints inside the circuit.
+via \texttt{hints} (Section~\ref{sec:polyring:hints}), while the verifier's
+checks are implemented as constraints inside the circuit.
 
 Refer to our fork at \url{https://anonymous.4open.science/r/tiny-gnark-DDCD} for code.
 
@@ -47,15 +47,14 @@ annotated function in the circuit at compile time. Inputs and outputs are
 injected at the solving time. We define these two hints to implement the 
 prover's steps in the two-round protocol of Section~\ref{sec:iop:interactive}.
 
-\paragraph{\texttt{polyRingMulHint}} implements \textsc{PolyMulDiv}
-(Algorithm~\ref{alg:polymuldiv}): it multiplies the input polynomials, divides
+\paragraph{\texttt{polyRingMulHint}} implements \textsc{PolyMulDiv}: it multiplies the input polynomials, divides
 by $P$ to obtain $(Q, R)$, and serialises the result as
 $\texttt{nbQTerms} \mid Q\text{ limbs} \mid \texttt{nbRemTerms} \mid R\text{ limbs}$.
 Inputs are packed as $\texttt{nbBits} \mid \texttt{nbLimbs} \mid \texttt{nbPoly} \mid q \mid \text{inputs} \mid P$,
 where each polynomial is prefixed by its term count.
 
 \paragraph{\texttt{quotientsRLCHint}} computes the accumulated quotient
-$Q_{\mathrm{acc}}[j] = \sum_{i} z^i \cdot Q_i[j] \bmod q$ coefficient-wise,
+$Q_{\mathrm{acc}} = \sum_{i} z^i \cdot Q_i \bmod q$ coefficient-wise,
 corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 % ----------------------------------------------------------
@@ -95,32 +94,20 @@ pairs $(\mathcal{Q}, \mathcal{R})$ are stored in the field object's
 at circuit finalisation, in \texttt{performDeferredRingChecks}
 (\texttt{emulated/field\_polyring.go}). The Fiat-Shamir transformation of
 Section~\ref{sec:iop:fs} is applied there via two sequential \texttt{api.Commit}
-calls~\cite{gnarkcommit}: the first commits the queued remainders and pairing
-inputs to derive the RLC challenge $z$; the second commits $Q_\text{acc}$
-(computed by \texttt{quotientsRLCHint}) to derive the evaluation point $x$.
-
-\begin{table}[ht]
-\centering
-\caption{Paper-to-implementation mapping (paths relative to the anonymised repository)}
-\label{tab:alg_mapping}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Paper artefact} & \textbf{Implementation} \\
-\hline
-Alg.~\ref{alg:polymuldiv} \textsc{PolyMulDiv} & \texttt{polyRingMulHint} (out-of-circuit hint) \\
-\hline
-Alg.~\ref{alg:2r:prover} prover loop & Miller loop, \texttt{sw\_bn254/pairing.go}; \\
- (arrays $\mathcal{Q}, \mathcal{R}$) & queued in \texttt{f.deferredPolyChecks} \\
-\hline
-Prover RLC $Q_\text{acc} = \sum_i z^i Q_i$ & \texttt{quotientsRLCHint} \\
-\hline
-Alg.~\ref{alg:2r:verifier} + Eq.~\eqref{eq:iop-batched} & \texttt{performDeferredRingChecks}, \\
- & \texttt{emulated/field\_polyring.go} \\
-\hline
-Challenges $z$, $x$ (Fiat-Shamir, \S\ref{sec:iop:fs}) & two sequential \texttt{api.Commit} calls~\cite{gnarkcommit} \\
-\hline
-\end{tabular}
-\end{table}
+calls as described in Section~\ref{sec:iop:fs:gnark}, mirroring the two rounds of the interactive protocol:
+the first commits the limbs of every queued remainder together with the hinted
+pairing witnesses, deriving the RLC challenge $z$; the second commits $z$
+together with the limbs of $Q_\text{acc}$ (computed outside the circuit by
+\texttt{quotientsRLCHint}), deriving the evaluation point $x$. Absorbing $z$
+into the second commitment chains the two rounds, exactly as required by the
+non-interactive transcript of Section~\ref{sec:iop:noninteractive}. Both
+challenges are native field elements; \texttt{NativeToEmulated} decomposes each
+into emulated limbs and asserts the recomposition in-circuit. The
+verifier's evaluations are realised by
+\texttt{evalPolyWithChallenge}, which shares the cached power vector
+$\mathcal{X}$ across all polynomials and accumulates limb products without
+intermediate reduction via \texttt{InnerProductNoReduce}
+(Section~\ref{sec:polyring:performance}).
 
 % ----------------------------------------------------------
 
@@ -133,10 +120,10 @@ Register the ring group once at initialisation:
 
 \begin{verbatim}
 fp, _ := emulated.NewField[emulated.BN254Fp](api)
-modPoly := fp.MakePoly([]any{82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1})
+modPoly := fp.MakePoly(82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1)
 ring := fp.NewPolyRingCheck(modPoly, nil)
 // Each Miller-loop step then calls:
-rem, _ = f.MulPolyRings(ring, f, f, L1, L2, L3)
+f, _ = fp.MulPolyRings(ring, f, f, L1, L2, L3)
 \end{verbatim}
 and \texttt{performDeferredRingChecks} is invoked once by the gnark backend at
 finalisation, running the full two-round protocol of Section~\ref{sec:iop}.
@@ -158,12 +145,12 @@ rem := acc.Eval()
 \subsubsection{Schoolbook vs Horner's Method for Polynomial Evaluation}
 \label{sec:emulated:flat}
 
-Horner's method for evaluations across emulated elements causes a linear increase in the limbs count per coefficient.
+Horner's method for evaluations in \texttt{EvalPoly} across emulated elements causes a linear increase in the limbs size and count per coefficient.
 This necessitates reductions after each multiplication.
 Instead, we cache powers of the evaluation point $x$ in $\mathcal{X} = (x^0, x^1, \ldots, x^d)$ and evaluate each polynomial as an inner product of $\mathcal{X}$ and the coefficient array $\mathbf{F}$:
 $$\mathcal{X} \cdot \mathbf{F} = \mathcal{X}_0 \cdot F_0 + \mathcal{X}_1 \cdot F_1 + \cdots + \mathcal{X}_d \cdot F_d$$
 
-In the emulated field context, \textsc{Eval} in Algorithm~\ref{alg:evalpolyprod} is replaced by this inner product with $\mathcal{X}$. This allows us to use the inner product optimization described below.
+In the emulated field context, Horner's method evaluations are replaced by this inner product with $\mathcal{X}$. This allows us to use the inner product optimization described below.
 
 \subsubsection{Native field operations for inner products}
 
@@ -180,7 +167,7 @@ Let $\Fq$ be emulated with limbs of width $b$ bits inside a native field $\mathb
 Consider evaluating a degree-$d$ polynomial via an inner product over the cached
 power vector $\mathcal{X}$.
 Since limbs are accumulated independently, each result-limb is a sum of $d+1$
-products of two $b$-bit values, so its magnitude is bounded by $\beta = 2^{2b + \lceil\log_2(d+1)\rceil}$.
+products of two $b$-bit values, so its magnitude is bounded by $2^{\beta}$ with $\beta = 2b + \lceil\log_2(d+1)\rceil$.
 
 The deferred single-element reduction is safe whenever $\beta < \log_2 p$.
 \end{lemma}
@@ -193,3 +180,9 @@ Then
 \]
 so the deferred reduction is safe.
 \end{corollary}
+
+Beyond this static bound, the implementation tracks each element's overflow at
+compile time and \texttt{InnerProductNoReduce} inserts a reduction whenever an
+accumulation would exceed the native capacity, so Lemma~\ref{lem:overflow} is
+also enforced dynamically for rings and degrees other than the BN254
+instantiation above.
