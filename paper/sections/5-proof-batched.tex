@@ -16,19 +16,19 @@ This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:o
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv} (Algorithm~\ref{alg:polymuldiv}), which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
 
-\begin{algorithm}
-\caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
-\label{alg:polymuldiv}
-\begin{algorithmic}[1]
-\Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
-\Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
-\State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
-\State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
-\State \Return $(Q, R)$
-\end{algorithmic}
-\end{algorithm}
+% \begin{algorithm}
+% \caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
+% \label{alg:polymuldiv}
+% \begin{algorithmic}[1]
+% \Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
+% \Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+% \State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
+% \State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
+% \State \Return $(Q, R)$
+% \end{algorithmic}
+% \end{algorithm}
 
 \begin{algorithm}
 \caption{Pairing Prover: Preparing polynomials}
@@ -46,17 +46,22 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \color{black}
 
 \Statex
+
+\State \textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return $Q, R \in \Fq[x]$ 
+\State \qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+
+\Statex
 \Statex \gText{Miller loop}
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \If{$s_i = 0$}
-		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 \EndFor
@@ -67,7 +72,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 
 \Statex
@@ -75,11 +80,11 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 
 \If{$w = 0$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 1$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 2$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$
 \EndIf
 \State $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$) \gComm{Final $\mathcal{Q}$ and $\mathcal{R}$ accumulation, skip $f$}
 
@@ -161,7 +166,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 
 \Statex
