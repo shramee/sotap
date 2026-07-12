@@ -81,39 +81,39 @@ Both implementations are evaluated against the same gnark circuit: a 3-pairing m
 \hline
 \multicolumn{4}{|c|}{\textbf{BN254 -- SCS (Plonkish) Constraint System}} \\
 \hline
-Nb Constraints    & 1,592,440 & 1,035,242 & \textbf{35.0\%} \\
-Nb Commitments    &   571,125 &   269,520 & \textbf{52.8\%} \\
-Compile Time      &  615.04~ms &  366.77~ms & \textbf{40.4\%} \\
-Compile Memory    &   1.33~GB &    0.82~GB & \textbf{38.8\%} \\
-Solve Time        &  167.57~ms &  112.57~ms & \textbf{32.8\%} \\
-Solve Memory      &  348.73~MB &  181.19~MB & \textbf{48.0\%} \\
+Nb Constraints    & 1,592,440 & 1,035,550 & \textbf{35.0\%} \\
+Nb Commitments    &   571,125 &   269,616 & \textbf{52.8\%} \\
+Compile Time      &  615.04~ms &  347.13~ms & \textbf{43.6\%} \\
+Compile Memory    &   1.33~GB &    0.82~GB & \textbf{38.3\%} \\
+Solve Time        &  167.57~ms &   97.30~ms & \textbf{41.9\%} \\
+Solve Memory      &  348.73~MB &  181.24~MB & \textbf{48.0\%} \\
 \hline
 \multicolumn{4}{|c|}{\textbf{BN254 -- R1CS Constraint System}} \\
 \hline
-Nb Constraints    &   491,447 &   315,955 & \textbf{35.7\%} \\
-Nb Commitments    &   571,125 &   269,520 & \textbf{52.8\%} \\
-Compile Time      &  617.63~ms &  380.63~ms & \textbf{38.4\%} \\
+Nb Constraints    &   491,447 &   316,167 & \textbf{35.7\%} \\
+Nb Commitments    &   571,125 &   269,616 & \textbf{52.8\%} \\
+Compile Time      &  617.63~ms &  367.25~ms & \textbf{40.5\%} \\
 Compile Memory    &   1.60~GB &    0.98~GB & \textbf{38.8\%} \\
-Solve Time        &  175.42~ms &  123.30~ms & \textbf{29.7\%} \\
-Solve Memory      &  173.26~MB &  112.68~MB & \textbf{35.0\%} \\
+Solve Time        &  175.42~ms &  106.36~ms & \textbf{39.4\%} \\
+Solve Memory      &  173.26~MB &  112.72~MB & \textbf{34.9\%} \\
 \hline
 \multicolumn{4}{|c|}{\textbf{BLS12--381 -- SCS (Plonkish) Constraint System}} \\
 \hline
-Nb Constraints    & 1,784,247 & 1,191,033 & \textbf{33.2\%} \\
-Nb Commitments    &   660,160 &   300,032 & \textbf{54.5\%} \\
-Compile Time      &  650.02~ms &  415.05~ms & \textbf{36.1\%} \\
+Nb Constraints    & 1,784,247 & 1,191,105 & \textbf{33.2\%} \\
+Nb Commitments    &   660,160 &   300,104 & \textbf{54.5\%} \\
+Compile Time      &  650.02~ms &  410.48~ms & \textbf{36.9\%} \\
 Compile Memory    &   1.48~GB &    0.97~GB & \textbf{34.5\%} \\
-Solve Time        &  180.05~ms &  111.71~ms & \textbf{38.0\%} \\
-Solve Memory      &  362.14~MB &  284.34~MB & \textbf{21.5\%} \\
+Solve Time        &  180.05~ms &  111.60~ms & \textbf{38.0\%} \\
+Solve Memory      &  362.14~MB &  284.30~MB & \textbf{21.5\%} \\
 \hline
 \multicolumn{4}{|c|}{\textbf{BLS12--381 -- R1CS Constraint System}} \\
 \hline
 Nb Constraints    &   545,510 &   368,434 & \textbf{32.5\%} \\
-Nb Commitments    &   660,160 &   300,032 & \textbf{54.5\%} \\
-Compile Time      &  686.95~ms &  418.32~ms & \textbf{39.1\%} \\
-Compile Memory    &   1.74~GB &    1.14~GB & \textbf{34.8\%} \\
-Solve Time        &  182.72~ms &  119.97~ms & \textbf{34.3\%} \\
-Solve Memory      &  231.77~MB &  118.67~MB & \textbf{48.8\%} \\
+Nb Commitments    &   660,160 &   300,104 & \textbf{54.5\%} \\
+Compile Time      &  686.95~ms &  424.01~ms & \textbf{38.3\%} \\
+Compile Memory    &   1.74~GB &    1.13~GB & \textbf{35.1\%} \\
+Solve Time        &  182.72~ms &  121.15~ms & \textbf{33.7\%} \\
+Solve Memory      &  231.77~MB &  118.61~MB & \textbf{48.8\%} \\
 \hline
 \multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{api.Commit} calls. Hardware: Apple M3 Pro (\texttt{goarch:arm64}).} \\
 \multicolumn{4}{l}{\footnotesize BN254 Circuit: \url{https://tinyurl.com/ppprt-circuit-bn254}} \\
