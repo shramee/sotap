@@ -60,54 +60,109 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 % ----------------------------------------------------------
 \subsection{API}~\label{sec:polyring:api}
 
-The toolkit exposes three entry points.
-\texttt{NewPolyRingCheck} registers a ring group (modulus $P$ plus an optional
-small-coefficient evaluator) and returns a handle shared by every multiplication
-under that modulus; multiple groups with different moduli may coexist.
-\texttt{MulPolyRings} computes $R = (\prod_j A_j) \bmod P$ outside the circuit
-via \texttt{polyRingMulHint}, range-checks $R$'s limbs inside, and enqueues the
-check $(A_j; R; Q)$ in the group; for longer product chains
-a \texttt{PolyRingAccumulator} wrapper automatically triggers intermediate
-reductions when the accumulated degree exceeds a configurable bound.
-At circuit finalisation, \texttt{performDeferredRingChecks} implements
+The toolkit exposes the following entry points.
+
+\paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
+Registers a \emph{ring group}: a modulus polynomial $P$ paired with an optional
+small-coefficient evaluator \texttt{modEvalFn}.  Returns a
+\texttt{*PolyRingGroupChecks} handle shared by every multiplication under that
+modulus; multiple groups with different moduli may coexist in the same circuit.
+
+\paragraph{\texttt{MulPolyRings(group, $A_1,\ldots,A_k$)}}
+Computes $R = (\prod_j A_j) \bmod P$ outside the circuit via
+\texttt{polyRingMulHint} (prover), range-checks $R$'s limbs inside the circuit
+(verifier), and enqueues the tuple $(A_j; R; Q)$ in the group's deferred check
+list.  Returns $R$ immediately so callers can continue building the circuit.
+
+\paragraph{\texttt{PolyRingAccumulator}}
+A helper that accumulates a product chain $\prod_i F_i$ and flushes to
+\texttt{MulPolyRings} automatically when the accumulated degree would exceed a
+configurable bound \texttt{targetDeg}, avoiding excessive hint call overhead.
+\texttt{Mul} enqueues one factor; \texttt{Sqr} enqueues the current state
+twice; \texttt{Eval} forces an immediate flush and returns the remainder.
+
+\paragraph{\texttt{ToCommit($e_1,\ldots$)}}
+Adds extra elements to the first commitment (the one that derives challenge
+$z$).  Required for hinted values—such as the residue witness $c$ in pairing
+checks—whose correctness is asserted \emph{inside} the polynomial identity
+protocol itself, so they must be absorbed before $z$ is sampled.
+
+\paragraph{\texttt{performDeferredRingChecks} (internal)}
+Called once by the gnark backend at circuit finalisation.  Implements
 Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit}
-calls~\cite{gnarkcommit} (producing challenges $z$ and $x$) and one
-\texttt{AssertIsEqual} per group, so no in-circuit work beyond remainder
-range-checks is performed until this point. Full API signatures and a
-step-by-step code walkthrough are available in the repository.\footnote{%
-\url{https://anonymous.4open.science/r/tiny-gnark-DDCD}}
+calls~\cite{gnarkcommit} (producing $z$ then $x$) followed by one
+\texttt{AssertIsEqual} per group.  No in-circuit multiplications over ring
+elements occur before this point beyond the remainder range-checks.
 
 % ----------------------------------------------------------
 \subsection{Mapping Algorithms to Implementation}
 \label{sec:polyring:mapping}
 
-Table~\ref{tab:alg_mapping} maps each algorithm of Sections~\ref{sec:op-polys}
-and~\ref{sec:iop} to its realisation in the toolkit.
+Table~\ref{tab:alg_mapping} maps each step of the two-round protocol
+(Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier}) to its
+realisation in the toolkit.
 
-The prover's side of
-Algorithm~\ref{alg:2r:prover} is driven from the Miller loop of the BN254
-pairing implementation (\texttt{sw\_bn254/pairing.go}): each loop step submits
-its operands through \texttt{MulPolyRings}, and the resulting quotient--remainder
-pairs $(\mathcal{Q}, \mathcal{R})$ are stored in the field object's
-\texttt{deferredPolyChecks} queue. The verifier's side
-(Algorithm~\ref{alg:2r:verifier} and Equation~\eqref{eq:iop-batched}) runs once,
-at circuit finalisation, in \texttt{performDeferredRingChecks}
-(\texttt{emulated/field\_polyring.go}). The Fiat-Shamir transformation of
-Section~\ref{sec:iop:fs} is applied there via two sequential \texttt{api.Commit}
-calls as described in Section~\ref{sec:iop:fs:gnark}, mirroring the two rounds of the interactive protocol:
-the first commits the limbs of every queued remainder together with the hinted
-pairing witnesses, deriving the RLC challenge $z$; the second commits $z$
-together with the limbs of $Q_\text{acc}$ (computed outside the circuit by
-\texttt{quotientsRLCHint}), deriving the evaluation point $x$. Absorbing $z$
-into the second commitment chains the two rounds, exactly as required by the
-non-interactive transcript of Section~\ref{sec:iop:noninteractive}. Both
-challenges are native field elements; \texttt{NativeToEmulated} decomposes each
-into emulated limbs and asserts the recomposition in-circuit. The
-verifier's evaluations are realised by
-\texttt{evalPolyWithChallenge}, which shares the cached power vector
-$\mathcal{X}$ across all polynomials and accumulates limb products without
-intermediate reduction via \texttt{InnerProductNoReduce}
-(Section~\ref{sec:polyring:performance}).
+\begin{table}[h]
+\centering
+\caption{Algorithm-to-implementation mapping}
+\label{tab:alg_mapping}
+\begin{tabular}{lll}
+\hline
+\textbf{Protocol step} & \textbf{Who} & \textbf{Code} \\
+\hline
+\textsc{PolyMulDiv}: multiply \& reduce & Prover (hint) &
+  \texttt{polyRingMulHint} \\
+Remainder range-check & Verifier (circuit) &
+  \texttt{MulPolyRings} (\texttt{packLimbs}) \\
+Enqueue check $(A_j; R; Q)$ & Circuit setup &
+  \texttt{MulPolyRings} \\
+Degree-bounded accumulation & Circuit setup &
+  \texttt{PolyRingAccumulator} \\
+Commit remainders $\Rightarrow$ challenge $z$ & Verifier (circuit) &
+  \texttt{performDeferredRingChecks} (1st \texttt{Commit}) \\
+Form $Q_\text{acc} = \sum_i z^i Q_i$ & Prover (hint) &
+  \texttt{quotientsRLCHint} \\
+Commit $z, Q_\text{acc}$ $\Rightarrow$ challenge $x$ & Verifier (circuit) &
+  \texttt{performDeferredRingChecks} (2nd \texttt{Commit}) \\
+Decompose $z, x$ into emulated limbs & Verifier (circuit) &
+  \texttt{NativeToEmulated} \\
+Evaluate polynomials at $x$ & Verifier (circuit) &
+  \texttt{evalPolyWithChallenge} \\
+Assert Equation~\eqref{eq:iop-batched} & Verifier (circuit) &
+  \texttt{AssertIsEqual} per group \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Prover path.}
+The prover's work is entirely in hint functions called during witness
+generation.  Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint},
+which multiplies the input polynomials and performs Euclidean division by $P$,
+returning $(Q_i, R_i)$.  The remainder $R_i$ is returned to the caller
+immediately; the quotient $Q_i$ is stored in the group's deferred list.
+In the BN254 pairing (\texttt{sw\_bn254/pairing.go}), the Miller loop drives
+this through a \texttt{PolyRingAccumulator} with \texttt{targetDeg\,=\,69}:
+\texttt{Sqr} and \texttt{Mul} accumulate line evaluations until the degree
+bound is reached, at which point \texttt{Eval} flushes to \texttt{MulPolyRings}.
+The residue witness $c$ and its inverse are added to the first commitment via
+\texttt{ToCommit} so that $z$ binds to them before the identity check.
+
+\paragraph{Verifier path.}
+All verifier work is deferred to \texttt{performDeferredRingChecks}, which runs
+once at circuit finalisation (Section~\ref{sec:iop:fs:gnark}).  It issues two
+sequential \texttt{api.Commit} calls~\cite{gnarkcommit}: the first absorbs all
+remainder limbs (and any \texttt{ToCommit} elements), producing $z$; the second
+absorbs $z$ and the limbs of $Q_\text{acc}$ (computed by
+\texttt{quotientsRLCHint}), producing $x$.  Chaining $z$ into the second
+commitment realises the non-interactive transcript of
+Section~\ref{sec:iop:noninteractive}.  Both challenges are native field
+elements; \texttt{NativeToEmulated} decomposes each into $\lceil\lambda/b\rceil$
+emulated limbs and asserts the recomposition in-circuit.  Polynomial evaluations
+at $x$ are then computed by \texttt{evalPolyWithChallenge}, which caches the
+power vector $\mathcal{X} = (1, x, x^2, \ldots)$ and evaluates each polynomial
+as an inner product via \texttt{InnerProductNoReduce}
+(Section~\ref{sec:polyring:performance}); each polynomial's evaluation is cached
+on first use so shared factors (e.g.\ the modulus $P$) are not re-evaluated.
 
 % ----------------------------------------------------------
 
