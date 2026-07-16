@@ -95,13 +95,11 @@ Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit} calls
 elements occur before this point beyond the remainder range-checks.
 
 \subsubsection{Shared Circuit Skeleton}
-Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier} walk the identical Miller loop structure, differing only in what happens at each step: the prover computes $(Q_i, R_i)$, the verifier checks them. The implementation exploits this by using a single circuit function per curve, \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go}, that traces this shared skeleton once. At every step the code calls \texttt{MulPolyRings} (via \texttt{PolyRingAccumulator}) with the same operands both algorithms process. Prover's work is performed during the witness generation phase, while the verifier's work is encoded into the circuit constraints and commitment API (Section~\ref{sec:iop:fs:gnark}).
+Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier} walk the identical Miller loop structure, differing only in what happens at each step: the prover computes $(Q_i, R_i)$, the verifier checks them. The implementation exploits this by using a single circuit function per curve, \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go}, that traces this shared skeleton once. At every step the code calls \texttt{MulPolyRings} (via \texttt{PolyRingAccumulator}) with the same operands both algorithms process. Prover's work is performed during the witness generation phase, while the verifier's work is performed by the circuit's constraints and commitment API (Section~\ref{sec:iop:fs:gnark}).
 
-\subsubsection{Inline: Prover Work via Hints}
-Within the shared loop, each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint} immediately, which multiplies the input polynomials and performs Euclidean division by $P$, returning $(Q_i, R_i)$. This is Algorithm~\ref{alg:2r:prover}'s work, executed inline during witness generation. The remainder $R_i$ is returned to the caller so the circuit can continue building; the quotient $Q_i$ is stored in the group's deferred list for checking at the end. At the end the prover commits the remainders and calls \texttt{quotientsRLCHint} to compute the accumulated quotient $Q_\text{acc}$ (Section~\ref{sec:iop:batching}).
-
-\subsubsection{Deferred: Verifier Work via \texttt{performDeferredRingChecks}}
-\texttt{performDeferredRingChecks} issues two sequential \texttt{api.Commit} calls (Section~\ref{sec:iop:fs:gnark}): the first absorbs all remainder limbs (and any \texttt{ToCommit} elements), producing $z$; the second absorbs $z$ and the limbs of $Q_\text{acc}$, producing $x$. Chaining $z$ into the second commitment realises the non-interactive transcript of Section~\ref{sec:iop:noninteractive}. Polynomial evaluations for $R_i$ and $Q_\text{acc}$ at $x$ are then computed as described in Section~\ref{sec:polyring:performance}. Finally each ring group is closed out with one \texttt{AssertIsEqual}, implementing Equation~\eqref{eq:iop-batched}.
+\subsubsection{Prover's and Verifier's Work}
+Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint} to prepare $Q_i$, $R_i$ and queue the deferred check. This is Algorithm~\ref{alg:2r:prover}'s work, executed inline during witness generation. The remainder $R_i$ is returned to the caller so the circuit can continue building. Then \texttt{performDeferredRingChecks} calls \texttt{api.Commit} with all $R_i$ to obtain the challenge $z$. Then it calls \texttt{quotientsRLCHint} to get $Q_\text{acc}$. After $Q_\text{acc}$, second commit absorbs $z$ and $Q_\text{acc}$ to produce $x$.
+Now verifiers work starts as described in Algorithm~\ref{alg:2r:verifier}, Polynomials $R_i$ and $Q_\text{acc}$ are evaluated at $x$, and Equation~\eqref{eq:iop-batched} is verified using the Schwartz Zippel lemma with one \texttt{AssertIsEqual} call.
 
 % ----------------------------------------------------------
 
@@ -112,11 +110,11 @@ Within the shared loop, each \texttt{MulPolyRings} call triggers \texttt{polyRin
 \gText{// Register the ring group once at initialisation}
 fp, _ := emulated.NewField[emulated.BN254Fp](api)
 modPoly := fp.MakePoly(82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1)
-group := fp.NewPolyRingCheck(modPoly, nil)
+ring := fp.NewPolyRingCheck(modPoly, nil)
 \gText{// Operations on ring elements A, B, C}
-res, _ = fp.MulPolyRings(group, A, B, C) \gText{// compute (A·B·C)}
+res, _ = fp.MulPolyRings(ring, A, B, C) \gText{// compute (A·B·C)}
 \gText{// Accumulate a product chain}
-acc := fp.NewPolyRingAccumulator(group, targetDeg)
+acc := f.NewPolyRingAccumulator(ring, targetDeg)
 acc.Mul(A).Mul(B).Sqr()  \gText{// enqueue (A·B)² without multiplying yet}
 rem := acc.Eval()        \gText{// multiply and return the remainder}
 \end{alltt}
