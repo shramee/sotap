@@ -1,132 +1,122 @@
-# IACR TCHES Peer Review
+Review #104A
+Overall merit
+2. 
+Reject and Resubmit (RR)
 
-**Manuscript:** *Pairing Proofs and Polynomial Ring Toolkit*
-**Venue:** IACR Transactions on Cryptographic Hardware and Embedded Systems
-**Reviewer Confidence:** High (familiar with ZKP constraint systems, pairing-based cryptography, and gnark)
+Relevance to TCHES
+3. 
+Right in the middle of CHES
 
----
+Novelty/Contribution
+2. 
+Minor Contribution
 
-## 1. Summary
+Reviewer expertise
+4. 
+I work right in this subfield (I am well-versed with the related literature and publish regularly in the subfield)
 
-This paper addresses the high cost of verifying elliptic curve pairings inside arithmetized constraint systems (R1CS, SCS/Plonkish) and resource-constrained virtual machines (Ethereum VM, BitVM, ZKVMs). The authors propose a public-coin interactive proof system that consolidates the Miller loop iterations and final exponentiation of an optimal ate pairing over BN254 into a single multi-operand polynomial identity, verified probabilistically via the Schwartz-Zippel lemma. Rather than checking each field multiplication individually (as in [Fel23]), the scheme batches entire Miller loop steps—including line function evaluations, residue witness multiplications, and Frobenius corrections—into one polynomial equation per step, then further batches all equations via a random linear combination into a single accumulated quotient checked at a random evaluation point.
+Paper summary
+The authors revisit the problem of proving pairing computations in SNARK frameworks. They improve on the state of the art by Housni from CT-RSA 2023 by adapting optimizations from the literature that allows to express the whole pairing computation as a single polynomial relation, by building on top of [Fel23] and [NE24]. The technique is benchmarked with a gnark implementation with significant reduction in constraints, commitments and prover resources.
 
-The paper makes two concrete contributions: (1) the proof system itself, with a formal two-round interactive protocol (and its Fiat-Shamir non-interactive variant), yielding a 39% reduction in SCS constraints and a 60% reduction in commitments for a Groth16 verification simulation on BN254; and (2) a reusable **polynomial ring toolkit** implemented in gnark's `emulated` package, providing a clean API (`NewPolyRingCheck`, `MulPolyRings`, `PolyRingAccumulator`, `performDeferredRingChecks`) for deferred polynomial-ring multiplication and verification in arbitrary emulated fields.
+Comments for authors
+Pros:
++ Proving pairing computations is an interesting research problem, and thinking about how the cost metric allows different trade-offs is always interesting
++ The savings in constraints and prover resources are substantial
 
----
+Cons:
+- Curve BN254 is obsolete, since it barely meets the 100-bit security level
+- The relationship to Garaga is unclear, and raises novelty/anonymity concerns
+- The contribution is incremental, and essentially combines techniques already present in the literature
+- The benchmarking scenario involving 3 pairings is unclear
 
-## 2. Novelty & Impact
+The paper is reasonably well-written and organized, but it feels quite redundant at times. There are several floats that do not seem to contribute to understanding the technique and end up consuming quite a bit of space. For example, Algorithms 4 and 5 could probably be combined into one algorithm with the Prover and Verifier parts interleaved and color-coded. The interactive and non-interactive versions of the protocol are quite similar (as expected), and providing both does not help the reader much. In any case, the paper fits the page limit comfortably, so these are more nitpicks than roadblockers.
 
-**Originality: Moderate-to-High.** The paper synthesizes three prior ideas—El Housni's R1CS-optimized Miller loop formulas [Hou23], Feltroidprime's Schwartz-Zippel-based polynomial identity testing for $\mathbb{F}_{q^{12}}$ [Fel23], and Novakovic-Eagen's residue witness technique for final exponentiation [NE24]—into a unified framework. The genuine novelty lies in the *granularity shift*: verifying entire Miller loop steps as single polynomial identities rather than individual binary multiplications, thereby eliminating intermediate remainder commitments. This is a clean and effective insight.
+The main shortcomings are with the some technical aspects and novelty of the contribution:
+* The entire evaluation is based on computing a 3-pairing, which I understand to be a product of 3 pairings (thus 3 interleaved Miller loops and one final exponentiation), but the paper does not explain exactly how this works. The last page gives a circuit for Groth16 verification, but it is unclear if that matches the intended 3-pairing benchmark introduced earlier. For generality, the paper should give metrics for a single pairing and a product of $n$ pairings.
+* The choice of benchmarking curve BN254 is never justified, which is puzzling given the well-known fact that BN curves need a larger field size to meet the 128-bit security level after the Kim-Barbulescu attack. This gets a bit confusing when numbers are given for a BLS12-381 curve in Table 6, but at presumably a different cost metric tailored to the Cairo VM? My reading of Section 7 added to the confusion, since the authors write that the proposed technique is already running in production within another library, so how can there be improvements to claim in Table 6? The statement also creates an obvious issue with the anonymity requirement for submissions.
 
-**Significance: High for the target domain.** Pairing verification is a critical bottleneck in recursive proof composition and on-chain verification. A 60% reduction in commitments directly translates to smaller proof transcripts and lower gas costs in blockchain deployments. The reusable toolkit also lowers the barrier for other developers to adopt the technique.
+Even without considering the confusion about what is implemented where, the contribution feels already thin: it heavily builds on previous work and arguably just combines two ideas already present in the literature, obtaining modest improvements by rearranging the polynomials in a better way.
 
-**Limitations on novelty:**
-- The core mathematical machinery (Schwartz-Zippel PIT, Euclidean division in $\mathbb{F}_q[x]/P_{12}(x)$) is standard. The contribution is primarily an *engineering optimization* within an existing algebraic framework, not a new cryptographic primitive or fundamentally new proof technique.
-- The scope is narrow: only BN254 with optimal ate pairings. Generalization to BLS12-381, BW6-761, or other pairing-friendly curves is mentioned nowhere, and degree/sparsity arguments would need revisiting for different tower constructions.
+Required Changes
+- Add a modern set of parameters, such as BLS12-381
+- Clarify the relationship with the Garaga library, and elaborate on the novelty over the approach implemented there
 
----
+Questions for authors’ response
+- Why BN254 and not a widely-deployed modern alternative such as BLS12-381?
+- What is the exact relationship between the techniques proposed in this work and those implemented in Garaga?
+- Do you exploit the sparseness of the Miller line functions for savings in some way?
+- What is the application scenario motivating the 3-pairing benchmark? Is that the same circuit described in Section 7.2 for Groth16 verification?
 
-## 3. Technical Soundness
+Review #104B
+Overall merit
+4. 
+Minor Revision (MinR)
 
-### 3.1 Correctness of the Polynomial Formulation
+Relevance to TCHES
+2. 
+Somewhat relevant
 
-The polynomial equations in Section 4.2 (Equations 1–4) are correctly derived from Algorithm 2. The degree analysis in Tables 2–5 is consistent: for a 3-pair zero-bit step, the LHS product $F^2 \cdot L_1 \cdot L_2 \cdot L_3$ has degree $2 \times 11 + 3 \times 9 = 49$, and the RHS $R + Q \cdot P_{12}$ with $\deg(Q) = 49 - 12 + 1 = 38$ checks out. The coefficient counts are correct given $\mathbb{F}_{q^{12}}$ representation (12 coefficients per element) and Sparse$_{01379}$ representation (4 non-zero coefficients per line function).
+Novelty/Contribution
+3. 
+Major Contribution
 
-### 3.2 Security Analysis
+Reviewer expertise
+3. 
+I am knowledgeable in this subfield but not expert (I know some related works and may have a publication in the subfield)
 
-The soundness proof (Theorem 1, Section 5.7.2) is essentially correct but has notable issues:
+Paper summary
+This paper proposes a polynomial-identity-based approach for reducing the cost of pairing verification in arithmetized settings. The key idea is to verify larger pairing-related relations, rather than checking extension-field multiplications one by one, and to package the resulting method as a reusable polynomial ring toolkit in gnark. The paper also reports implementation results on BN254/Groth16-style verification workloads, showing noticeable reductions in constraints, commitments, and memory usage.
 
-- **The soundness bound application is slightly imprecise.** The bivariate Schwartz-Zippel bound used is $\Pr[P_{\text{err}}(z,x) = 0] \leq \frac{\deg_z + \deg_x}{|\mathbb{F}_q|}$. However, the standard multivariate Schwartz-Zippel lemma bounds by $\frac{d}{|\mathbb{F}|}$ where $d$ is the *total degree*, not the sum of individual degrees. For a bivariate polynomial, these coincide only when the polynomial is examined appropriately. The authors should clarify whether they are applying the lemma to $P_{\text{final}}$ viewed as a bivariate polynomial over $\mathbb{F}_q^2$ (where $(z, x)$ are drawn independently) or sequentially. As stated, the bound $\frac{n - 1 + d_x}{|\mathbb{F}_q|}$ is correct for independent uniform sampling over $\mathbb{F}_q^2$, but the text could be more precise about which form of the lemma is being invoked.
+Comments for authors
+This paper studies a relevant practical problem and presents an implementation-oriented optimization that seems useful for recursive proving and other constrained verification settings. The paper is generally well motivated, and the reported benchmark improvements are promising.
 
-- **Remark 1 is critical but underemphasized.** The entire soundness argument assumes the verifier evaluates polynomials without arithmetic error. The deferred-reduction inner product optimization (Section 6.6) introduces a risk: if intermediate limb values overflow the native characteristic $p$, the algebraic identity breaks silently. Lemma 1 provides a concrete overflow bound ($2^{146} \ll 2^{254}$), which is reassuring for BN254 with 4-limb/64-bit emulation. However, this bound is *parameter-specific* and would need re-derivation for any other curve or limb width. The paper should state this caveat explicitly and ideally provide a general formula.
+I think the main strength of the work is the choice of verification granularity: consolidating larger pairing sub-computations into polynomial relations appears to reduce intermediate checking overhead in a natural way. The implementation in gnark and the provided performance data also make the paper more compelling.
 
-- **The transition from IOP to non-interactive proof via Fiat-Shamir is handled too briefly.** Section 5.5 cites [BSCS16] for the knowledge soundness bound but does not discuss potential pitfalls of applying Fiat-Shamir in the algebraic group model or when the hash function is instantiated concretely (e.g., MiMC). gnark's specific commitment mechanism via MiMC hashing is mentioned in Section 6.5 but its security implications are not analyzed.
+My main suggestions are mostly about clarity and presentation. In particular, the paper would benefit from a clearer explanation of the precise contribution relative to prior work, especially in terms of what is conceptually new versus what is an integration of existing ideas. I also think the discussion of the proof protocol / Fiat-Shamir transformation and the implementation-specific commitment mechanism could be presented more clearly. Finally, some notation and terminology could be cleaned up to improve readability.
 
-### 3.3 Threat Model
+Overall, I find the paper interesting and practically relevant. With some clarification and polishing, I think it would make a useful contribution.
 
-The paper implicitly assumes a standard honest-verifier model for the interactive protocol, which is appropriate. However, no explicit threat model is stated. For a TCHES submission where hardware/embedded deployment is a concern, the authors should discuss whether the verifier's random sampling is vulnerable to side-channel leakage in constrained environments, and whether the Fiat-Shamir instantiation is constant-time.
+Required Changes
+1. Clarify the main contribution relative to the most closely related prior works.
+2. Improve the presentation of the interactive proof / Fiat-Shamir discussion and its relation to the gnark implementation.
+3. Clean up notation and terminology to make the paper easier to follow.
+4. Clarify the experimental metrics and benchmarking setup.
 
----
+Questions for authors’ response
+1. Could the authors more clearly summarize the main conceptual novelty over the closest prior approaches?
+2. Could the authors clarify the meaning of the commitment-related metrics used in the benchmarks?
+3. Could the authors briefly explain how the protocol description maps to the gnark implementation, especially in the Fiat-Shamir setting?
 
-## 4. Evaluation & Reproducibility
+Review #104C
+Overall merit
+3. 
+Major Revision (MajR)
 
-### 4.1 Benchmarks
+Relevance to TCHES
+3. 
+Right in the middle of CHES
 
-The benchmark in Table 6 is well-structured: it compares both SCS (Plonkish) and R1CS backends on a realistic Groth16 verification simulation circuit over BN254. The reported numbers (39% SCS constraint reduction, 60% commitment reduction, ~42% compile-time memory reduction, ~52% solver memory reduction) are substantial and credible given the theoretical analysis.
+Novelty/Contribution
+2. 
+Minor Contribution
 
-**Strengths:**
-- The benchmark circuit (`Groth16Simulation`) is well-chosen: it directly models the pairing operations in real recursive proof verification.
-- Both constraint system backends (SCS, R1CS) are tested.
-- Multiple metrics are reported (constraints, commitments, compile time, compile memory, solve time, solve memory).
-- Code is publicly available (GitHub links and Gist provided).
+Reviewer expertise
+2. 
+I have passing knowledge of the subfield (I know a couple of related works)
 
-**Weaknesses:**
-- **Single curve, single circuit.** All benchmarks are on BN254 with one specific circuit. No other pairing-friendly curves or circuit configurations are tested. This significantly limits the generalizability claims.
-- **No prover/verifier wall-clock time breakdown.** The "solve time" metric conflates prover computation, but the paper does not separate the cost of hint computation (polynomial multiplication and division outside the circuit) from constraint solving. For practical deployment, this distinction matters.
-- **No comparison with Garaga [FE].** The paper acknowledges Garaga as "an earlier proof of concept" in Cairo/Starknet but does not benchmark against it, even qualitatively. Given that Garaga targets a similar problem, this omission weakens the comparative analysis.
-- **Hardware specification is minimal.** "Apple M3 Pro (goarch:arm64)" is stated, but no information on RAM, OS version, Go version, or gnark version is provided. Reproducibility would benefit from a more complete environment specification.
-- **No statistical rigor.** Benchmark numbers appear to be single-run measurements with no variance, confidence intervals, or repeated trials reported.
+Paper summary
+The paper improves the algebraic representation of pairing relations which subsequently translates into small and more efficient proofs of bilinear pairings with application to e.g. recursive proofs. More precisely, the authors provide a compact polynomial representation constraining an entire miller loop: In a series of multiplications, they find, it is cheaper to defer reduction by the irreducible polynomial to the very end instead of reducing each intermediate product. Applying this change and incorporating most recent improvements, the authors present significant improvements in constraints and commitments.
 
-### 4.2 Reproducibility
+Comments for authors
 
-The provision of both the circuit definition (GitHub Gist) and the implementation (GitHub repository) is commendable and significantly aids reproducibility. However:
-- The Gist link and repo link should be anonymized for double-blind review (they appear to contain the author's username "shramee" and organization "mistcash").
-- No build/run instructions or specific dependency versions are documented in the paper.
+# Strengths
+The paper clearly describes the technique and targets a very relevant issue. The performance numbers show clearly the significant impact and the implementation details show careful engineering work beyond the given "reduction optimization". 
 
----
+# Weaknesses
+The paper is a bit ambiguous about the relation to the previous results. Given the practical evaluation is such a strong point I believe this could be improved: For Table 6, the description (411-414) makes it not very clear what is compared. What is the exact state of "Before" and "After", when it comes to contributions by this work, by Fel23, Hou23, NE24. A similar point applies to the "gnark baseline" in Table 7, the paper should be more precise about the concrete state of this baseline with respect to recent academic results.  Again on Table 6: the meaning of MULMOD, ADDMOD, COMMITS, VM STEPS is never properly defined, making this table even harder to understand.  The polynomial ring toolkit is an interesting feature but it is not really evaluated beyond the bilinear pairing use case making assessment as a separate contribution hard.
 
-## 5. Clarity
-
-**Overall: Good, with room for improvement.**
-
-The paper is generally well-organized with a logical flow: motivation → background → related work → polynomial formulation → full proof protocol → toolkit → benchmarks → conclusion. The algorithms (1–6) are clearly presented with line-by-line comments. The protocol diagrams (Figures in Sections 5.4 and 5.6) are helpful.
-
-**Issues:**
-- The notation is introduced somewhat abruptly. $\text{Sparse}_{01379}$ is used before being formally defined (first appears in Section 4.1, defined parenthetically).
-- The paper switches between "constraint" (C) and "commitment" metrics without always making clear which is being discussed, particularly in Section 4.1 where the comparative analysis jumps between the two.
-- Section 6 (Polynomial Ring Toolkit) reads more like API documentation than a research paper section. While the detail is valuable for practitioners, it disrupts the theoretical flow. Consider moving the detailed API to an appendix.
-- The paper is 22 pages, which is on the longer side for TCHES. Some compression is possible in Sections 6.3–6.5 without loss of substance.
-
----
-
-## 6. Constructive Feedback
-
-### Major Issues
-
-- **M1: Anonymization failure.** The GitHub links in Section 7.2 (footnotes 2 and 3) contain identifiable usernames ("shramee", "mistcash"), violating double-blind review requirements. These must be anonymized or replaced with anonymous repositories.
-
-- **M2: Lack of curve generality.** The entire paper is specialized to BN254. The authors should either (a) provide a general framework showing how the polynomial equations adapt to BLS12-381 or other curves, or (b) explicitly scope the contribution to BN254 and discuss what changes for other curves (different tower constructions, different sparsity patterns, different loop lengths).
-
-- **M3: Incomplete security discussion.** The Fiat-Shamir instantiation via MiMC and gnark's commitment mechanism needs more rigorous treatment. What are the concrete security assumptions? Is MiMC's algebraic structure a concern when hashing algebraic data? The [BSB, BSB23] references describe the mechanism, but the security implications for this specific protocol should be analyzed.
-
-- **M4: Missing comparison with Garaga.** Given [FE] targets the same problem space, a direct comparison (even at the constraint-count level if runtime comparison is infeasible) would strengthen the paper.
-
-- **M5: Overflow safety is parameter-specific.** Lemma 1's bound is proved only for BN254 with 4-limb/64-bit arithmetic. A general formula or at least a discussion of when this bound might be violated (larger extension degrees, different limb widths) is needed.
-
-### Minor Issues
-
-- **m1:** The abstract claims "~42% reduction in compile-time memory" but Table 6 shows 41.8% (SCS) and 43.1% (R1CS). State the range or be precise.
-- **m2:** Section 2.2 title says "Schwartz-Zippel lemma" but the text correctly notes it should be "Demillo-Lipton-Schwartz-Zippel." Be consistent.
-- **m3:** In Algorithm 2, the comment "Skip $T \leftarrow T - Q_2(Q)$" on line 22 is confusing—clarify whether this is an intentional optimization or a notational shorthand.
-- **m4:** Table 1 footnotes use "C*" to denote costs excluding Fiat-Shamir overhead, but this notation is not defined before the table.
-- **m5:** The `emulated` package reference [Conb] points to a specific tree path in the gnark repo. This URL may break with future refactors; consider citing a tagged release.
-- **m6:** Section 4.3 states $\deg(P) < 2^8$ with a footnote giving the approximate formula $\deg(P) \approx 88 + 18(k-3)$ for $k$-pair pairings. For $k = 3$, this gives $\deg(P) \approx 88$, which is less than $2^8 = 256$. However, the footnote then claims "this bound can be extended to $2^{10}$"—clarify what motivates this extension and under what conditions.
-- **m7:** No acknowledgments section is present (expected for camera-ready but acceptable for submission).
-- **m8:** References [BSB] is a HackMD link—this is not a stable archival reference. If there is a preprint or published version, cite that instead.
-- **m9:** The paper would benefit from a table summarizing all polynomial equations (Eqs. 1–4) with their per-step and total costs for the full pairing, rather than having this information spread across Tables 2–5.
-
----
-
-## 7. Recommendation
-
-**Decision: Minor Revision**
-
-**Justification:** The paper presents a clean and effective optimization for pairing verification in constraint systems, achieving meaningful improvements (39% constraint reduction, 60% commitment reduction) confirmed by a working gnark implementation. The core technical contribution—consolidating Miller loop steps into single polynomial identities with batched quotient accumulation—is sound and well-motivated. The reusable polynomial ring toolkit is a valuable engineering contribution.
-
-However, the paper requires revision on several fronts before acceptance: (a) anonymization must be fixed for double-blind compliance, (b) the security analysis needs strengthening around the Fiat-Shamir instantiation and overflow safety generalization, (c) the evaluation should include at least a discussion of other curves and a comparison with Garaga, and (d) minor presentation issues should be addressed. None of these issues are fundamental—they can be resolved in a single revision cycle.
-
-The work is relevant to TCHES's scope (efficient cryptographic implementations in constrained environments) and would be a solid contribution once these issues are addressed.
-
----
-
-*Review prepared in the capacity of an expert peer reviewer for IACR TCHES. All assessments reflect the reviewer's independent technical judgment.*
+# Editorial Comments
+- The points about 29%, 60%, 42% appear almost identically a couple of times.
+- 178 -179, the sentence is broken.
+- 258-259: It may be worth considering to not allow x to be a scalar and a formal intermediate. 
+- The API description of 6.3-6.4 feels very much like a library documentation and could be deferred to the appendix.
