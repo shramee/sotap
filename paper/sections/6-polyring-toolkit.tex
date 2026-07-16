@@ -94,37 +94,14 @@ Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit} calls
 \texttt{AssertIsEqual} per group.  No in-circuit multiplications over ring
 elements occur before this point beyond the remainder range-checks.
 
-\subsubsection{Algorithmic overview}
-Files \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go} implement the Miller loop and final exponentiation polynomial relations for BN254 and BLS12--381. respectively, using the polynomial ring toolkit.
-The prover's work is entirely in hint functions called during witness
-The prover's work is entirely in hint functions called during witness
-generation.  Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint},
-which multiplies the input polynomials and performs Euclidean division by $P$,
-returning $(Q_i, R_i)$.  The remainder $R_i$ is returned to the caller
-immediately; the quotient $Q_i$ is stored in the group's deferred list.
-In the BN254 pairing (\texttt{sw\_bn254/pairing.go}), the Miller loop drives
-this through a \texttt{PolyRingAccumulator} with \texttt{targetDeg\,=\,69}:
-\texttt{Sqr} and \texttt{Mul} accumulate line evaluations until the degree
-bound is reached, at which point \texttt{Eval} flushes to \texttt{MulPolyRings}.
-The residue witness $c$ and its inverse are added to the first commitment via
-\texttt{ToCommit} so that $z$ binds to them before the identity check.
+\subsubsection{Shared Circuit Skeleton}
+Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier} walk the identical Miller loop structure, differing only in what happens at each step: the prover computes $(Q_i, R_i)$, the verifier checks them. The implementation exploits this by using a single circuit function per curve, \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go}, that traces this shared skeleton once. At every step the code calls \texttt{MulPolyRings} (via \texttt{PolyRingAccumulator}) with the same operands both algorithms process. Prover's work is performed during the witness generation phase, while the verifier's work is encoded into the circuit constraints and commitment API (Section~\ref{sec:iop:fs:gnark}).
 
-\subsubsection{Verifier path}
-All verifier work is deferred to \texttt{performDeferredRingChecks}, which runs
-once at circuit finalisation.  It issues two
-sequential \texttt{api.Commit} calls (Section~\ref{sec:iop:fs:gnark}): the first absorbs all
-remainder limbs (and any \texttt{ToCommit} elements), producing $z$; the second
-absorbs $z$ and the limbs of $Q_\text{acc}$ (computed by
-\texttt{quotientsRLCHint}), producing $x$.  Chaining $z$ into the second
-commitment realises the non-interactive transcript of
-Section~\ref{sec:iop:noninteractive}.  Both challenges are native field
-elements; \texttt{NativeToEmulated} decomposes each into $\lceil\lambda/b\rceil$
-emulated limbs and asserts the recomposition in-circuit.  Polynomial evaluations
-at $x$ are then computed by \texttt{evalPolyWithChallenge}, which caches the
-power vector $\mathcal{X} = (1, x, x^2, \ldots)$ and evaluates each polynomial
-as an inner product via \texttt{InnerProductNoReduce}
-(Section~\ref{sec:polyring:performance}); each polynomial's evaluation is cached
-on first use so shared factors (e.g.\ the modulus $P$) are not re-evaluated.
+\subsubsection{Inline: Prover Work via Hints}
+Within the shared loop, each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint} immediately, which multiplies the input polynomials and performs Euclidean division by $P$, returning $(Q_i, R_i)$. This is Algorithm~\ref{alg:2r:prover}'s work, executed inline during witness generation. The remainder $R_i$ is returned to the caller so the circuit can continue building; the quotient $Q_i$ is stored in the group's deferred list for checking at the end. At the end the prover commits the remainders and calls \texttt{quotientsRLCHint} to compute the accumulated quotient $Q_\text{acc}$ (Section~\ref{sec:iop:batching}).
+
+\subsubsection{Deferred: Verifier Work via \texttt{performDeferredRingChecks}}
+\texttt{performDeferredRingChecks} issues two sequential \texttt{api.Commit} calls (Section~\ref{sec:iop:fs:gnark}): the first absorbs all remainder limbs (and any \texttt{ToCommit} elements), producing $z$; the second absorbs $z$ and the limbs of $Q_\text{acc}$, producing $x$. Chaining $z$ into the second commitment realises the non-interactive transcript of Section~\ref{sec:iop:noninteractive}. Polynomial evaluations for $R_i$ and $Q_\text{acc}$ at $x$ are then computed as described in Section~\ref{sec:polyring:performance}. Finally each ring group is closed out with one \texttt{AssertIsEqual}, implementing Equation~\eqref{eq:iop-batched}.
 
 % ----------------------------------------------------------
 
