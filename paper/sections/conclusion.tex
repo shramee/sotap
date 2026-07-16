@@ -37,7 +37,7 @@ Before & After & Before & After & Before & After & Before & After \\
 \multicolumn{2}{|c}{\textbf{31.5\%}} & \multicolumn{2}{|c}{\textbf{25.4\%}} & \multicolumn{2}{|c}{\textbf{41.6\%}} & \multicolumn{2}{|c|}{\textbf{32.7\%}} \\
 \hline
 \multicolumn{8}{l}{\footnotesize MULMOD/ADDMOD\@: Field operations in $\mathbb{F}_p$ via built-in function calls} \\
-\multicolumn{8}{l}{\footnotesize COMMITS\@: Use transaction calldata and Poseidon hash operations for Fiat-Shamir} \\
+\multicolumn{8}{l}{\footnotesize COMMITS\@: Elements committed for Fiat-Shamir, see \S~\ref{sec:iop:fs:cairo}} \\
 \multicolumn{8}{l}{\footnotesize VM STEPS\@: CairoVM Steps~\cite{cairo} (CPU Cycles)} \\
 \hline
 \end{tabular}
@@ -71,6 +71,8 @@ The \textbf{This Work} numbers were obtained by compiling the exact same benchma
 \label{sec:bench-circuit}
 Both implementations are evaluated against the same gnark circuit: a 3-pairing multi-pairing check $\prod_{i=1}^{3} e(P_i, Q_i) = 1$ via \texttt{PairingCheck}. This corresponds to the pairing workload of a Groth16 verification, which reduces to a product-of-pairings check over three variable pairs once the constant $e(\alpha, \beta)$ term from the trusted setup is folded in. The same 3-pairing configuration is used in the CairoVM benchmarks of Table~\ref{tab:garaga_performance}, allowing a like-for-like comparison across environments.
 
+Test circuit can be found at \texttt{sw\_bn254} package in \texttt{g16\_simulation\_test.go} file in our implementation repo - \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}.
+
 \begin{table*}[t]
 \centering
 \caption{Performance comparison: gnark implementation, 3-pairing product check (Groth16 verification) on BN254 and BLS12--381}
@@ -82,7 +84,7 @@ Both implementations are evaluated against the same gnark circuit: a 3-pairing m
 \multicolumn{4}{|c|}{\textbf{BN254 -- SCS (Plonkish) Constraint System}} \\
 \hline
 Nb Constraints    & 1,592,440 & 1,035,550 & \textbf{35.0\%} \\
-Nb Commitments    &   571,125 &   269,616 & \textbf{52.8\%} \\
+Nb \Fq Committed    &   571,125 &   269,616 & \textbf{52.8\%} \\
 Compile Time      &  615.04~ms &  347.13~ms & \textbf{43.6\%} \\
 Compile Memory    &   1.33~GB &    0.82~GB & \textbf{38.3\%} \\
 Solve Time        &  167.57~ms &   97.30~ms & \textbf{41.9\%} \\
@@ -91,7 +93,7 @@ Solve Memory      &  348.73~MB &  181.24~MB & \textbf{48.0\%} \\
 \multicolumn{4}{|c|}{\textbf{BN254 -- R1CS Constraint System}} \\
 \hline
 Nb Constraints    &   491,447 &   316,167 & \textbf{35.7\%} \\
-Nb Commitments    &   571,125 &   269,616 & \textbf{52.8\%} \\
+Nb \Fq Committed    &   571,125 &   269,616 & \textbf{52.8\%} \\
 Compile Time      &  617.63~ms &  367.25~ms & \textbf{40.5\%} \\
 Compile Memory    &   1.60~GB &    0.98~GB & \textbf{38.8\%} \\
 Solve Time        &  175.42~ms &  106.36~ms & \textbf{39.4\%} \\
@@ -100,7 +102,7 @@ Solve Memory      &  173.26~MB &  112.72~MB & \textbf{34.9\%} \\
 \multicolumn{4}{|c|}{\textbf{BLS12--381 -- SCS (Plonkish) Constraint System}} \\
 \hline
 Nb Constraints    & 1,784,247 & 1,191,105 & \textbf{33.2\%} \\
-Nb Commitments    &   660,160 &   300,104 & \textbf{54.5\%} \\
+Nb \Fq Committed    &   660,160 &   300,104 & \textbf{54.5\%} \\
 Compile Time      &  650.02~ms &  410.48~ms & \textbf{36.9\%} \\
 Compile Memory    &   1.48~GB &    0.97~GB & \textbf{34.5\%} \\
 Solve Time        &  180.05~ms &  111.60~ms & \textbf{38.0\%} \\
@@ -109,16 +111,14 @@ Solve Memory      &  362.14~MB &  284.30~MB & \textbf{21.5\%} \\
 \multicolumn{4}{|c|}{\textbf{BLS12--381 -- R1CS Constraint System}} \\
 \hline
 Nb Constraints    &   545,510 &   368,434 & \textbf{32.5\%} \\
-Nb Commitments    &   660,160 &   300,104 & \textbf{54.5\%} \\
+Nb \Fq Committed    &   660,160 &   300,104 & \textbf{54.5\%} \\
 Compile Time      &  686.95~ms &  424.01~ms & \textbf{38.3\%} \\
 Compile Memory    &   1.74~GB &    1.13~GB & \textbf{35.1\%} \\
 Solve Time        &  182.72~ms &  121.15~ms & \textbf{33.7\%} \\
 Solve Memory      &  231.77~MB &  118.61~MB & \textbf{48.8\%} \\
 \hline
-\multicolumn{4}{l}{\footnotesize Commitments: Fiat-Shamir \texttt{api.Commit} calls. Hardware: Apple M3 Pro (\texttt{goarch:arm64}).} \\
-\multicolumn{4}{l}{\footnotesize BN254 Circuit: \url{https://tinyurl.com/ppprt-circuit-bn254}} \\
-\multicolumn{4}{l}{\footnotesize BLS12--381 Circuit: \url{https://tinyurl.com/ppprt-circuit-bls12-381}} \\
-\multicolumn{4}{l}{\footnotesize Our implementation: \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}} \\
+\multicolumn{4}{l}{\footnotesize Hardware: Apple M3 Pro (\texttt{goarch:arm64})} \\
+\multicolumn{4}{l}{\footnotesize \Fq Committed: Elements committed via \texttt{api.Commit} calls for Fiat-Shamir.} \\
 \hline
 \end{tabular}
 \end{table*}

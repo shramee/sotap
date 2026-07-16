@@ -22,11 +22,11 @@ We present a public-coin interactive proof system for verifying pairing computat
 
 \begin{itemize}
 \item \textbf{35\% reduction} in SCS constraints (1,592,440~$\to$~1,035,550 for a 3-pairing BN254 Groth16 verification check; 33\% on BLS12--381)
-\item \textbf{53\% reduction} in commitments (571,125~$\to$~269,616; 54.5\% on BLS12--381)
+\item \textbf{53\% reduction} in committed elements (571,125~$\to$~269,616; 54.5\% on BLS12--381)
 \item up to $\sim$\textbf{39\% reduction} in compile-time memory and up to \textbf{48\%} in solver memory
 \end{itemize}
 
-Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate commitments.
+Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate variable commitment.
 
 \paragraph{Relation to prior work.}
 The polynomial identity testing framework of Feltroidprime~\cite{FXFM23} verifies each individual $\Fe{12}$ multiplication as its own quotient-remainder relation, committing to a remainder for every operation. Our conceptual departure is one of granularity: we consolidate \emph{entire Miller loop iterations}---squaring, residue witness factors, and all line function multiplications of a step---into a single polynomial relation, eliminating the intermediate remainders altogether (Section~\ref{sec:ops:comp-analysis}). An early proof-of-concept of these techniques, adapted from a technical write-up and implementation we circulated, was deployed in the Garaga library~\cite{grg} for Cairo/Starknet in 2024. The purpose of this work is to formally introduce and systematically evaluate the techniques, establishing soundness bounds (Section~\ref{sec:iop}), benchmarking against the state-of-the-art gnark baseline, and generalizing the machinery beyond the Cairo-specific implementation into a reusable toolkit (Section~\ref{sec:polyring}).

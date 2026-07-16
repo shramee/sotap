@@ -213,7 +213,7 @@ The soundness bound of Theorem~\ref{thm:soundness} carries over because every pr
 
 \subsubsection{Instantiating the Random Oracle}\label{sec:iop:fs:ro}
 
-The protocol is agnostic to how $H$ is realised; what varies across execution environments is the cost of a \emph{commitment}, i.e.\ of absorbing one $\Fq$ element into the transcript. We therefore qualify the commitment counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
+The protocol is agnostic to how $H$ is realised; the cost of absorbing one $\Fq$ element into the transcript varies across execution environments. We therefore qualify the committed element counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
 
 \paragraph{CairoVM (Poseidon).} \label{sec:iop:fs:cairo}
 Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon~\cite{poseidon} sponge; $\Fq$ elements are represented by 96-bit limbs, with two limbs packed into each \texttt{Felt252} absorption. Both hashing cost and calldata therefore scale linearly with the number of committed elements, which is why the COMMITS column of Table~\ref{tab:garaga_performance} is reported alongside modular operations: halving the committed elements roughly halves the transcript-related share of VM steps and the hint calldata.
