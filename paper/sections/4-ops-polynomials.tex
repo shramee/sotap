@@ -213,7 +213,7 @@ Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{
 
 \subsubsection{Final Exponentiation Equation}\label{sec:op:finx}
 
-The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
+The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentiation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
 
 \begin{equation}\label{eq:op:fx}
 F(x) \cdot c^{-q}(x) \cdot c^{q^2}(x) \cdot c^{-q^3}(x) \cdot W^w(x) = 1 + Q(x) \cdot P_{12}(x)
@@ -251,7 +251,7 @@ With this we have all the polynomials we need for verifying entire pairing opera
 
 \subsection{Security}\label{sec:op-sec}
 
-Each verification equation takes the form $P = \prod_i A_i(x) - Q(x) \cdot P_{12}(x) - R(x)$ where $\deg(P) < 2^8$.\footnote{For $k$-pair pairings, $\deg(P) \approx 88 + 18(k-3)$, well below $2^8$ for all practical $k$. This bound can be extended to $2^{10}$ with negligible soundness impact.} By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}):
+Each verification equation takes the form $P = \prod_i A_i(x) - Q(x) \cdot P_{12}(x) - R(x)$ where $\deg(P) < 2^8$.\footnote{For $k$-pair pairings, $\deg(P) \approx 88 + 18(k-3)$, well below $2^8$ for all practical $k$.} By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}):
 
 \textbf{Soundness:} $\delta_s \leq d/|\Fq| < 2^8/2^{254} = 2^{-246}$ for BN254.
 

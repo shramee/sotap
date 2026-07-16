@@ -221,7 +221,7 @@ Prover-supplied hints are passed as transaction calldata and absorbed into a run
 \paragraph{Faster Hash Verification~\cite{FstHV} in gnark.} \label{sec:iop:fs:gnark}
 Belling et al.~\cite{FstHV} provide commitment schemes that allow the prover to compute commitment natively (outside the circuit) and attach an Argument of Knowledge to prove correctness. The scheme is described for both Groth16 and PLONK (\cite{FstHV} Section 6.1 and 6.2). Belling later extends this to support multiple commitment for multiple rounds for gnark in~\cite{mrmc}.
 
-This is made availble via \texttt{api.Commit} calls in gnark. The costs are backend-specific.
+This is made available via \texttt{api.Commit} calls in gnark. The costs are backend-specific.
 
 \paragraph{Groth16 in gnark.} Each commitment costs two $\G_1$ MSMs of size equal to the number of committed wires (\cite{FstHV}~Section~6.1). Proof size grows by one $\G_1$ point per commitment, plus a single knowledge proof folded across all commitments. Verification gains one two-pairing product check (the knowledge proof) and one extra scalar multiplication in the public-input MSM per commitment. None of this touches the constraint count, since the commitment lives entirely outside the arithmetization.
 

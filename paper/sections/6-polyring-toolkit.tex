@@ -55,10 +55,12 @@ $Q_{\mathrm{acc}} = \sum_{i} z^i \cdot Q_i \bmod q$ coefficient-wise,
 corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 % ----------------------------------------------------------
-\subsection{API Reference}
+\subsection{Algorithms and Implementation}
 \label{sec:polyring:api}
 
-\subsubsection{Implementation functions}
+\subsubsection{API Reference}
+
+Five functions cover the full lifecycle of a ring group: registration, per-operation multiplication, chained accumulation, extra commitment inputs, and finalisation. The three subsections below trace how a concrete circuit, BN254 pairing verification, calls these: one shared skeleton, prover work running inline within it, verifier work deferred to its end.
 
 \paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
 Registers a \emph{ring group}: a modulus polynomial $P$ paired with an optional
@@ -133,11 +135,11 @@ on first use so shared factors (e.g.\ the modulus $P$) are not re-evaluated.
 \gText{// Register the ring group once at initialisation}
 fp, _ := emulated.NewField[emulated.BN254Fp](api)
 modPoly := fp.MakePoly(82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1)
-ring := fp.NewPolyRingCheck(modPoly, nil)
+group := fp.NewPolyRingCheck(modPoly, nil)
 \gText{// Operations on ring elements A, B, C}
-res, _ = fp.MulPolyRings(ring, A, B, C) \gText{// compute (A·B·C)}
+res, _ = fp.MulPolyRings(group, A, B, C) \gText{// compute (A·B·C)}
 \gText{// Accumulate a product chain}
-acc := f.NewPolyRingAccumulator(ring, targetDeg)
+acc := fp.NewPolyRingAccumulator(group, targetDeg)
 acc.Mul(A).Mul(B).Sqr()  \gText{// enqueue (A·B)² without multiplying yet}
 rem := acc.Eval()        \gText{// multiply and return the remainder}
 \end{alltt}
