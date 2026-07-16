@@ -51,9 +51,8 @@ This is already implemented in-production in Garaga~\cite{grg} for CairoVM and i
 
 \subsection{Implementation and Performance}
 
-\textbf{The Garaga library~\cite{grg}} provided an earlier proof of concept for this technique
-in Cairo/Starknet (2024). The resulting reductions in commitment overhead and
-modulo operations (Table~\ref{tab:garaga_performance}) were sufficient to fit Groth16
+\textbf{The Garaga implementation~\cite{grg}}
+in Cairo/Starknet (2024) sufficiently reduced the commitment overhead and modulo operations (Table~\ref{tab:garaga_performance}) to fit Groth16
 proof verification within Starknet's transaction limits for the first time.
 However, Cairo~\cite{cairo} is a specialized environment with its own cost metrics,
 making direct comparison with mainstream ZK frameworks difficult.
