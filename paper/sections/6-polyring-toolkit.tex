@@ -55,10 +55,10 @@ $Q_{\mathrm{acc}} = \sum_{i} z^i \cdot Q_i \bmod q$ coefficient-wise,
 corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 % ----------------------------------------------------------
-\subsection{API}
+\subsection{API Reference}
 \label{sec:polyring:api}
 
-The toolkit exposes the following entry points.
+\subsubsection{Implementation functions}
 
 \paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
 Registers a \emph{ring group}: a modulus polynomial $P$ paired with an optional
@@ -92,43 +92,9 @@ Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit} calls
 \texttt{AssertIsEqual} per group.  No in-circuit multiplications over ring
 elements occur before this point beyond the remainder range-checks.
 
-% ----------------------------------------------------------
-\subsection{Mapping Algorithms to Implementation}
-\label{sec:polyring:mapping}
-
-Table~\ref{tab:alg_mapping} maps each step of the two-round protocol
-(Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier}) to its
-realisation in the toolkit.
-
-\begin{table}[h]
-\centering
-\caption{Algorithm-to-implementation mapping}
-\label{tab:alg_mapping}
-\begin{tabular}{lll}
-\hline
-\textbf{Protocol step} & \textbf{Who} & \textbf{Code} \\
-\hline
-\textsc{PolyMulDiv}: multiply \& reduce & Prover (hint) &
-  \texttt{polyRingMulHint} \\
-Enqueue check $(A_j; R; Q)$ & Circuit setup &
-  \texttt{MulPolyRings} \\
-Degree-bounded accumulation & Circuit setup &
-  \texttt{PolyRingAccumulator} \\
-Commit remainders $\Rightarrow$ challenge $z$ & Verifier (circuit) &
-  \texttt{performDeferredRingChecks}\\
-Form $Q_\text{acc} = \sum_i z^i Q_i$ & Prover (hint) &
-  \texttt{quotientsRLCHint} \\
-Commit $z, Q_\text{acc}$ $\Rightarrow$ challenge $x$ & Verifier (circuit) &
-  \texttt{performDeferredRingChecks}\\
-Evaluate polynomials at $x$ & Verifier (circuit) &
-  \texttt{evalPolyWithChallenge} \\
-Assert Equation~\eqref{eq:iop-batched} & Verifier (circuit) &
-  \texttt{AssertIsEqual} per group \\
-\hline
-\end{tabular}
-\end{table}
-
-\paragraph{Prover path.}
+\subsubsection{Algorithmic overview}
+Files \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go} implement the Miller loop and final exponentiation polynomial relations for BN254 and BLS12--381. respectively, using the polynomial ring toolkit.
+The prover's work is entirely in hint functions called during witness
 The prover's work is entirely in hint functions called during witness
 generation.  Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint},
 which multiplies the input polynomials and performs Euclidean division by $P$,
@@ -141,7 +107,7 @@ bound is reached, at which point \texttt{Eval} flushes to \texttt{MulPolyRings}.
 The residue witness $c$ and its inverse are added to the first commitment via
 \texttt{ToCommit} so that $z$ binds to them before the identity check.
 
-\paragraph{Verifier path.}
+\subsubsection{Verifier path}
 All verifier work is deferred to \texttt{performDeferredRingChecks}, which runs
 once at circuit finalisation.  It issues two
 sequential \texttt{api.Commit} calls (Section~\ref{sec:iop:fs:gnark}): the first absorbs all
