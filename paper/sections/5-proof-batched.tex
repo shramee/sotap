@@ -47,8 +47,8 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 
 \Statex
 
-\State \textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return $Q, R \in \Fq[x]$ 
-\State \qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+\State \colorbox{revyellow}{\textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} $Q, R \in \Fq[x]$}
+\State \colorbox{revyellow}{\qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$}
 
 \Statex
 \Statex \gText{Miller loop}
@@ -141,7 +141,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 \Statex
 
-\State \textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)
+\State \colorbox{revyellow}{\textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)}
 
 \Statex
 \Statex \gText{Miller loop}
@@ -201,18 +201,21 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 \subsection{Fiat-Shamir Transformation} \label{sec:iop:fs}
 
-Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ to the two-round protocol of Section~\ref{sec:iop:interactive} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ is the number of oracle queries (one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound.
+Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ \rev{to the two-round protocol of Section~\ref{sec:iop:interactive}} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ is the number of oracle queries \rev{(one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound}.
 
 \subsubsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
+\begin{revblock}
 The prover runs Algorithm~\ref{alg:2r:prover} to obtain $(\mathcal{Q}, \mathcal{R})$, derives the challenge
 $$z = H(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R})$$
 from the transcript instead of receiving it, computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$, and outputs the proof $(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R},\, Q_\text{acc})$. The verifier recomputes $z$, derives the evaluation point $x = H(z,\, Q_\text{acc})$, and runs Algorithm~\ref{alg:2r:verifier}, testing the polynomial identities via Equation~\eqref{eq:iop-batched}.
 
 The soundness bound of Theorem~\ref{thm:soundness} carries over because every prover-chosen value entering Equation~\eqref{eq:iop-batched} is absorbed before the challenge it must not depend on: $\mathcal{R}$ and the hinted witnesses $c, W^w$ before $z$, and $Q_\text{acc}$ with $z$ chained into the second query before $x$.
+\end{revblock}
 
 \subsubsection{Instantiating the Random Oracle}\label{sec:iop:fs:ro}
 
+\begin{revblock}
 The protocol is agnostic to how $H$ is realised; the cost of absorbing one $\Fq$ element into the transcript varies across execution environments. We therefore qualify the committed element counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
 
 \paragraph{CairoVM (Poseidon).} \label{sec:iop:fs:cairo}
@@ -226,6 +229,7 @@ This is made available via \texttt{api.Commit} calls in gnark. The costs are bac
 \paragraph{Groth16 in gnark.} Each commitment costs two $\G_1$ MSMs of size equal to the number of committed wires (\cite{FstHV}~Section~6.1). Proof size grows by one $\G_1$ point per commitment, plus a single knowledge proof folded across all commitments. Verification gains one two-pairing product check (the knowledge proof) and one extra scalar multiplication in the public-input MSM per commitment. None of this touches the constraint count, since the commitment lives entirely outside the arithmetization.
 
 \paragraph{PLONK in gnark.} The overhead shifts almost entirely into the constraint system instead. Each committed wire adds one constraint (\cite{FstHV}~Section~6.2), so cost scales with the number of committed \emph{wires}. Proof size grows by one $\G_1$ element per commitment. Verification pays no extra pairing: the committed polynomial's evaluation is folded into the batched KZG opening that PLONK already performs, so the marginal verifier cost is a handful of field operations.
+\end{revblock}
 
 \subsection{Security Analysis}
 

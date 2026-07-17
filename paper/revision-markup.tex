@@ -1,0 +1,17 @@
+% Revision markup: yellow highlighting of parts modified/added in the major
+% revision (TCHES 2026-4 #104 -> TCHES 2027-1 #185). Remove this input and the
+% \rev / revblock markers for the camera-ready version.
+\usepackage{soul}
+\usepackage[framemethod=default]{mdframed}
+\definecolor{revyellow}{rgb}{1,0.95,0.55}
+\sethlcolor{revyellow}
+\soulregister{\cite}{7}
+\soulregister{\ref}{7}
+\soulregister{\eqref}{7}
+\soulregister{\S}{0}
+% Inline highlight for prose
+\newcommand{\rev}[1]{\hl{#1}}
+% Block highlight for whole paragraphs/subsections (handles math, lists, floats)
+\newmdenv[backgroundcolor=revyellow,hidealllines=true,innerleftmargin=3pt,
+  innerrightmargin=3pt,innertopmargin=3pt,innerbottommargin=3pt,
+  skipabove=4pt,skipbelow=4pt]{revblock}
