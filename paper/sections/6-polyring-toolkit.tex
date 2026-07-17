@@ -60,7 +60,7 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 \subsubsection{API Reference}
 
-Five functions cover the full lifecycle of a ring group: registration, per-operation multiplication, chained accumulation, extra commitment inputs, and finalisation. The three subsections below trace how a concrete circuit, BN254 pairing verification, calls these: one shared skeleton, prover work running inline within it, verifier work deferred to its end.
+\rev{Five functions cover the full lifecycle of a ring group: registration, per-operation multiplication, chained accumulation, extra commitment inputs, and finalisation. The three subsections below trace how a concrete circuit, BN254 pairing verification, calls these: one shared skeleton, prover work running inline within it, verifier work deferred to its end.}
 
 \paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
 Registers a \emph{ring group}: a modulus polynomial $P$ paired with an optional
@@ -81,11 +81,13 @@ configurable bound \texttt{targetDeg}, avoiding excessive hint call overhead.
 \texttt{Mul} enqueues one factor; \texttt{Sqr} enqueues the current state
 twice; \texttt{Eval} forces an immediate flush and returns the remainder.
 
+\begin{revblock}
 \paragraph{\texttt{ToCommit($e_1,\ldots$)}}
 Adds extra elements to the first commitment (the one that derives challenge
 $z$).  Required for hinted values—such as the residue witness $c$ in pairing
 checks—whose correctness is asserted \emph{inside} the polynomial identity
 protocol itself, so they must be absorbed before $z$ is sampled.
+\end{revblock}
 
 \paragraph{\texttt{performDeferredRingChecks} (internal)}
 Called once by the gnark backend at circuit finalisation.  Implements 
@@ -95,11 +97,13 @@ Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit} calls
 elements occur before this point beyond the remainder range-checks.
 
 \subsubsection{Shared Circuit Skeleton}
+\begin{revblock}
 Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier} walk the identical Miller loop structure, differing only in what happens at each step: the prover computes $(Q_i, R_i)$, the verifier checks them. The implementation exploits this by using a single circuit function per curve, \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go}, that traces this shared skeleton once. At every step the code calls \texttt{MulPolyRings} (via \texttt{PolyRingAccumulator}) with the same operands both algorithms process. Prover's work is performed during the witness generation phase, while the verifier's work is performed by the circuit's constraints and commitment API (Section~\ref{sec:iop:fs:gnark}).
 
 \subsubsection{Prover's and Verifier's Work}
 Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint} to prepare $Q_i$, $R_i$ and queue the deferred check. This is Algorithm~\ref{alg:2r:prover}'s work, executed inline during witness generation. The remainder $R_i$ is returned to the caller so the circuit can continue building. Then \texttt{performDeferredRingChecks} calls \texttt{api.Commit} with all $R_i$ to obtain the challenge $z$. Then it calls \texttt{quotientsRLCHint} to get $Q_\text{acc}$. After $Q_\text{acc}$, second commit absorbs $z$ and $Q_\text{acc}$ to produce $x$.
 Now verifiers work starts as described in Algorithm~\ref{alg:2r:verifier}, Polynomials $R_i$ and $Q_\text{acc}$ are evaluated at $x$, and Equation~\eqref{eq:iop-batched} is verified using the Schwartz Zippel lemma with one \texttt{AssertIsEqual} call.
+\end{revblock}
 
 % ----------------------------------------------------------
 
@@ -162,8 +166,10 @@ Then
 so the deferred reduction is safe.
 \end{corollary}
 
+\begin{revblock}
 Beyond this static bound, the implementation tracks each element's overflow at
 compile time and \texttt{InnerProductNoReduce} inserts a reduction whenever an
 accumulation would exceed the native capacity, so Lemma~\ref{lem:overflow} is
 also enforced dynamically for rings and degrees other than the BN254
 instantiation above.
+\end{revblock}
