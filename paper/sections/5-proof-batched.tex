@@ -47,8 +47,8 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 
 \Statex
 
-\State \colorbox{revyellow}{\textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} $Q, R \in \Fq[x]$}
-\State \colorbox{revyellow}{\qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$}
+\State \colorbox{revhl}{\textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} $Q, R \in \Fq[x]$}
+\State \colorbox{revhl}{\qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$}
 
 \Statex
 \Statex \gText{Miller loop}
@@ -141,7 +141,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 \Statex
 
-\State \colorbox{revyellow}{\textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)}
+\State \colorbox{revhl}{\textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)}
 
 \Statex
 \Statex \gText{Miller loop}
