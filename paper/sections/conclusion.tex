@@ -37,7 +37,7 @@ Before & After & Before & After & Before & After & Before & After \\
 \multicolumn{2}{|c}{\textbf{31.5\%}} & \multicolumn{2}{|c}{\textbf{25.4\%}} & \multicolumn{2}{|c}{\textbf{41.6\%}} & \multicolumn{2}{|c|}{\textbf{32.7\%}} \\
 \hline
 \multicolumn{8}{l}{\footnotesize MULMOD/ADDMOD\@: Field operations in $\mathbb{F}_p$ via built-in function calls} \\
-\multicolumn{8}{l}{\footnotesize COMMITS\@: Elements committed for Fiat-Shamir, see \S~\ref{sec:iop:fs:cairo}} \\
+\multicolumn{8}{l}{\footnotesize \colorbox{revyellow}{COMMITS\@: Elements committed for Fiat-Shamir, see \S~\ref{sec:iop:fs:cairo}}} \\
 \multicolumn{8}{l}{\footnotesize VM STEPS\@: CairoVM Steps~\cite{cairo} (CPU Cycles)} \\
 \hline
 \end{tabular}
@@ -60,6 +60,7 @@ This work situates the same technique within gnark---the standard framework for
 field emulation in arithmetized circuits---providing a systematic benchmark against
 an industry baseline.
 
+\begin{revblock}
 In Table~\ref{tab:garaga_performance}, the \emph{Before} column is Garaga verifying each extension field multiplication individually via the polynomial identity testing of~\cite{FXFM23}; the \emph{After} column is Garaga using our consolidated relations. MULMOD/ADDMOD count modular field operations, COMMITS count Poseidon~\cite{poseidon} input commitments for Fiat-Shamir, and VM STEPS count CairoVM CPU cycles---together a low-level estimate of computational complexity inside the virtual machine.
 
 \paragraph{Our polynomial ring toolkit} implementation in gnark is benchmarked in Table~\ref{tab:main_performance}, measured via a 3-pairing product check (see below) on BN254 and BLS12--381. We compare our results against a \textbf{gnark baseline} using the upstream \texttt{emulated} package~\cite{gnark}, which represents the state-of-the-art for emulated pairings and includes the optimizations of~\cite{PR1CS22} and~\cite{OPP24}.
@@ -71,11 +72,13 @@ The \textbf{This Work} numbers were obtained by compiling the exact same benchma
 Both implementations are evaluated against the same gnark circuit: a 3-pairing multi-pairing check $\prod_{i=1}^{3} e(P_i, Q_i) = 1$ via \texttt{PairingCheck}. This corresponds to the pairing workload of a Groth16 verification, which reduces to a product-of-pairings check over three variable pairs once the constant $e(\alpha, \beta)$ term from the trusted setup is folded in. The same 3-pairing configuration is used in the CairoVM benchmarks of Table~\ref{tab:garaga_performance}, allowing a like-for-like comparison across environments.
 
 Test circuit can be found at \texttt{sw\_bn254} package in \texttt{g16\_simulation\_test.go} file in our implementation repo - \url{https://anonymous.4open.science/r/tiny-gnark-DDCD/}.
+\end{revblock}
 
 \begin{table*}[t]
 \centering
-\caption{Performance comparison: gnark implementation, 3-pairing product check on BN254 and BLS12--381}
+\caption{Performance comparison: gnark implementation, 3-pairing product check on BN254 and BLS12--381 \colorbox{revyellow}{(regenerated: uniform 3-pairing circuit, BLS12--381 added)}}
 \label{tab:main_performance}
+\colorbox{revyellow}{%
 \begin{tabular}{|l|r|r|r|}
 \hline
 \textbf{Metric} & \textbf{gnark Baseline} & \textbf{This Work} & \textbf{Reduction} \\
@@ -119,14 +122,15 @@ Solve Memory      &  231.77~MB &  118.61~MB & \textbf{48.8\%} \\
 \multicolumn{4}{l}{\footnotesize Hardware: Apple M3 Pro (\texttt{goarch:arm64}), 36gb, macOS Tahoe 26.5.2} \\
 \multicolumn{4}{l}{\footnotesize \Fq Committed: Elements committed via \texttt{api.Commit} calls for Fiat-Shamir.} \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}
 
 \subsection{Further Work}
 
 Several natural extensions of this work remain open. First, our framework
-could be extended to additional curves beyond BN254 and BLS12--381, notably
-\textbf{BW6--761} for recursive proof chain verification on Ethereum.
+could be extended to additional curves \rev{beyond BN254 and BLS12--381, notably
+\textbf{BW6--761} for recursive proof chain verification on Ethereum}.
 
 A further direction is exploring the technique for native field pairings, such
 as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the
