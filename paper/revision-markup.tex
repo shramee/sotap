@@ -3,8 +3,8 @@
 % \rev / revblock markers for the camera-ready version.
 \usepackage{soul}
 \usepackage[framemethod=default]{mdframed}
-\definecolor{revyellow}{rgb}{1,0.95,0.55}
-\sethlcolor{revyellow}
+\definecolor{revhl}{rgb}{1,0.95,0.55}
+\sethlcolor{revhl}
 \soulregister{\cite}{7}
 \soulregister{\ref}{7}
 \soulregister{\eqref}{7}
@@ -12,6 +12,6 @@
 % Inline highlight for prose
 \newcommand{\rev}[1]{\hl{#1}}
 % Block highlight for whole paragraphs/subsections (handles math, lists, floats)
-\newmdenv[backgroundcolor=revyellow,hidealllines=true,innerleftmargin=3pt,
-  innerrightmargin=3pt,innertopmargin=3pt,innerbottommargin=3pt,
-  skipabove=4pt,skipbelow=4pt]{revblock}
+\newmdenv[backgroundcolor=revhl,hidealllines=true,innerleftmargin=0pt,
+  innerrightmargin=0pt,innertopmargin=0pt,innerbottommargin=0pt,
+  skipabove=0pt,skipbelow=0pt]{revblock}
