@@ -21,9 +21,9 @@ In such contexts, an efficient proof system for pairing correctness can replace 
 We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual extension field operations~\cite{FXFM23}, our approach achieves:
 
 \begin{itemize}
-\item \textbf{35\% reduction} in SCS constraints (1,592,440~$\to$~1,035,550 for a 3-pairing BN254 Groth16 verification check; 33\% on BLS12--381)
-\item \textbf{53\% reduction} in committed elements (571,125~$\to$~269,616; 54.5\% on BLS12--381)
-\item up to $\sim$\textbf{39\% reduction} in compile-time memory and up to \textbf{48\%} in solver memory
+\item \rev{\textbf{35\% reduction} in SCS constraints (1,592,440~$\to$~1,035,550 for a 3-pairing BN254 Groth16 verification check; 33\% on BLS12--381)}
+\item \rev{\textbf{53\% reduction} in committed elements (571,125~$\to$~269,616; 54.5\% on BLS12--381)}
+\item \rev{up to $\sim$\textbf{39\% reduction} in compile-time memory and up to \textbf{48\%} in solver memory}
 \end{itemize}
 
 Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate variable commitment.
