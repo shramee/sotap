@@ -127,30 +127,27 @@ Solve Memory      &  173.26~MB &  112.72~MB & \textbf{34.9\%} \\
 
 \end{table*}
 
+\begin{revblock}
+
 \subsection{Further Work}
 
-Several natural extensions of this work remain open. First, our framework
-could be extended to additional curves \rev{beyond BN254 and BLS12--381, notably
+Several natural extensions of this work remain open. First, the framework
+can be readily extended to additional curves \rev{beyond BN254 and BLS12--381, notably
 \textbf{BW6--761} for recursive proof chain verification on Ethereum}.
-
 A further direction is exploring the technique for native field pairings, such
-as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the
+as BLS12--377 inside BW6--761~\cite{PR1CS22}, where the
 trade-off between batching savings and commitment costs warrants dedicated
 analysis.
 
-% Finally, the underlying technique generalizes beyond pairings to any setting
-% involving repeated operations over the same polynomial rings in arithmetized
-% environments. A particularly promising instance is lattice-based cryptography
-% in ZK-SNARKs: schemes such as ML-KEM and ML-DSA operate in cyclotomic rings
-% $\mathbb{Z}_q[x]/(x^n + 1)$, and since our toolkit is parameterised by an
-% arbitrary modulus polynomial, the same deferred quotient-remainder
-% verification could batch the many ring multiplications arising when verifying
-% post-quantum primitives in-circuit. Notably, the small coefficient moduli of
-% these schemes do not affect soundness: each relation lifts to an integer
-% polynomial identity via a prover-supplied multiple of $q$, e.g.\
-% $a(x) \cdot b(x) = Q(x) \cdot (x^n + 1) + q \cdot K(x) + r(x)$ over
-% $\mathbb{Z}[x]$, and the challenge is sampled from the proof system's scalar
-% field, preserving the Schwartz-Zippel bound of Theorem~\ref{thm:soundness}.
-% With coefficient range checks bounding intermediate values below the native
-% characteristic (as in Lemma~\ref{lem:overflow}), the only added cost is the
-% witness polynomial $K$ per relation.
+Finally, the underlying technique generalizes beyond pairings to any setting
+involving repeated operations over the same polynomial rings. Another interesting
+instance is lattice-based cryptography in ZK-SNARKs: schemes such as ML-KEM and
+ML-DSA operate in cyclotomic rings over $\mathbb{Z}_q[x]/(x^n + 1)$.
+Though the small moduli typical of lattice based schemes don't require active
+reductions, the polynomial identity testing would help in two significant ways.
+One, skip the need to do the in-circuit NTT transforms, and two, provide reduced
+coefficients ready for efficient packing for public inputs.
+
+Exploring the cost-benefits of this approach in lattice-based ZK-SNARKs is another
+promising direction for future work.
+\end{revblock}
