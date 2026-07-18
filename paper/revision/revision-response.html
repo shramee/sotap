@@ -1,0 +1,209 @@
+<meta charset="utf-8">
+<title>Revision Requirements and Responses — Paper #185</title>
+<style>
+  @page { size: A4; margin: 24mm 22mm; }
+  html { font-size: 10.5pt; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1.4;
+    color: #111;
+    max-width: 170mm;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.4rem; line-height: 1.25; margin: 0 0 .2rem; }
+  .subtitle { font-size: 1.05rem; color: #333; margin: 0 0 1rem; }
+  h2 { font-size: 1.1rem; margin: 1.3rem 0 .4rem; border-bottom: 1.5px solid #333; padding-bottom: .15rem; }
+  h3 { font-size: 1rem; margin: .9rem 0 .3rem; }
+  p { margin: .35rem 0; }
+  ul { margin: .25rem 0 .5rem; padding-left: 1.3rem; }
+  li { margin: .18rem 0; }
+  .req {
+    background: #f2f2f2; border-left: 3px solid #555;
+    padding: .4rem .7rem; margin: .75rem 0 .35rem;
+    font-style: italic;
+  }
+  .req b { font-style: normal; }
+  code, tt { font-family: 'Courier New', monospace; font-size: .92em; }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0; font-size: .95em; }
+  th, td { border: 1px solid #999; padding: .25rem .5rem; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  .meta { color: #444; font-size: .95em; }
+  .avoid-break { break-inside: avoid; }
+</style>
+
+<h1>Pairing Proofs and Polynomial Ring Toolkit</h1>
+<p class="subtitle">Revision requirements and responses — Major Revision resubmission</p>
+
+<p class="meta">
+  <b>Resubmission:</b> TCHES 2027, Issue 1, Paper #185 &nbsp;·&nbsp;
+  <b>Original submission:</b> TCHES 2026, Issue 4, Paper #104 (Major Revision)<br>
+  All modified or added parts are <b>highlighted in yellow</b> in the revised paper. The original
+  submission PDF accompanies this document. Section/table/algorithm numbers refer to the revised
+  paper; note the prover and verifier algorithms are now Algorithms 3 and 4 (two auxiliary
+  algorithm floats were removed).
+</p>
+
+<p><b>Part A</b> addresses the binding revision criteria (Comment @A1); <b>Part B</b> the remaining
+individual review points. Only changes made in this revision are listed.</p>
+
+<h2>Part A — Binding revision criteria (Comment @A1)</h2>
+
+<div class="avoid-break">
+<div class="req"><b>A.1</b> Clarify the main contribution relative to the most closely related prior works (such as Fel23 and Garaga)</div>
+<ul>
+  <li>Section 3 now quantifies the delta over [Fel23]: a 3-pair zero-bit Miller loop step takes
+  four chained relations and 48 F<sub>q</sub> commitments under [Fel23] versus one relation and 12
+  commitments in our scheme (derivation in Section 4.1).</li>
+  <li>New closing paragraph of Section 3 on <b>Garaga</b>: it deployed an early Cairo-specific
+  proof-of-concept in 2024, adapted from a preceding technical write-up (cited anonymously), with
+  no formal treatment; this paper supplies the foundations (Sections 4–5) and the systematic
+  evaluation against gnark's state-of-the-art baseline. Anonymity is unaffected.</li>
+</ul>
+</div>
+
+<div class="avoid-break">
+<div class="req"><b>A.2</b> Add additional benchmarks for BLS12-381, as per the rebuttal</div>
+<ul>
+  <li>The toolkit is now implemented for BLS12-381 (<tt>sw_bls12381</tt>) and Table 7 adds full
+  BLS12-381 results for both SCS and R1CS: 33.2% / 32.5% fewer constraints, 54.5% fewer committed
+  elements, up to 48.8% less solver memory. Abstract, Sections 1.2 and 2.1 updated accordingly.</li>
+</ul>
+</div>
+
+<div class="avoid-break">
+<div class="req"><b>A.3</b> Clarify the benchmarking setup, in particular the 3-pairing setting</div>
+<ul>
+  <li>We replaced the original composite "Groth16 simulation" circuit (2-pair fixed-G2 check plus
+  accumulated single pairing) with one uniform benchmark: a 3-pairing product check
+  &prod;<sub>i=1..3</sub> e(P<sub>i</sub>, Q<sub>i</sub>) = 1 via <tt>PairingCheck</tt>, identical
+  for baseline and our fork. The rewritten "Benchmark circuit" paragraph (Section 7.2) explains
+  why this is the Groth16 verification workload (the constant e(&alpha;,&beta;) folds into a
+  product over three variable pairs) and notes the same 3-pairing configuration is used in the
+  CairoVM benchmarks (Table 6). All numbers regenerated (abstract, Section 1.2, Table 7).</li>
+  <li>New text in Section 7.2 states the baseline's provenance (upstream gnark <tt>emulated</tt>
+  package with the [Hou23] and [NE24] optimizations) and that both implementations exploit Miller
+  line sparseness; Section 4.1 now states the sparseness savings are included in all constraint
+  counts.</li>
+</ul>
+</div>
+
+<div class="avoid-break">
+<div class="req"><b>A.4</b> Improve the mapping between algorithms and implementation, in particular the application of Fiat-Shamir</div>
+<ul>
+  <li>Section 5.5.1 (Non-Interactive Proof) rewritten: the transcript is now explicit —
+  z = H(pairing inputs, c, W<sup>w</sup>, 𝓡), x = H(z, Q<sub>acc</sub>) — with a new argument for
+  why Theorem 1's soundness carries over (each prover-chosen value is absorbed before the
+  challenge it must not depend on). The redundant non-interactive protocol figure was removed.</li>
+  <li>Section 6.3 ("Algorithms and Implementation", expanded from the former API subsection) now
+  traces Algorithms 3/4 onto the code: <tt>MulPolyRings</tt>/<tt>polyRingMulHint</tt> execute the
+  prover's work during witness generation; <tt>performDeferredRingChecks</tt> implements
+  Equation (5) via two sequential <tt>api.Commit</tt> calls (producing z, then x) plus one
+  <tt>AssertIsEqual</tt> per ring group — the verifier's work. New subsections "Shared Circuit
+  Skeleton" and "Prover's and Verifier's Work"; new <tt>ToCommit</tt> API entry for hinted values
+  absorbed before z.</li>
+</ul>
+</div>
+
+<div class="avoid-break">
+<div class="req"><b>A.5</b> Qualify the commitment-based performance metric: schemes, overhead, impact</div>
+<ul>
+  <li>New Section 5.5.2 (Instantiating the Random Oracle): CairoVM commits via a Poseidon sponge
+  over calldata hints — hashing cost and calldata scale linearly with committed elements (why
+  COMMITS accompanies modular ops in Table 6); gnark commits via <tt>api.Commit</tt>
+  ([BSB23]/[BSB]) with backend-specific costs spelled out — Groth16: two G<sub>1</sub> MSMs and one
+  extra G<sub>1</sub> proof element per commitment, no constraint-count impact; PLONK: one
+  constraint per committed wire, evaluation folded into the existing batched KZG opening.</li>
+  <li>Metric definitions tightened: Table 6's COMMITS footnote now cross-references Section 5.5.2;
+  a new Section 7.2 paragraph defines Table 6's Before/After columns and all four metrics; Table 7's
+  metric is renamed "Nb F<sub>q</sub> Committed" (elements committed via <tt>api.Commit</tt>);
+  commitment terminology unified throughout.</li>
+</ul>
+</div>
+
+<div class="avoid-break">
+<div class="req"><b>A.6</b> Minor presentation issues pointed out by the reviewers</div>
+<p>All addressed — see Part B.</p>
+</div>
+
+<h2>Part B — Individual review points</h2>
+
+<h3>Review 104A</h3>
+
+<div class="req">Why BN254 and not a modern alternative? Add BLS12-381.</div>
+<p>BLS12-381 added throughout (A.2). BN254 is kept alongside as it remains ubiquitous in deployed
+systems (Ethereum precompiles and rollups built on them).</p>
+
+<div class="req">Relationship with Garaga; novelty over it.</div>
+<p>A.1: new Section 3 paragraph and clarified Section 7.2.</p>
+
+<div class="req">Do you exploit Miller line sparseness?</div>
+<p>Yes — both compared implementations do; now stated explicitly in Sections 4.1 and 7.2.</p>
+
+<div class="req">What motivates the 3-pairing benchmark? Same as the Section 7.2 Groth16 circuit? Metrics for single/n pairings?</div>
+<p>Yes, it is the Groth16 pairing workload; the benchmark is now one uniform 3-pairing product
+check for both implementations (A.3). For other pair counts, per-step costs (Section 4) scale via
+deg(P) &asymp; 88 + 18(k&minus;3) (footnote, Section 4.3).</p>
+
+<div class="req">Redundant floats; combine Algorithms; interactive vs non-interactive versions similar.</div>
+<p>Removed the PolyMulDiv and EvalPoly algorithm floats (their signatures are inlined into
+Algorithms 3/4) and the separate non-interactive protocol figure (now three lines of text in
+Section 5.5.1). The prover/verifier algorithms stay separate floats because Section 6.3 uses them
+to anchor the implementation mapping, with their shared structure made explicit there.</p>
+
+<h3>Review 104B</h3>
+
+<div class="req">1. Contribution vs prior work. &nbsp;2. Interactive proof / Fiat-Shamir presentation and gnark relation. &nbsp;4. Metrics and benchmarking setup; commitment metrics.</div>
+<p>See A.1; A.4; A.3 + A.5 respectively.</p>
+
+<div class="req">3. Clean up notation and terminology.</div>
+<p>Commitment terminology unified ("committed elements", Table 7 metric renamed); polynomials now
+use the formal indeterminate X consistently, keeping z, x &isin; F<sub>q</sub> as scalars
+(Section 5.6).</p>
+
+<div class="req">How does the protocol map to the gnark implementation in the Fiat-Shamir setting?</div>
+<p>A.4 — Section 6.3 traces it call-by-call; the two <tt>api.Commit</tt> calls realise the two
+challenges of Section 5.5.</p>
+
+<h3>Review 104C</h3>
+
+<div class="req">Table 6: what do "Before"/"After" compare relative to this work, Fel23, Hou23, NE24?</div>
+<p>Now defined in Section 7.2: <em>Before</em> = Garaga verifying each extension-field
+multiplication individually via [Fel23]; <em>After</em> = Garaga with our consolidated relations.
+Deltas vs [Hou23]/[NE24] are in Section 3.</p>
+
+<div class="req">Be precise about the Table 7 gnark baseline's state vs recent academic results.</div>
+<p>Stated in Section 7.2: upstream gnark <tt>emulated</tt> package including the [Hou23] and [NE24]
+optimizations; identical benchmark and harness for both runs.</p>
+
+<div class="req">MULMOD, ADDMOD, COMMITS, VM STEPS never properly defined.</div>
+<p>Defined in the new Section 7.2 metrics paragraph, with the COMMITS footnote cross-referencing
+Section 5.5.2.</p>
+
+<div class="req">Toolkit not evaluated beyond the pairing use case.</div>
+<p>The toolkit is now framed as a reusable artefact evaluated via the pairing workload; Section 6
+documents its generic interface (arbitrary modulus, multiple ring groups) and a new note in
+Section 6.5 covers dynamic overflow tracking beyond the BN254 instantiation. A multi-workload
+evaluation is left as future work.</p>
+
+<div class="req">29%/60%/42% repeated; broken sentence at 178–179; x as both scalar and formal indeterminate (258–259); API description reads like library documentation.</div>
+<p>Respectively: headline numbers now appear only in the abstract and Section 1.2 (updated to the
+new benchmark); the broken sentence is fixed (Section 4.2); the scalar/indeterminate convention is
+fixed and applied (Section 5.6); the API text was condensed and repurposed into the
+algorithm-to-implementation mapping of Section 6.3 (kept in the main body since binding criterion
+A.4 is discharged there).</p>
+
+<h2>Summary of changes (all highlighted in yellow in the revised paper)</h2>
+
+<table>
+<tr><th>Location</th><th>Change</th><th>Criteria</th></tr>
+<tr><td>Abstract, §1.2, §2.1</td><td>Updated headline numbers: uniform 3-pairing benchmark, BLS12-381 added</td><td>A.2, A.3</td></tr>
+<tr><td>§3</td><td>Concrete Fel23 comparison; new Garaga paragraph</td><td>A.1</td></tr>
+<tr><td>§4.1, §4.2</td><td>Sparseness statement; fixed benchmark cross-reference sentence</td><td>A.3, A.6</td></tr>
+<tr><td>Algorithms 3, 4</td><td>Inlined PolyMulDiv/EvalPoly signatures (two floats removed)</td><td>A.6</td></tr>
+<tr><td>§5.5.1</td><td>Explicit Fiat-Shamir transcript and soundness carry-over (replaces NI figure)</td><td>A.4</td></tr>
+<tr><td>§5.5.2 (new)</td><td>Random-oracle instantiations with per-scheme commitment costs</td><td>A.5</td></tr>
+<tr><td>§5.6</td><td>Scalar vs. indeterminate notation applied</td><td>A.6</td></tr>
+<tr><td>§6.3</td><td>Expanded API + new algorithm-to-implementation mapping subsections; ToCommit</td><td>A.4</td></tr>
+<tr><td>§6.5</td><td>Dynamic overflow-tracking note</td><td>—</td></tr>
+<tr><td>§7.2</td><td>Before/After &amp; baseline definitions, metrics paragraph, rewritten benchmark circuit; Table 7 regenerated (BLS12-381, uniform circuit)</td><td>A.2, A.3, A.5</td></tr>
+</table>

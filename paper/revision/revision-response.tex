@@ -1,0 +1,114 @@
+% Revision requirements and responses — TCHES 2027-1 Paper #185
+% (Major Revision of TCHES 2026-4 Paper #104)
+% Build: pdflatex revision-response.tex
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=24mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage[framemethod=default]{mdframed}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage[colorlinks=true,allcolors=blue!50!black]{hyperref}
+\usepackage{parskip}
+
+\newcommand{\Fq}{\ensuremath{\mathbb{F}_q}}
+\newcommand{\G}{\ensuremath{\mathbb{G}}}
+
+% Requirement box: quoted revision requirement / reviewer point
+\definecolor{reqbg}{gray}{0.95}
+\newmdenv[backgroundcolor=reqbg,linecolor=black!20,linewidth=0.25pt,
+  innerleftmargin=5pt,innerrightmargin=5pt,
+  innertopmargin=5pt,innerbottommargin=5pt,skipabove=16pt,skipbelow=4pt]{reqbox}
+
+
+  \newcommand{\req}[2][]{\begin{reqbox}\textbf{#1}\itshape\ #2\end{reqbox}}
+
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=2pt}
+
+\title{Major Revision: Pairing Proofs and Polynomial Ring Toolkit}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1.4cm}
+
+\noindent\textbf{Submission:} TCHES 2027, Issue 1, Paper \#185
+\\
+\textbf{Original submission:} TCHES 2026, Issue 4, Paper \#104
+
+All modified or added parts are \colorbox{yellow!45}{highlighted in yellow} in the revised
+paper.
+\\
+
+\section*{Summary of changes}
+
+\renewcommand{\arraystretch}{1.25}
+\noindent\begin{tabularx}{\textwidth}{|l|X|l|}
+\hline
+\textbf{Location} & \textbf{Change} & \textbf{Criteria} \\
+\hline
+Abstract, \S1.2, \S2.1 & Updated headline numbers: uniform 3-pairing benchmark, BLS12--381 added & A.2, A.3 \\
+\rowcolor{black!10} \S3 & Concrete Fel23 comparison; new Garaga paragraph & A.1 \\
+\S4.1, \S4.2 & Sparseness statement; fixed benchmark cross-reference sentence & A.3, A.6 \\
+\rowcolor{black!10} Algorithms 3, 4 & Inlined PolyMulDiv/EvalPoly signatures (two floats removed) & A.6 \\
+\S5.5.1 & Improved Fiat-Shamir section removed redundant Non Interactive figure & A.4 \\
+\rowcolor{black!10} \S5.5.2 (new) & Random-oracle instantiations with per-scheme commitment costs across CairoVM, gnark Groth16 and gnark PLONK & A.5 \\
+\S5.6 & Standard indeterminate notation applied & A.6 \\
+\rowcolor{black!10} \S6.3 & Removed excessive API documentation, added description of the logic flow with algorithm to implementation mappings & A.4 \\
+\S6.5 & Dynamic overflow-tracking note & --- \\
+\rowcolor{black!10} \S7.2 & Before/After \& baseline definitions, metrics paragraph, rewritten benchmark circuit; Table~7 regenerated (BLS12--381, uniform circuit) & A.2, A.3, A.5 \\
+\S7.3 & Further work; application to other curves; native field pairings; and lattice-based ZK-SNARKs & Reviewer C \\
+\hline
+\end{tabularx}
+
+\section*{Revision criteria}
+
+Updates for post-rebuttal discussion requirements,
+
+\req[A.1]{Clarify the main contribution relative to the most closely related prior works (such as
+Fel23 and Garaga)}
+\begin{itemize}
+\item Section~3 now quantifies the delta over [Fel23] concretely and links to Sections 4.1 for more details.
+\item New closing paragraph of Section~3 clarifies Garaga relationship.
+\end{itemize}
+
+\req[A.2]{Add additional benchmarks for BLS12-381, as per the rebuttal}
+\begin{itemize}
+\item The toolkit is now implemented for BLS12--381 and Table~7 includes BLS12--381 results for both SCS and R1CS.
+\end{itemize}
+
+\req[A.3]{Clarify the benchmarking setup, in particular the 3-pairing setting}
+\begin{itemize}
+\item We replaced the original composite Groth16 simulation circuit with a uniform 3-pairing product check,
+$\prod_{i=1}^{3} e(P_i, Q_i) = 1$ via \texttt{PairingCheck}. The simplified circuit now directly corresponds
+to the polynomials specified in section 4. Baseline and our work fork are both benchmarked on the
+same circuit. All numbers regenerated (abstract, Section~1.2, Table~7).
+\item New text in Section~7.2 states the Miller line sparseness; Section~4.1 now clarifies the sparseness savings are included all compared schemes.
+\end{itemize}
+
+\req[A.4]{Improve the mapping between algorithms and implementation, in particular the
+application of Fiat-Shamir}
+\begin{itemize}
+\item Section~5.5 (Fiat-Shamir Transformation) now more detailed, The redundant
+non-interactive protocol figure was removed.
+\item Section~6.3 (Algorithms and Implementation)
+now traces Algorithms~3/4 (and steps in the proof) to the code.
+\end{itemize}
+
+\req[A.5]{Qualify the commitment-based performance metric: schemes, overhead, impact}
+\begin{itemize}
+\item New Section~5.5.2 (Instantiating the Random Oracle): Details the commitments machinery for CairoVM and gnark(both Groth16 and PLONK).
+\item Commitment definitions tightened, clear distinction between commitment count (2 commitments) and number of elements committed.
+\end{itemize}
+
+\req[A.6]{Minor presentation issues pointed out by the reviewers}
+\begin{itemize}
+\item Percentages only included in text in the abstract and the introduction.
+\item Broken sentences/spelling mistakes fixed
+\item Formal indeterminate is now capital X throughout the paper.
+\end{itemize}
+
+\end{document}
