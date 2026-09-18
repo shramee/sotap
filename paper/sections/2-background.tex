@@ -29,7 +29,7 @@
 
 \subsection{Pairing Computation}
 
-An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable. We will focus on the optimal ate pairing~\cite{hsp10} over Barreto-Naehrig (BN) curves, which is widely used due to its efficiency. We will specifically use the Ethereum's BN254 curve, defined over a 254-bit prime field $\Fq$, with groups $\G_1, \G_2$ of order $r$ and target group $\G_T$ contained in the 12th extension field $\Fe{12}$.
+An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable. We will focus on the optimal ate pairing~\cite{hsp10} over Barreto-Naehrig (BN) curves, which is widely used due to its efficiency. We will focus on the Ethereum's BN254 curve, defined over a 254-bit prime field $\Fq$, with groups $\G_1, \G_2$ of order $r$ and target group $\G_T$ contained in the 12th extension field $\Fe{12}$. \rev{We also benchmark BLS12--381 (Table~\ref{tab:main_performance}) for higher security requirements.}
 
 The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
 
@@ -62,7 +62,7 @@ We measure computational cost in terms of \textit{constraints} (denoted by \text
 \item \textbf{Division/Inversion:} One multiplication + one equality check
 \end{itemize}
 
-\textbf{Commitment Overhead:} Beyond constraint costs, we account for \textit{calldata} or \textit{commitment overhead}---the number of field elements the prover must commit to (via Fiat-Shamir hashing in non-interactive proofs). For blockchain deployments, this overhead directly impacts transaction costs and is often the dominant factor.
+\textbf{Commitment Overhead:} Beyond constraint costs, we account for \textit{commitment overhead}---the number of field elements the prover must commit to (via Fiat-Shamir hashing in non-interactive proofs). For blockchain deployments, this overhead directly impacts transaction costs and is often the dominant factor.
 
 \subsubsection{Cost Model Comparison}
 

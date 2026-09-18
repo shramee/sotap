@@ -4,7 +4,7 @@ Algorithm~\ref{alg:pairing} gives the pairing computation combining El Housni's 
 
 Our contribution is to express each step of this algorithm as a single multi-operand polynomial product verified via the Schwartz-Zippel lemma, rather than as a sequence of individual binary multiplications as in~\cite{FXFM23}.
 
-\begin{algorithm}
+\begin{algorithm}[!h]
 \caption{Optimal Ate pairing with Residue witness check}
 \label{alg:pairing}
 \begin{algorithmic}[1]
@@ -59,7 +59,7 @@ Our contribution is to express each step of this algorithm as a single multi-ope
 
 \subsection{Comparative Analysis~\label{sec:ops:comp-analysis}}
 
-We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C.
+We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C. \rev{All compared schemes---\cite{PR1CS22}, \cite{FXFM23}, and ours---exploit this sparseness of the Miller line functions; the corresponding savings are included in every constraint count below.}
 
 \subsubsection{Previous scheme}
 
@@ -117,7 +117,7 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 
 \subsection{Operation Polynomials}\label{sec:op-polys}
 
-Our implementation uses different polynomials for different bits in the Miller loop. Let us walk through a 3-pairing setup which Inversions used widely for Groth16 verification. We will describe the polynomials for zero bits, non-zero bits and correction step.
+Our implementation uses different polynomials for different bits in the Miller loop. \rev{Let us walk through a 3-pairing setup, the configuration used for Groth16 verification (Section~\ref{sec:bench-circuit}).} We will describe the polynomials for zero bits, non-zero bits and correction step.
 
 \subsubsection{Miller loop: Zero Bit Equation}\label{sec:op:ml-0bit}
 
@@ -213,7 +213,7 @@ Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{
 
 \subsubsection{Final Exponentiation Equation}\label{sec:op:finx}
 
-The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
+The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentiation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
 
 \begin{equation}\label{eq:op:fx}
 F(x) \cdot c^{-q}(x) \cdot c^{q^2}(x) \cdot c^{-q^3}(x) \cdot W^w(x) = 1 + Q(x) \cdot P_{12}(x)
@@ -251,7 +251,7 @@ With this we have all the polynomials we need for verifying entire pairing opera
 
 \subsection{Security}\label{sec:op-sec}
 
-Each verification equation takes the form $P = \prod_i A_i(x) - Q(x) \cdot P_{12}(x) - R(x)$ where $\deg(P) < 2^8$.\footnote{For $k$-pair pairings, $\deg(P) \approx 88 + 18(k-3)$, well below $2^8$ for all practical $k$. This bound can be extended to $2^{10}$ with negligible soundness impact.} By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}):
+Each verification equation takes the form $P = \prod_i A_i(x) - Q(x) \cdot P_{12}(x) - R(x)$ where $\deg(P) < 2^8$.\footnote{For $k$-pair pairings, $\deg(P) \approx 88 + 18(k-3)$, well below $2^8$ for all practical $k$.} By the Schwartz-Zippel lemma (Section~\ref{sec:bg:sz}):
 
 \textbf{Soundness:} $\delta_s \leq d/|\Fq| < 2^8/2^{254} = 2^{-246}$ for BN254.
 

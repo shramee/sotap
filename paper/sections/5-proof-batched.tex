@@ -16,19 +16,19 @@ This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:o
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv} (Algorithm~\ref{alg:polymuldiv}), which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
 
-\begin{algorithm}
-\caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
-\label{alg:polymuldiv}
-\begin{algorithmic}[1]
-\Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
-\Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
-\State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
-\State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
-\State \Return $(Q, R)$
-\end{algorithmic}
-\end{algorithm}
+% \begin{algorithm}
+% \caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
+% \label{alg:polymuldiv}
+% \begin{algorithmic}[1]
+% \Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
+% \Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+% \State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
+% \State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
+% \State \Return $(Q, R)$
+% \end{algorithmic}
+% \end{algorithm}
 
 \begin{algorithm}
 \caption{Pairing Prover: Preparing polynomials}
@@ -46,28 +46,33 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \color{black}
 
 \Statex
-\Statex \gText{Miller loop bits}
+
+\State \colorbox{revhl}{\textbf{function} \texttt{PolyMulDiv} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} $Q, R \in \Fq[x]$}
+\State \colorbox{revhl}{\qquad s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$}
+
+\Statex
+\Statex \gText{Miller loop}
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \If{$s_i = 0$}
-		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, L_\text{dbl})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 \EndFor
 \Statex
-\Statex \gText{Miller loop Frobenius correction}
+
 
 \State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{Algorithm~\ref{alg:polymuldiv}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, L_\pi, L_{-\pi^2})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$)
 
 \Statex
@@ -75,11 +80,11 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 
 \If{$w = 0$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 1$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 2$}
-    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algorithm~\ref{alg:polymuldiv}}
+    \State $Q, R \leftarrow {\textit{PolyMulDiv}}(f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$
 \EndIf
 \State $\mathcal{Q}$.\textit{append}($Q$), $\mathcal{R}$.\textit{append}($R$) \gComm{Final $\mathcal{Q}$ and $\mathcal{R}$ accumulation, skip $f$}
 
@@ -91,29 +96,29 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 
 \subsection{Verifier's Algorithms}
 
-The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$ via Algorithm~\ref{alg:evalpolyprod}, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
+The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
 
-\begin{algorithm}
-\caption{EvalPoly: Evaluate polynomial product minus remainder via Horner's method}
-\label{alg:evalpolyprod}
-\begin{algorithmic}[1]
-\Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
-\Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
-\Function{Eval}{$P = (p_0, p_1, \ldots, p_d),\ z$} \gComm{Uses Horner's method}
-    \State $v \leftarrow p_d$ \gComm{Start from leading coefficient}
-    \For{$k = d-1$ \textbf{downto} $0$}
-        \State $v \leftarrow v \cdot z + p_k$ \gComm{$d$ multiplications, $d$ additions total}
-    \EndFor
-    \State \Return $v$
-\EndFunction
-\State $e \leftarrow \Call{Eval}{P_1, z}$ \gComm{Evaluate first polynomial}
-\For{$i = 2$ to $n$}
-    \State $e \leftarrow e \cdot \Call{Eval}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}
-\EndFor
-\State $e \leftarrow e - \Call{Eval}{R, z}$ \gComm{Subtract remainder evaluation}
-\State \Return $e$
-\end{algorithmic}
-\end{algorithm}
+% \begin{algorithm}
+% \caption{EvalPoly: Evaluate polynomial product minus remainder via Horner's method}
+% \label{alg:evalpolyprod}
+% \begin{algorithmic}[1]
+% \Require Polynomials $P_1, \ldots, P_n,\, R \in \Fq[x]$ of degree $\leq d$, evaluation point $z \in \Fq$
+% \Ensure $e \in \Fq$ where $e = \prod_{i=1}^{n} P_i(z) - R(z)$
+
+% \State \textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \Return ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)
+
+% \State \textbf{function} \texttt{Eval} ({$P = (p_0, p_1, \ldots, p_d),\ z$}): \Return ($evaluation \in \Fq$)
+
+% \State \gText{~~~~Uses Horner's method, body not included for brevity}
+
+% \State $e \leftarrow \Call{Eval}{P_1, z}$ \gComm{Evaluate first polynomial}
+% \For{$i = 2$ to $n$}
+%     \State $e \leftarrow e \cdot \Call{Eval}{P_i, z}$ \gComm{Multiply in each subsequent evaluation}
+% \EndFor
+% \State $e \leftarrow e - \Call{Eval}{R, z}$ \gComm{Subtract remainder evaluation}
+% \State \Return $e$
+% \end{algorithmic}
+% \end{algorithm}
 
 \begin{algorithm}
 \caption{Pairing Verifier: Evaluating remainders}
@@ -122,6 +127,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \Require $P \in \G_1, Q \in \G_2, c \in \Fe{12}, w \in \{0,1,2\}$, $\mathcal{R} \text{ array of remainders}$, $Q_\text{acc} \in \Fq[x]$
 \Statex Internal: 27th root of unity, $W, W^2 \in \Fe{12}$, first round challenge, $z \xleftarrow{\$} \Fq$
 \Ensure $pairing(P, Q) \stackrel{?}{=} 1$
+
 \Statex Write $s = 6t + 2 = \sum_{i=0}^{L-1} s_i 2^i$ where $s_i \in \{-1, 0, 1\}$ and $s_L = 1$
 
 \State $c^{-1} \leftarrow 1 / c$ \Comment{Inverse Residue witness}
@@ -134,29 +140,33 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \color{black}
 
 \Statex
-\Statex \gText{Miller loop bits}
+
+\State \colorbox{revhl}{\textbf{function} \texttt{EvalPoly} ({$R, P_1, \ldots, P_n \in \Fq[x]$}): \textbf{return} ($\prod_{i=1}^{n} P_i(z) - R(z) \in \Fq$)}
+
+\Statex
+\Statex \gText{Miller loop}
 \For{$i = L - 2$ to $0$}
     \State $L_\text{dbl} \leftarrow l_{T,T}(P)$, $T \leftarrow [2]T$
     \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
     \If{$s_i = 0$}
-		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+		\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, L_{\text{dbl}})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = 1$}
         \State $L_\text{add} \leftarrow l_{T,Q}(P)$, $T \leftarrow T + Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, c^{-1}, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \ElsIf{$s_i = -1$}
         \State $L_\text{add} \leftarrow l_{T,-Q}(P)$, $T \leftarrow T - Q$
-        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+        \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, f, c, L_\text{dbl}, L_\text{add})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
     \EndIf
     \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 \EndFor
 \Statex
-\Statex \gText{Miller loop Frobenius correction}
+
 \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
 \State $Q_1 \leftarrow \pi_p(Q), Q_2 \leftarrow \pi_p^2(Q)$
 \State $L_\pi \leftarrow l_{T,Q_1}(P)$
 \State $T \leftarrow T + Q_1$
 \State $L_{-\pi^2} \leftarrow l_{T,-Q_2}(P)$
-\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{Algo~\ref{alg:evalpolyprod}, add $L_{*i}$ for each $P_i, Q_i$}
+\State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, L_\pi, L_{-\pi^2})$ \Comment{add $L_{*i}$ for each $P_i, Q_i$}
 \State $f \leftarrow R$, $a_\text{rlc} \leftarrow a_\text{rlc} \cdot z$ \gComm{Update random linear combination factor}
 
 \Statex
@@ -164,11 +174,11 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 \Statex \gText{Final exponentiation: Cubic scaling + Frobenius mappings}
 \State $R \leftarrow \mathcal{R}.\textit{pop\_front}()$ \gComm{Fetch R from prover}
 \If{$w = 0$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 1$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, W, c^{-q}, c^{q^2}, c^{-q^3})$
 \ElsIf{$w = 2$}
-    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \textit{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$ \Comment{Algo~\ref{alg:evalpolyprod}}
+    \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$
 \EndIf
 
 \Statex
@@ -185,47 +195,57 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
     \LtoR{Challenge $z \xleftarrow{\$} \Fq$}{3.5}
     \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{4.5}
     \RtoL{Round II: Commit $Q_\text{acc}$}{5.5}
-    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.5}
+    \LDoes{Samples $x \xleftarrow{\$} \Fq$ and runs Algorithm~\ref{alg:2r:verifier} to test\\polynomial identities at $x$, Eq~\ref{eq:iop-batched}}{6.5}
     \LtoR{Accept/Reject}{8}
 }
 
 \subsection{Fiat-Shamir Transformation} \label{sec:iop:fs}
 
-Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ (hash queries) and $\lambda=254$ (BN254 hash output length).
+Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ \rev{to the two-round protocol of Section~\ref{sec:iop:interactive}} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ is the number of oracle queries \rev{(one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound}.
 
-\paragraph{Gnark's multi-commitment mechanism.}
-In gnark, each \texttt{api.Commit} call registers committed variables in the constraint system; the two sequential calls in our protocol produce the two challenges $z$ and $x$ via gnark's multi-round commitment scheme~\cite{gnarkcommit,BellingCCS23}.
+\subsubsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
-\subsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
+\begin{revblock}
+The prover runs Algorithm~\ref{alg:2r:prover} to obtain $(\mathcal{Q}, \mathcal{R})$, derives the challenge
+$$z = H(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R})$$
+from the transcript instead of receiving it, computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$, and outputs the proof $(\text{\textit{pairing inputs}},\, c,\, W^w,\, \mathcal{R},\, Q_\text{acc})$. The verifier recomputes $z$, derives the evaluation point $x = H(z,\, Q_\text{acc})$, and runs Algorithm~\ref{alg:2r:verifier}, testing the polynomial identities via Equation~\eqref{eq:iop-batched}.
 
-\IOP{Non-interactive proof}{Verifier}{Prover}{
-    \RDoes{Computes pairings with Algorithm~\ref{alg:2r:prover} and prepares\\ remainders and quotients arrays $\mathcal{R}$ and $\mathcal{Q}$}{1}
-    \RDoes{Derives challenge $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$}{2}
-    \RDoes{Computes $Q_{\text{acc}} = \sum_{i=0}^{n-1} z^i \cdot Q_i$ using $\mathcal{Q}$ and $z$}{2.8}
-    \RtoL{Sends pairing inputs, $\mathcal{R}$, and $Q_\text{acc}$}{4}
-    \LDoes{Recomputes $z = H(\text{\textit{pairing inputs}, $\mathcal{R}$})$ for RLC}{5}
-    \LDoes{Derives evaluation point $x = H(z, Q_\text{acc})$}{5.8}
-    \LDoes{Runs Algorithm~\ref{alg:2r:verifier} with $z$ and tests polynomial\\identities at $x$ with Algorithm~\ref{alg:evalpolyprod}}{6.8}
-    \LtoR{Accept/Reject}{8.3}
-}
+The soundness bound of Theorem~\ref{thm:soundness} carries over because every prover-chosen value entering Equation~\eqref{eq:iop-batched} is absorbed before the challenge it must not depend on: $\mathcal{R}$ and the hinted witnesses $c, W^w$ before $z$, and $Q_\text{acc}$ with $z$ chained into the second query before $x$.
+\end{revblock}
 
-\textbf{Concrete commitment costs:} In gnark, each call to \texttt{api.Commit} registers committed variables in the constraint system; the precise prover overhead depends on the backend (Groth16 or Plonk)~\cite{gnarkcommit,BellingCCS23}.
+\subsubsection{Instantiating the Random Oracle}\label{sec:iop:fs:ro}
+
+\begin{revblock}
+The protocol is agnostic to how $H$ is realised; the cost of absorbing one $\Fq$ element into the transcript varies across execution environments. We therefore qualify the committed element counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
+
+\paragraph{CairoVM (Poseidon).} \label{sec:iop:fs:cairo}
+Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon~\cite{poseidon} sponge; $\Fq$ elements are represented by 96-bit limbs, with two limbs packed into each \texttt{Felt252} absorption. Both hashing cost and calldata therefore scale linearly with the number of committed elements, which is why the COMMITS column of Table~\ref{tab:garaga_performance} is reported alongside modular operations: halving the committed elements roughly halves the transcript-related share of VM steps and the hint calldata.
+
+\paragraph{Faster Hash Verification~\cite{FstHV} in gnark.} \label{sec:iop:fs:gnark}
+Belling et al.~\cite{FstHV} provide commitment schemes that allow the prover to compute commitment natively (outside the circuit) and attach an Argument of Knowledge to prove correctness. The scheme is described for both Groth16 and PLONK (\cite{FstHV} Section 6.1 and 6.2). Belling later extends this to support multiple commitment for multiple rounds for gnark in~\cite{mrmc}.
+
+This is made available via \texttt{api.Commit} calls in gnark. The costs are backend-specific.
+
+\paragraph{Groth16 in gnark.} Each commitment costs two $\G_1$ MSMs of size equal to the number of committed wires (\cite{FstHV}~Section~6.1). Proof size grows by one $\G_1$ point per commitment, plus a single knowledge proof folded across all commitments. Verification gains one two-pairing product check (the knowledge proof) and one extra scalar multiplication in the public-input MSM per commitment. None of this touches the constraint count, since the commitment lives entirely outside the arithmetization.
+
+\paragraph{PLONK in gnark.} The overhead shifts almost entirely into the constraint system instead. Each committed wire adds one constraint (\cite{FstHV}~Section~6.2), so cost scales with the number of committed \emph{wires}. Proof size grows by one $\G_1$ element per commitment. Verification pays no extra pairing: the committed polynomial's evaluation is folded into the batched KZG opening that PLONK already performs, so the marginal verifier cost is a handful of field operations.
+\end{revblock}
 
 \subsection{Security Analysis}
 
 Throughout this section, $z, x \in \mathbb{F}_q$ denote field element challenges (scalars),
-while polynomials are elements of $\mathbb{F}_q[x]$ with $x$ as the formal indeterminate.
+while polynomials are elements of $\mathbb{F}_q[X]$ with $X$ as the formal indeterminate.
 In particular, $z^j$ is a scalar coefficient, not a polynomial term.
 
 \subsubsection{Algebraic Intuition}\label{sec:iop:alg-intuition}
 
 Before the formal soundness proof it is instructive to consider why an incorrect
 remainder is difficult to hide.  Suppose a malicious prover corrupts exactly one remainder:
-$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[x]$, $\Delta_j \neq 0$,
+$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[X]$, $\Delta_j \neq 0$,
 $\deg(\Delta_j) \leq 11$.  Since $z$ is obtained \emph{after} the commitment to
 $\mathcal{R}$, the prover cannot adjust any other $R_k$ to compensate for $\Delta_j$.
 To successfully deceive the verifier, the prover must find a valid forged quotient
-$Q'_\text{acc} \in \mathbb{F}_q[x]$ satisfying
+$Q'_\text{acc} \in \mathbb{F}_q[X]$ satisfying
 
 $$\sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12}$$
 
@@ -235,11 +255,11 @@ Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} - z^j\Delta_j(x) \\
 Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
 Here $z^j \in \mathbb{F}_q$ is a nonzero scalar (with overwhelming probability over the
-choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[x]$ is a nonzero polynomial of degree
+choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[X]$ is a nonzero polynomial of degree
 at most~$11$.  Since $P_{12}$ is irreducible of degree~$12$ and
 $\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
-divide $z^j\Delta_j$ in $\mathbb{F}_q[x]$; hence $z^j\Delta_j/P_{12}$ is not a
-polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[x]$ can satisfy the
+divide $z^j\Delta_j$ in $\mathbb{F}_q[X]$; hence $z^j\Delta_j/P_{12}$ is not a
+polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[X]$ can satisfy the
 equation for this single-corruption case.
 
 
@@ -277,7 +297,7 @@ $$\delta_s \leq \frac{66 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}.$$
 \textbf{Non-interactive proof via Fiat-Shamir} \label{sec:iop:soundness:fs}: From Section~\ref{sec:iop:fs}, under the random oracle model the
 knowledge soundness error becomes~\cite{IOP-NI}:
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
-where $m = 2$ (hash queries) and $\lambda = 254$ (hash output length), giving
+where $m = 2$ (one query per round) and $\lambda = 254$ (challenge bit-length), giving
 $$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}.$$
 
 \begin{remark}[Correctness of polynomial evaluation]\label{rem:overflow}

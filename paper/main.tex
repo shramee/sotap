@@ -8,6 +8,8 @@
 \definecolor{navyDark}{HTML}{003f88}
 \definecolor{navy}{HTML}{0066cc}
 \usepackage[colorlinks=true,allcolors=navyDark,citecolor=navy]{hyperref}
+\usepackage{alltt}
+
 
 \usepackage{algorithm}
 \usepackage{algorithmicx, algpseudocode}
@@ -15,6 +17,14 @@
 \usetikzlibrary{arrows.meta}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
+
+% Custom theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{remark}{Remark}
 
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
@@ -76,8 +86,6 @@ MIST.cash|FOCBB, Shhtarknet \\
 \maketitle
 
 \input{sections/0-abstract.tex}
-
-\newwatermark[pages={1-24},fontfamily=times,color=red!10,angle=45,scale=3.5,xpos=0,ypos=0]{CONFIDENTIAL\\DRAFT}
 
 \tableofcontents
 \listofalgorithms
