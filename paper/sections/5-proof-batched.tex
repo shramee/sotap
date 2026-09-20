@@ -3,34 +3,7 @@
 
 We now combine the polynomial equations from Section~\ref{sec:op-polys} into a complete two-round public-coin interactive proof, further reducing verification cost by batching all quotients into a single accumulated polynomial.
 
-\subsection{Batching Polynomial Identity Testing}\label{sec:iop:batching}
-
-All $n$ polynomial equations from Section~\ref{sec:op-polys} are batched into a single verification. The prover commits to remainders $\{R_i\}_{i=0}^{n-1}$ and receives challenge $z$. Using $z$, the prover forms the accumulated quotient $Q_\text{acc} = \sum_{i=0}^{n-1} z^i \cdot Q_i$. The verifier then samples a second challenge point $c$ and checks:
-
-\begin{equation}
-    \label{eq:iop-batched}
-    \sum_{i=0}^{n - 1}z^i \cdot [A_i(c) \cdot B_i(c) \cdots X_i(c) - R_i(c)] = Q_\text{acc}(c) \cdot P_{12}(c)
-\end{equation}
-
-This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:op:ml-0bit}--\ref{tbl:op:finx}) to a single evaluation of a degree-76 polynomial.
-
-\subsection{Prover's Algorithms}
-
-The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the irreducible $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
-
-% \begin{algorithm}
-% \caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
-% \label{alg:polymuldiv}
-% \begin{algorithmic}[1]
-% \Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
-% \Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
-% \State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
-% \State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
-% \State \Return $(Q, R)$
-% \end{algorithmic}
-% \end{algorithm}
-
-\begin{algorithm}
+\begin{algorithm}[H]
 \caption{Pairing Prover: Preparing polynomials}
 \label{alg:2r:prover}
 \begin{algorithmic}[1]
@@ -93,6 +66,33 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 \State \Return $\mathcal{Q}, \mathcal{R}$
 \end{algorithmic}
 \end{algorithm}
+
+\subsection{Batching Polynomial Identity Testing}\label{sec:iop:batching}
+
+All $n$ polynomial equations from Section~\ref{sec:op-polys} are batched into a single verification. The prover commits to remainders $\{R_i\}_{i=0}^{n-1}$ and receives challenge $z$. Using $z$, the prover forms the accumulated quotient $Q_\text{acc} = \sum_{i=0}^{n-1} z^i \cdot Q_i$. The verifier then samples a second challenge point $c$ and checks:
+
+\begin{equation}
+    \label{eq:iop-batched}
+    \sum_{i=0}^{n - 1}z^i \cdot [A_i(c) \cdot B_i(c) \cdots X_i(c) - R_i(c)] = Q_\text{acc}(c) \cdot P_{12}(c)
+\end{equation}
+
+This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:op:ml-0bit}--\ref{tbl:op:finx}) to a single evaluation of a degree-76 polynomial.
+
+\subsection{Prover's Algorithms}
+
+The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the \rev{monic} $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
+
+% \begin{algorithm}
+% \caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
+% \label{alg:polymuldiv}
+% \begin{algorithmic}[1]
+% \Require $P_1, \ldots, P_n \in \Fq[x]$; Divisor $P_{12} \in \Fq[x]$
+% \Ensure $Q, R$ s.t.\ $\prod P_i = Q \cdot P_{12} + R$, $\deg(R) < \deg(P_{12})$
+% \State $R \leftarrow \prod_{i=1}^{n} P_i$ \gComm{Polynomial product}
+% \State Perform Euclidean division of $R$ by $P_{12}$ to get $(Q, R)$
+% \State \Return $(Q, R)$
+% \end{algorithmic}
+% \end{algorithm}
 
 \subsection{Verifier's Algorithms}
 
@@ -252,7 +252,7 @@ Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
 Here $z^j \in \mathbb{F}_q$ is a nonzero scalar (with overwhelming probability over the
 choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[X]$ is a nonzero polynomial of degree
-at most~$11$.  Since $P_{12}$ is irreducible of degree~$12$ and
+at most~$11$.  Since $P_{12}$ is \rev{monic} of degree~$12$ and
 $\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
 divide $z^j\Delta_j$ in $\mathbb{F}_q[X]$; hence $z^j\Delta_j/P_{12}$ is not a
 polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[X]$ can satisfy the
