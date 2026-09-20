@@ -1,1 +1,0 @@
-go test -benchmem -run=^$ -bench Benchmark -v

@@ -14,7 +14,7 @@ El Housni's seminal work~\cite{PR1CS22} represents the first systematic explorat
 
 Housni notes that the cost of inversions is much lower in constraint systems, almost the same as multiplication. Over $\F_p$, inversions cost 2 constraints: one for computing $x \cdot y$ where $y$ is provided from the hint, and one equality check $x \cdot y \stackrel{?}{=} 1$. Division can be similarly reduced to just two constraints. For $c = a/b$ where $c$ is the input from hint, we compute $b \cdot c$ and equality check $b \cdot c \stackrel{?}{=} a$. This is further generalised to field extensions.
 % \begin{align*}
-%     \text{For } x, y &\in \F_{p^{n}} \\
+%     \text{For } x, y &\in \F_{q^{n}} \\
 %     x/y &= z \text{ (}z\text{ as input from hint)} \\
 %     \text{Compute } t &= y \cdot z \\
 %     \text{Equality check } t &\stackrel{?}{=} x \\
@@ -36,7 +36,7 @@ Taking this a step further, computation of y coordinate for the intermediate $S 
 
 \subsubsection{Line evaluations}
 
-Following~\cite{Ara13}, the lines are sparse elements in $\Fe{12}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \F_{p^{2}}$. The multiplication of these sparse elements costs 39C.
+Following~\cite{Ara13}, the lines are sparse elements in $\Fe{12}$ of the form $ay_P + bx_P \cdot w + c \cdot w^3$ with $a, b, c \in \F_{q^{2}}$. The multiplication of these sparse elements costs 39C.
 Housni proposes representing the lines in the form $1 + \frac{b'x_P}{y_P} \cdot w + \frac{c'}{y_P} \cdot w^3$ which makes it sparser (notice unit first coefficient resulting in free multiplication).
 
 % This can be rewritten as,
@@ -70,7 +70,7 @@ $\Fe{12}$ & 54C & 36C & 66C & 30C \\
 
 \subsection{Faster Extension Field Multiplications -- Feltroidprime 2023}
 
-Feltroidprime~\cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\F_{p}$ to achieve significant performance improvements.
+Feltroidprime~\cite{FXFM23} showcases a novel approach to extension field multiplications that exploits a counterintuitive property of circuit-based computation: operations traditionally viewed as expensive (such as polynomial divisions) can become highly efficient in constraint systems. Moving away from the conventional towered extension approach, he proposes returning to direct extensions of $\F_{q}$ to achieve significant performance improvements.
 
 \subsubsection{Isomorphisms among towered to direct extensions}
 
@@ -79,9 +79,9 @@ Feltroidprime walks through the construction of mapping functions to go back and
 % He starts with the tower for BN254 (as used in gnark\cite{gnark}):
 
 % \begin{flalign}
-% \F_{p^2}[u] &= \F_{p}[u]/(u^2+1) \\
-% \F_{p^6}[v] &= \F_{p^2}[v]/(v^3-9-u) \\
-% \Fe{12}[w] &= \F_{p^6}[w]/(w^2-v)
+% \F_{q^2}[u] &= \F_{q}[u]/(u^2+1) \\
+% \F_{q^6}[v] &= \F_{q^2}[v]/(v^3-9-u) \\
+% \Fe{12}[w] &= \F_{q^6}[w]/(w^2-v)
 % \end{flalign}
 
 % Obtains irreducible polynomials,
