@@ -7,7 +7,7 @@
 
 The protocol of Section~\ref{sec:iop} is packaged as a reusable toolkit in
 the \texttt{emulated} package of gnark~\cite{gnaF}, parameterised by any
-emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any modulus
+emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any \rev{monic} modulus
 polynomial $P \in \Fq[x]$. The toolkit operates in a recursive proof
 setting where the prover's computations are performed outside the circuit
 via \texttt{hints} (Section~\ref{sec:polyring:hints}), while the verifier's
@@ -63,7 +63,7 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 Five functions cover the full lifecycle of a ring group: registration, per-operation multiplication, chained accumulation, extra commitment inputs, and finalisation. The three subsections below trace how a concrete circuit, BN254 pairing verification, calls these: one shared skeleton, prover work running inline within it, verifier work deferred to its end.
 
 \paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
-Registers a \emph{ring group}: a modulus polynomial $P$ paired with an optional
+Registers a \emph{ring group}: a \rev{monic} modulus polynomial $P$ paired with an optional
 small-coefficient evaluator \texttt{modEvalFn}.  Returns a
 \texttt{*PolyRingGroupChecks} handle shared by every multiplication under that
 modulus; multiple groups with different moduli may coexist in the same circuit.
