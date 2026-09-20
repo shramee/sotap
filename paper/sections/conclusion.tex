@@ -64,7 +64,7 @@ In Table~\ref{tab:garaga_performance}, the \emph{Before} column is Garaga verify
 
 \paragraph{Our polynomial ring toolkit} implementation in gnark is benchmarked in Table~\ref{tab:main_performance}, measured via a 3-pairing product check (see below) on BN254 and BLS12--381. We compare our results against a \textbf{gnark baseline} using the upstream \texttt{emulated} package~\cite{gnark}, which represents the state-of-the-art for emulated pairings and includes the optimizations of~\cite{PR1CS22} and~\cite{OPP24}.
 
-The \textbf{This Work} numbers were obtained by compiling the exact same benchmark against our fork, replacing the baseline's extension field multiplications with our new toolkit. No changes were made to the circuit definition or test harness. Both implementations exploit the sparseness of the Miller line functions (Section~\ref{sec:ops:comp-analysis}).
+The \textbf{This Work} numbers were obtained by compiling the exact same benchmark against our fork, replacing the baseline's extension field multiplications with our new toolkit. No changes were made to the circuit definition or test harness. Both implementations exploit the sparseness of the Miller line functions (Section~\ref{sec:ops:comp-analysis}). \rev{The excess memory savings come from the commitment and deferred-check pipeline: fewer deferred checks reduce both committed values and hint data payloads.}
 
 \paragraph{Benchmark circuit.}
 \label{sec:bench-circuit}
