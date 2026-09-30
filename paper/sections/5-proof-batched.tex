@@ -230,19 +230,19 @@ This is made available via \texttt{api.Commit} calls in gnark. The costs are bac
 
 \subsection{Security Analysis}
 
-Throughout this section, $z, x \in \mathbb{F}_q$ denote field element challenges (scalars),
-while polynomials are elements of $\mathbb{F}_q[X]$ with $X$ as the formal indeterminate.
+Throughout this section, $z, x \in \Fq$ denote field element challenges (scalars),
+while polynomials are elements of $\Fq[X]$ with $X$ as the formal indeterminate.
 In particular, $z^j$ is a scalar coefficient, not a polynomial term.
 
 \subsubsection{Algebraic Intuition}\label{sec:iop:alg-intuition}
 
 Before the formal soundness proof it is instructive to consider why an incorrect
 remainder is difficult to hide.  Suppose a malicious prover corrupts exactly one remainder:
-$R_j' = R_j + \Delta_j$ with $\Delta_j \in \mathbb{F}_q[X]$, $\Delta_j \neq 0$,
+$R_j' = R_j + \Delta_j$ with $\Delta_j \in \Fq[X]$, $\Delta_j \neq 0$,
 $\deg(\Delta_j) \leq 11$.  Since $z$ is obtained \emph{after} the commitment to
 $\mathcal{R}$, the prover cannot adjust any other $R_k$ to compensate for $\Delta_j$.
 To successfully deceive the verifier, the prover must find a valid forged quotient
-$Q'_\text{acc} \in \mathbb{F}_q[X]$ satisfying
+$Q'_\text{acc} \in \Fq[X]$ satisfying
 
 $$\sum_{i=0}^{n-1} z^i(A_i - R_i') = Q'_\text{acc} \cdot P_{12}$$
 
@@ -251,12 +251,12 @@ All $R_i' = R_i$ except for $R_j' = R_j + \Delta_j$. Substituting $R_j' = R_j + 
 Q'_\text{acc} \cdot P_{12} &= Q_\text{acc} \cdot P_{12} - z^j\Delta_j(x) \\
 Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
-Here $z^j \in \mathbb{F}_q$ is a nonzero scalar (with overwhelming probability over the
-choice of $z$) and $\Delta_j(x) \in \mathbb{F}_q[X]$ is a nonzero polynomial of degree
+Here $z^j \in \Fq$ is a nonzero scalar (with overwhelming probability over the
+choice of $z$) and $\Delta_j(x) \in \Fq[X]$ is a nonzero polynomial of degree
 at most~$11$.  Since $P_{12}$ is \rev{monic} of degree~$12$ and
 $\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
-divide $z^j\Delta_j$ in $\mathbb{F}_q[X]$; hence $z^j\Delta_j/P_{12}$ is not a
-polynomial. Consequently no valid $Q'_\text{acc} \in \mathbb{F}_q[X]$ can satisfy the
+divide $z^j\Delta_j$ in $\Fq[X]$; hence $z^j\Delta_j/P_{12}$ is not a
+polynomial. Consequently no valid $Q'_\text{acc} \in \Fq[X]$ can satisfy the
 equation for this single-corruption case.
 
 
@@ -274,8 +274,8 @@ uniformly via Schwartz-Zippel.
 \begin{theorem}[Soundness]\label{thm:soundness}
 Let $n$ be the number of polynomial equations batched via a random linear combination into the bivariate polynomial identity:
 $$P_{\mathrm{final}}(z, x) = \sum_{i=0}^{n-1} z^i \cdot \Bigl[\prod_{j} P_{i,j}(x) - R_i(x)\Bigr] - Q_{\mathrm{acc}}(x) \cdot P_{12}(x) = 0$$
-Let the maximum degree in $x$ of the polynomial products be $d_x < 2^8$. For a prover committing to incorrect remainders, the probability of successful forgery $\delta_s$ over randomly chosen $(z,x) \in \mathbb{F}_q^2$ is bounded by:
-$$\delta_s \leq \frac{n - 1 + d_x}{|\mathbb{F}_q|}$$
+Let the maximum degree in $x$ of the polynomial products be $d_x < 2^8$. For a prover committing to incorrect remainders, the probability of successful forgery $\delta_s$ over randomly chosen $(z,x) \in \Fq^2$ is bounded by:
+$$\delta_s \leq \frac{n - 1 + d_x}{|\Fq|}$$
 \end{theorem}
 
 \begin{proof}
@@ -285,7 +285,7 @@ If the prover commits to an incorrect remainder $R_i(x)$, the evaluation yields 
     \item \textbf{Degree in $x$:} at most $d_x < 2^8$ (due to the polynomial products).
 \end{itemize}
 By the Schwartz-Zippel lemma, the probability that the non-zero polynomial $P_{\mathrm{err}}$ evaluates to zero is bounded by the total degree divided by the field size:
-$$\Pr[P_{\mathrm{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\mathrm{err}}) + \deg_x(P_{\mathrm{err}})}{|\mathbb{F}_q|} \leq \frac{n - 1 + d_x}{|\mathbb{F}_q|}$$
+$$\Pr[P_{\mathrm{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\mathrm{err}}) + \deg_x(P_{\mathrm{err}})}{|\Fq|} \leq \frac{n - 1 + d_x}{|\Fq|}$$
 \end{proof}
 
 \textbf{Concrete parameters for BN254}: With $n = 67$ equations and $d_x \leq 256$:

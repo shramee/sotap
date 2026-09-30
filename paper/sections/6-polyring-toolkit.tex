@@ -30,7 +30,7 @@ allows handling small-integer coefficients efficiently by multiplying by the sma
 integer first and negating afterwards, rather than multiplying by the
 full-width field representative $q - c$.
 
-\subsubsection*{Example: BN254 $\mathbb{F}_{q^{12}}$}
+\subsubsection*{Example: BN254 $\Fe{12}$}
 \label{sec:polyring:rep:sparse}
 
 $P_{12}(x) = x^{12} - 18x^6 + 82$ has nine zero coefficients (stored as
@@ -144,7 +144,7 @@ Modular reductions can be deferred or entirely elided for operations expressible
 \textbf{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
 
 \begin{lemma}[Overflow safety for deferred reduction]\label{lem:overflow}
-Let $\Fq$ be emulated with limbs of width $b$ bits inside a native field $\mathbb{F}_p$.
+Let $\Fq$ be emulated with limbs of width $b$ bits inside a native field $\F_p$.
 Consider evaluating a degree-$d$ polynomial via an inner product over the cached
 power vector $\mathcal{X}$.
 Since limbs are accumulated independently, each result-limb is a sum of $d+1$
