@@ -16,7 +16,7 @@ This reduces $n$ polynomial verifications (degrees 38--76, see Tables~\ref{tbl:o
 
 \subsection{Prover's Algorithms}
 
-The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the \rev{monic} $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
+The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Section~\ref{sec:op-polys}. For each step, it calls \textsc{PolyMulDiv}, which multiplies the input polynomials and performs standard Euclidean division by the monic $P_{12}$. After receiving challenge $z$, the prover forms $Q_\text{acc} = \sum_{i} z^i Q_i$ and sends $\mathcal{R} = \{R_i\}$ and $Q_\text{acc}$ to the verifier. The full prover procedure is given in Algorithm~\ref{alg:2r:prover}.
 
 % \begin{algorithm}
 % \caption{PolyMulDiv: Multiply polynomials and divide by $P_{12}$}
@@ -253,7 +253,7 @@ Q'_\text{acc} &= Q_\text{acc} - \frac{z^j\Delta_j(x)}{P_{12}(x)}.
 \end{align*}
 Here $z^j \in \Fq$ is a nonzero scalar (with overwhelming probability over the
 choice of $z$) and $\Delta_j(x) \in \Fq[X]$ is a nonzero polynomial of degree
-at most~$11$.  Since $P_{12}$ is \rev{monic} of degree~$12$ and
+at most~$11$.  Since $P_{12}$ is monic of degree~$12$ and
 $\deg(z^j\Delta_j) \leq 11 < 12 = \deg(P_{12})$, the polynomial $P_{12}$ does not
 divide $z^j\Delta_j$ in $\Fq[X]$; hence $z^j\Delta_j/P_{12}$ is not a
 polynomial. Consequently no valid $Q'_\text{acc} \in \Fq[X]$ can satisfy the
