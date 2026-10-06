@@ -300,7 +300,7 @@ $$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}.$$
 \begin{remark}[Correctness of polynomial evaluation]\label{rem:overflow}
 Theorem~\ref{thm:soundness} assumes that the verifier evaluates all polynomials at the
 challenge point $x$ without arithmetic error.  The circuit implementation uses the
-deferred-reduction inner-product optimisation of Section~\ref{sec:polyring:performance}
+deferred-reduction inner-product optimisation of Section~\ref{sec:prt:performance}
 (Section~\ref{sec:emulated:flat}), which accumulates limb-wise products over $\mathbb{Z}$
 before a single final reduction.  Correctness of this optimisation requires that no
 intermediate limb value reaches the native field characteristic $p$.  We verify this

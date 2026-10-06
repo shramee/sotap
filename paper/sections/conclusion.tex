@@ -47,7 +47,7 @@ Before & After & Before & After & Before & After & Before & After \\
 
 Our approach delivers maximum impact in resource-constrained execution environments where custom auxiliary data can be provided for cheaper verification. \textbf{Recursive proof systems} benefit the most, greatly reducing outer circuit complexity through fewer commitments and operations. \textbf{ZKVMs} (RISC Zero, SP1, Jolt) benefit naturally as they express computation as constraint systems compatible with our polynomial framework. \textbf{Calldata-constrained blockchains} (Ethereum L2s, BitVM) also benefit, as fewer commitments mean smaller proof transcripts and associated calldata costs.
 
-This is already implemented in-production in Garaga~\cite{grg} for CairoVM and is currently the standard for all pairing based ZK proofs on Starknet. The polynomial ring toolkit (Section~\ref{sec:polyring}) in gnark, submitted as a part of this work, will directly impact the \texttt{evmprecompiles/ecpair} precompile via \texttt{AssertMillerLoopAndFinalExpIsOne}.
+This is already implemented in-production in Garaga~\cite{grg} for CairoVM and is currently the standard for all pairing based ZK proofs on Starknet. The polynomial ring toolkit (Section~\ref{sec:prt}) in gnark, submitted as a part of this work, will directly impact the \texttt{evmprecompiles/ecpair} precompile via \texttt{AssertMillerLoopAndFinalExpIsOne}.
 
 \subsection{Implementation and Performance}
 

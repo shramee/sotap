@@ -3,21 +3,21 @@
 % ============================================================
 
 \section{Polynomial Ring Toolkit}
-\label{sec:polyring}
+\label{sec:prt}
 
 The protocol of Section~\ref{sec:iop} is packaged as a reusable toolkit in
 the \texttt{emulated} package of gnark~\cite{gnaF}, parameterised by any
 emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any \rev{monic} modulus
 polynomial $P \in \Fq[x]$. The toolkit operates in a recursive proof
 setting where the prover's computations are performed outside the circuit
-via \texttt{hints} (Section~\ref{sec:polyring:hints}), while the verifier's
+via \texttt{hints} (Section~\ref{sec:prt:hints}), while the verifier's
 checks are implemented as constraints inside the circuit.
 
 Refer to our fork at \url{https://anonymous.4open.science/r/tiny-gnark-DDCD} for code.
 
 % ----------------------------------------------------------
 \subsection{Ring Representation}
-\label{sec:polyring:rep}
+\label{sec:prt:rep}
 
 A ring element is essentially a coefficient slice \texttt{[]*Element[T]} in
 ascending degree order. A \texttt{nil} entry is treated as zero by
@@ -31,7 +31,7 @@ integer first and negating afterwards, rather than multiplying by the
 full-width field representative $q - c$.
 
 \subsubsection*{Example: BN254 $\Fe{12}$}
-\label{sec:polyring:rep:sparse}
+\label{sec:prt:rep:sparse}
 
 $P_{12}(x) = x^{12} - 18x^6 + 82$ has nine zero coefficients (stored as
 \texttt{nil}) and two small non-zero ones. The \texttt{modEvalFn} computes
@@ -40,7 +40,7 @@ keeping intermediate values small instead of multiplying by $q - 18$.
 
 % ----------------------------------------------------------
 \subsection{Hint Functions}
-\label{sec:polyring:hints}
+\label{sec:prt:hints}
 
 Hints allow defining computations outside of a circuit. A hint defines an
 annotated function in the circuit at compile time. Inputs and outputs are
@@ -56,7 +56,7 @@ corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
 
 % ----------------------------------------------------------
 \subsection{Algorithms and Implementation}
-\label{sec:polyring:api}
+\label{sec:prt:api}
 
 \subsubsection{API Reference}
 
@@ -104,7 +104,7 @@ Now verifiers work starts as described in Algorithm~\ref{alg:2r:verifier}, Polyn
 % ----------------------------------------------------------
 
 \subsection{Usage}
-\label{sec:polyring:usage}
+\label{sec:prt:usage}
 
 \begin{alltt}
 \gText{// Register the ring group once at initialisation}
@@ -121,7 +121,7 @@ rem := acc.Eval()        \gText{// multiply and return the remainder}
 
 % ----------------------------------------------------------
 \subsection{Implementation Details and Performance}
-\label{sec:polyring:performance}
+\label{sec:prt:performance}
 
 \subsubsection{Schoolbook vs Horner's Method for Polynomial Evaluation}
 \label{sec:emulated:flat}
