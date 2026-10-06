@@ -182,8 +182,6 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
     \State $e_\text{acc} \leftarrow e_\text{acc} + a_\text{rlc} * \texttt{EvalPoly}(R, x, f, W^2, c^{-q}, c^{q^2}, c^{-q^3})$
 \EndIf
 
-\Statex
-
 \State \Return $Q_\text{acc}(x) \stackrel{?}{=} e_\text{acc} \land R \stackrel{?}{=} 1$ \gComm{Polynomial identity and expected pairing output check}
 \end{algorithmic}
 \end{algorithm}
