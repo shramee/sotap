@@ -127,21 +127,17 @@ Solve Memory      &  231.77~MB &  118.61~MB & \textbf{48.8\%} \\
 
 Several natural extensions of this work remain open. First, our framework could
 be extended to additional curves beyond BN254 and BLS12--381, notably
-\textbf{BW6--761} for recursive proof chain verification on Ethereum.
-
-A further direction is exploring the technique for native field pairings, such
-as BLS12--377 inside BW6--761~\cite{PR1CS22} scalar fields, where the
+BW6--761 for recursive proof chain verification on Ethereum.
+\rev{Second, the technique could be applied to} native field pairings, such
+as BLS12--377 \rev{over the} BW6--761~\cite{PR1CS22} scalar \rev{field}, where the
 trade-off between batching savings and commitment costs warrants dedicated
 analysis.
 
-% \rev{Finally, the underlying technique generalizes beyond pairings to any setting
-% involving repeated operations over the same polynomial rings. Another interesting
-% instance is lattice-based cryptography in ZK-SNARKs: schemes such as ML-KEM and
-% ML-DSA operate in cyclotomic rings over $\mathbb{Z}_q[x]/(x^n + 1)$.
-% Though the small moduli typical of lattice based schemes don't require active
-% reductions, the polynomial identity testing would help in two significant ways.
-% One, skip the need to do the in-circuit NTT transforms, and two, provide reduced
-% coefficients ready for efficient packing for public inputs.
-
-% Exploring the cost-benefits of this approach in lattice-based ZK-SNARKs is another
-% promising direction for future work.}
+\rev{Finally, the underlying technique generalizes beyond pairings to any setting
+involving repeated operations over the same polynomial ring. Lattice-based
+schemes such as ML-KEM and ML-DSA operate in cyclotomic rings of the form
+$\mathbb{Z}_q[x]/(x^n + 1)$.
+Inside ZK proofs, our polynomial ring toolkit (Section~\ref{sec:prt}) could avoid
+in-circuit NTTs and defer reduction for  efficient packing of the public inputs.
+Exploring the costs and benefits of this approach in lattice-based instances is
+another promising direction for future work.}
