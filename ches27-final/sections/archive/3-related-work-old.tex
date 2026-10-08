@@ -1,14 +1,14 @@
 \section{Related Work}
 
-The landscape of efficient pairing verification in constraint systems has evolved through several key contributions. El Housni's \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} established the theoretical framework for optimizing pairings in Rank-1 Constraint Systems, introducing techniques for efficient Miller loop implementation and final exponentiation that exploit the unique properties of constraint-based computation models. This work demonstrated that operations traditionally considered expensive in native implementations could be restructured to achieve remarkable efficiency gains in arithmetized environments.
+The landscape of efficient pairing verification in constraint systems has evolved through several key contributions. El Housni's \textbf{Pairings in Rank-1 Constraint Systems}~\cite{ACNS:ElHousni23} established the theoretical framework for optimizing pairings in Rank-1 Constraint Systems, introducing techniques for efficient Miller loop implementation and final exponentiation that exploit the unique properties of constraint-based computation models. This work demonstrated that operations traditionally considered expensive in native implementations could be restructured to achieve remarkable efficiency gains in arithmetized environments.
 
 Feltroidprime's subsequent research on \textbf{enhanced extension field multiplication techniques}~\cite{FXFM23} introduced polynomial verification methods using the Schwartz-Zippel lemma for $\Fe{12}$ arithmetic operations. By representing extension field elements as polynomials and verifying their operations through polynomial arithmetic, this approach achieved significant performance improvements in the pairing computations, particularly for emulated pairing circuits where traditional field operations are costly.
 
-Novakovic and Eagen's work \textbf{On Proving Pairings}~\cite{OPP24} presented breakthrough optimization strategies that enable the elimination of final exponentiation overhead through residue witness techniques. Their approach demonstrates that two elements in $\Fe{12}$ can be proven equivalent without expensive exponentiation by introducing witness elements that satisfy specific algebraic relationships, effectively embedding the final exponentiation verification into the Miller loop computation itself.
+Novakovic and Eagen's work \textbf{On Proving Pairings}~\cite{EPRINT:NovEag24} presented breakthrough optimization strategies that enable the elimination of final exponentiation overhead through residue witness techniques. Their approach demonstrates that two elements in $\Fe{12}$ can be proven equivalent without expensive exponentiation by introducing witness elements that satisfy specific algebraic relationships, effectively embedding the final exponentiation verification into the Miller loop computation itself.
 
 \subsection{Pairings in R1CS -- Housni 2022}
 
-El Housni's seminal work~\cite{PR1CS22} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
+El Housni's seminal work~\cite{ACNS:ElHousni23} represents the first systematic exploration of pairing optimization within constraint-based computation models, providing techniques that extend beyond R1CS to benefit any arithmetized environment, including Starkware's Cairo VM\cite{cairo}.
 
 \subsubsection{Cost of inversions}
 
@@ -27,7 +27,7 @@ Housni notes that the cost of inversions is much lower in constraint systems, al
 
 \subsubsection{Affine coordinates}
 
-Since division cost about as much as multiplications, we can represent points in affine coordinates for lower operation counts. Point doubling and addition formulas are provided in section 6.1 of~\cite{PR1CS22}. Doubling costs 12C and addition costs 10C.
+Since division cost about as much as multiplications, we can represent points in affine coordinates for lower operation counts. Point doubling and addition formulas are provided in section 6.1 of~\cite{ACNS:ElHousni23}. Doubling costs 12C and addition costs 10C.
 
 \subsubsection{Avoid doubling}
 
@@ -44,7 +44,7 @@ Housni proposes representing the lines in the form $1 + \frac{b'x_P}{y_P} \cdot 
 % 1 + b' \cdot \frac{x_P}{y_P} \cdot w + c' \cdot \frac{1}{y_P} \cdot w^3
 % $$
 
-Terms $\frac{x_P}{y_P}$ and $\frac{1}{y_P}$ can be precomputed at the cost of 2C, and reused throughout the miller loop. Untwisting isomorphisms for this form are given on pages 15–16 in section 6.1 of~\cite{PR1CS22}.
+Terms $\frac{x_P}{y_P}$ and $\frac{1}{y_P}$ can be precomputed at the cost of 2C, and reused throughout the miller loop. Untwisting isomorphisms for this form are given on pages 15–16 in section 6.1 of~\cite{ACNS:ElHousni23}.
 This representation only \textbf{costs 30C}, that's a \textbf{30\% savings} over 39C for the original representation.
 
 \subsubsection{Performance}
@@ -53,7 +53,7 @@ Table \ref{tab:fq12_pr1cs} summarizes the arithmetic costs for $\Fe{12}$ as pres
 
 \begin{table}[h]
 \centering
-\caption{Arithmetic in Housni's paper\cite{PR1CS22}}
+\caption{Arithmetic in Housni's paper\cite{ACNS:ElHousni23}}
 \label{tab:fq12_pr1cs}
 \begin{tabular}{|c|c|c|c|c|c|}
 \hline
@@ -154,14 +154,14 @@ $\Fe{12}$ & 39C* & 27C* & 51C* & 31C* \\
 
 \subsection{Eliminating Final Exponentiation -- Novakovic \& Eagen 2024}
 
-The mathematical structure underlying pairing based cryptography involves equivalence classes. Tate pairings (as described in~\cite{OPP24} and~\cite{P4B19}) result in the output in the quotient group $F_{q^k}/(F_{q^k})^r$.
+The mathematical structure underlying pairing based cryptography involves equivalence classes. Tate pairings (as described in~\cite{EPRINT:NovEag24} and~\cite{P4B19}) result in the output in the quotient group $F_{q^k}/(F_{q^k})^r$.
 This requires the output of the Miller loop to be raised to a power of $(q^k-1)/r$. This step, called \textbf{the final exponentiation}, normalizes the Miller loop output by clearing the $r$-th residue part. This normalization ensures equivalent pairing outputs produce identical results.
 
 This operation is particularly expensive in extension fields like $\Fe{12}$, because $(q^{12}-1)/r$ becomes very large.
 
 \subsubsection{Equivalence class}
 
-Novakovic and Eagen~\cite{OPP24} highlight that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a residue--witness based approach.
+Novakovic and Eagen~\cite{EPRINT:NovEag24} highlight that the final exponentiation can be eliminated when proving pairings. The expensive exponentiation can be replaced with an efficient residue check. The key insight is that instead of normalizing pairing outputs through final exponentiation, we can directly verify equivalence using a residue--witness based approach.
 
 \textbf{Equivalence class representation}: Two elements $A, B \in \Fe{12}$ are equivalent in the pairing context if there exists some witness $c$ such that $A \cdot c^r = B$.
 
@@ -194,7 +194,7 @@ According to Hasse theorem~\cite{Sil09}, $q + 1 - r \leq 2\sqrt{q}$ for an ellip
 The exponentiation by r can be written as exponentiation by $q + 1 - t$. Where $t \leq 2\sqrt{q}$ is much smaller exponentiation in worst case. And the computation of $c^{q}$ is efficiently computed by exploiting the Frobenius endomorphisms.
 
 \subsubsection{Parameters for BN254 curve}
-Section 4.2 and 4.3 of~\cite{OPP24} dive into finding optimal parameters for the curve to establish $A \cdot c^\lambda = B$
+Section 4.2 and 4.3 of~\cite{EPRINT:NovEag24} dive into finding optimal parameters for the curve to establish $A \cdot c^\lambda = B$
 
 For Ethereum's BN254 curve, the optimal parameter is $\lambda = 6x + 2 + q - q^2 + q^3$, which decomposes into two efficiently computable components:
 
@@ -213,11 +213,11 @@ Table \ref{tab:pairing_performance} summarizes the performance impact of elimina
 
 \begin{table}[h]
 \centering
-\caption{Performance impact of residue witness check~\cite{OPP24}}
+\caption{Performance impact of residue witness check~\cite{EPRINT:NovEag24}}
 \label{tab:pairing_performance}
 \begin{tabular}{|c|c|c|c|}
 \hline
-\textbf{Computation} & \textbf{Full Pairing} & \textbf{Witness Check~\cite{OPP24}} & \textbf{Change} \\
+\textbf{Computation} & \textbf{Full Pairing} & \textbf{Witness Check~\cite{EPRINT:NovEag24}} & \textbf{Change} \\
 \hline
 \multicolumn{4}{|c|}{} \\
 \multicolumn{4}{|c|}{\textbf{Emulated BN254 pairing}} \\

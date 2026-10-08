@@ -32,7 +32,7 @@ The prover computes quotients $Q_i$ and remainders $R_i$ for each equation in Se
 
 \subsection{Verifier's Algorithms}
 
-The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
+The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{EPRINT:NovEag24}, the $W$ (27th root of unity), the remainder array $\mathcal{R}$, and $Q_\text{acc}$ from the prover. Using challenge $z$ from the first round and a freshly sampled $x$, it mirrors the prover's pairing loop while evaluating each polynomial at $x$, accumulating the RLC $e_\text{acc}$. The final check is Equation~\ref{eq:iop-batched}. The full verifier is given in Algorithm~\ref{alg:2r:verifier}.
 
 
 \begin{algorithm}[H]
@@ -200,7 +200,7 @@ The verifier receives $P \in \G_1$, $Q \in \G_2$, residue witness $c$~\cite{OPP2
 
 \subsection{Fiat-Shamir Transformation} \label{sec:iop:fs}
 
-Applying the Fiat-Shamir transformation~\cite{fiatshamir} with random oracle $H$ to the two-round protocol of Section~\ref{sec:iop:interactive} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{IOP-NI}, where $m=2$ is the number of oracle queries (one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound.
+Applying the Fiat-Shamir transformation~\cite{C:FiaSha86} with random oracle $H$ to the two-round protocol of Section~\ref{sec:iop:interactive} gives a non-interactive proof with knowledge soundness $\delta_s + 3(m^2+1)2^{-\lambda}$~\cite{TCC:BenChiSpo16}, where $m=2$ is the number of oracle queries (one per round) and $\lambda$ is the challenge bit-length; Section~\ref{sec:iop:soundness} instantiates this bound.
 
 \subsubsection{Non-Interactive Proof} \label{sec:iop:noninteractive}
 
@@ -215,16 +215,16 @@ The soundness bound of Theorem~\ref{thm:soundness} carries over because every pr
 The protocol is agnostic to how $H$ is realised; the cost of absorbing one $\Fq$ element into the transcript varies across execution environments. We therefore qualify the committed element counts of Section~\ref{sec:ops:comp-analysis} and Table~\ref{tab:garaga_performance} for our two instantiations.
 
 \paragraph{CairoVM (Poseidon).} \label{sec:iop:fs:cairo}
-Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon~\cite{poseidon} sponge; $\Fq$ elements are represented by 96-bit limbs, with two limbs packed into each \texttt{Felt252} absorption. Both hashing cost and calldata therefore scale linearly with the number of committed elements, which is why the COMMITS column of Table~\ref{tab:garaga_performance} is reported alongside modular operations: halving the committed elements roughly halves the transcript-related share of VM steps and the hint calldata.
+Prover-supplied hints are passed as transaction calldata and absorbed into a running Poseidon~\cite{USENIX:GKRRS21} sponge; $\Fq$ elements are represented by 96-bit limbs, with two limbs packed into each \texttt{Felt252} absorption. Both hashing cost and calldata therefore scale linearly with the number of committed elements, which is why the COMMITS column of Table~\ref{tab:garaga_performance} is reported alongside modular operations: halving the committed elements roughly halves the transcript-related share of VM steps and the hint calldata.
 
-\paragraph{Faster Hash Verification~\cite{FstHV} in gnark.} \label{sec:iop:fs:gnark}
-Belling et al.~\cite{FstHV} provide commitment schemes that allow the prover to compute commitment natively (outside the circuit) and attach an Argument of Knowledge to prove correctness. The scheme is described for both Groth16 and PLONK (\cite{FstHV} Section 6.1 and 6.2). Belling later extends this to support multiple commitment for multiple rounds for gnark in~\cite{mrmc}.
+\paragraph{Faster Hash Verification~\cite{CCS:BelSolBeg23} in gnark.} \label{sec:iop:fs:gnark}
+Belling et al.~\cite{CCS:BelSolBeg23} provide commitment schemes that allow the prover to compute commitment natively (outside the circuit) and attach an Argument of Knowledge to prove correctness. The scheme is described for both Groth16 and PLONK (\cite{CCS:BelSolBeg23} Section 6.1 and 6.2). Belling later extends this to support multiple commitment for multiple rounds for gnark in~\cite{mrmc}.
 
 This is made available via \texttt{api.Commit} calls in gnark. The costs are backend-specific.
 
-\paragraph{Groth16 in gnark.} Each commitment costs two $\G_1$ MSMs of size equal to the number of committed wires (\cite{FstHV}~Section~6.1). Proof size grows by one $\G_1$ point per commitment, plus a single knowledge proof folded across all commitments. Verification gains one two-pairing product check (the knowledge proof) and one extra scalar multiplication in the public-input MSM per commitment. None of this touches the constraint count, since the commitment lives entirely outside the arithmetization.
+\paragraph{Groth16 in gnark.} Each commitment costs two $\G_1$ MSMs of size equal to the number of committed wires (\cite{CCS:BelSolBeg23}~Section~6.1). Proof size grows by one $\G_1$ point per commitment, plus a single knowledge proof folded across all commitments. Verification gains one two-pairing product check (the knowledge proof) and one extra scalar multiplication in the public-input MSM per commitment. None of this touches the constraint count, since the commitment lives entirely outside the arithmetization.
 
-\paragraph{PLONK in gnark.} The overhead shifts almost entirely into the constraint system instead. Each committed wire adds one constraint (\cite{FstHV}~Section~6.2), so cost scales with the number of committed \emph{wires}. Proof size grows by one $\G_1$ element per commitment. Verification pays no extra pairing: the committed polynomial's evaluation is folded into the batched KZG opening that PLONK already performs, so the marginal verifier cost is a handful of field operations.
+\paragraph{PLONK in gnark.} The overhead shifts almost entirely into the constraint system instead. Each committed wire adds one constraint (\cite{CCS:BelSolBeg23}~Section~6.2), so cost scales with the number of committed \emph{wires}. Proof size grows by one $\G_1$ element per commitment. Verification pays no extra pairing: the committed polynomial's evaluation is folded into the batched KZG opening that PLONK already performs, so the marginal verifier cost is a handful of field operations.
 
 \subsection{Security Analysis}
 
@@ -290,7 +290,7 @@ $$\Pr[P_{\mathrm{err}}(z, x) = 0] \leq \frac{\deg_z(P_{\mathrm{err}}) + \deg_x(P
 $$\delta_s \leq \frac{66 + 256}{2^{254}} < \frac{2^9}{2^{254}} = 2^{-245}.$$
 
 \textbf{Non-interactive proof via Fiat-Shamir} \label{sec:iop:soundness:fs}: From Section~\ref{sec:iop:fs}, under the random oracle model the
-knowledge soundness error becomes~\cite{IOP-NI}:
+knowledge soundness error becomes~\cite{TCC:BenChiSpo16}:
 $$\delta_s' = \delta_s + 3(m^2 + 1) \cdot 2^{-\lambda}$$
 where $m = 2$ (one query per round) and $\lambda = 254$ (challenge bit-length), giving
 $$\delta_s' \leq 2^{-245} + 15 \cdot 2^{-254} < 2^{-244}.$$

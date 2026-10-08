@@ -1,6 +1,6 @@
 \section{Pairing Operations as Polynomials}
 
-Algorithm~\ref{alg:pairing} gives the pairing computation combining El Housni's R1CS optimizations~\cite{PR1CS22} with Novakovic-Eagen's residue witness technique~\cite{OPP24}. The 27th root of unity $W$ scales the Miller loop output $f$ to be a cubic residue (see~\cite{OPP24} §4.3); if $f$ is not already a cubic residue, multiplying by $W^w$, $w\in\{1,2\}$ corrects this.
+Algorithm~\ref{alg:pairing} gives the pairing computation combining El Housni's R1CS optimizations~\cite{ACNS:ElHousni23} with Novakovic-Eagen's residue witness technique~\cite{EPRINT:NovEag24}. The 27th root of unity $W$ scales the Miller loop output $f$ to be a cubic residue (see~\cite{EPRINT:NovEag24} §4.3); if $f$ is not already a cubic residue, multiplying by $W^w$, $w\in\{1,2\}$ corrects this.
 
 Our contribution is to express each step of this algorithm as a single multi-operand polynomial product verified via the Schwartz-Zippel lemma, rather than as a sequence of individual binary multiplications as in~\cite{FXFM23}.
 
@@ -59,7 +59,7 @@ Our contribution is to express each step of this algorithm as a single multi-ope
 
 \subsection{Comparative Analysis~\label{sec:ops:comp-analysis}}
 
-We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{PR1CS22}, reducing their evaluation cost from 12C to 4C. All compared schemes---\cite{PR1CS22}, \cite{FXFM23}, and ours---exploit this sparseness of the Miller line functions; the corresponding savings are included in every constraint count below.
+We compare the two schemes for a 3-pair Miller loop zero-bit step (the most common case in BN254's NAF\cite{naf} representation of $s = 6t+2$). Here $F \in \Fe{12}$ is the accumulator, $L_i \in \text{Sparse}_{01379}$ are the three doubling line functions, $R \in \Fe{12}$ is the updated accumulator, and $Q$ is the quotient polynomial. $\text{Sparse}_{01379}$ denotes the subspace of $\Fe{12}$ elements whose only nonzero coefficients are at degrees $0,1,3,7,9$---the form that BN254 line functions naturally take~\cite{ACNS:ElHousni23}, reducing their evaluation cost from 12C to 4C. All compared schemes---\cite{ACNS:ElHousni23}, \cite{FXFM23}, and ours---exploit this sparseness of the Miller line functions; the corresponding savings are included in every constraint count below.
 
 \subsubsection{Previous scheme}
 
@@ -99,14 +99,14 @@ Table \ref{tab:miller_loop_comparison} compares the computational costs and comm
 \hline
 \textbf{Scheme} & \textbf{Constraints} & \textbf{$\Fq$ Commitments} & \textbf{Improvement} \\
 \hline
-\cite{PR1CS22} & 132C & --- & Baseline \\
+\cite{ACNS:ElHousni23} & 132C & --- & Baseline \\
 \hline
 \cite{FXFM23} & 76C* & 48 & 42\% \\
 \hline
 \textbf{Our scheme} & \textbf{41C}* & \textbf{12} & \textbf{69\%} \\
 \hline
 \multicolumn{4}{|c|}{} \\
-\multicolumn{4}{|l|}{\cite{PR1CS22}: 1 square (36C) + 3 sparse mul (3$\times$30C) = 132C} \\
+\multicolumn{4}{|l|}{\cite{ACNS:ElHousni23}: 1 square (36C) + 3 sparse mul (3$\times$30C) = 132C} \\
 \multicolumn{4}{|l|}{\cite{FXFM23}: 5 evals (5$\times$12C) + 3 line evals (3$\times$4C) + 4 muls (4$\times$1C) = 76C} \\
 \multicolumn{4}{|l|}{Our scheme: 2 evals (2$\times$12C) + 3 line evals (3$\times$4C) + 5C (muls + RLC) = 41C} \\
 \multicolumn{4}{|l|}{*Costs exclude Fiat-Shamir commitment overhead} \\
@@ -213,7 +213,7 @@ Q \textit{(Amortized See \ref{sec:iop:batching})} & $\deg(\text{LHS}) - \deg(P_{
 
 \subsubsection{Final Exponentiation Equation}\label{sec:op:finx}
 
-The final exponentiation check is handled as described in~\cite{OPP24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentiation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
+The final exponentiation check is handled as described in~\cite{EPRINT:NovEag24}. The equation handles the cubic scale factor multiplication, and \textbf{Frobenius component} ($q - q^2 + q^3$) of the final exponentiation (lines \ref{pr:ml:27r}, \ref{pr:ml:27r2} and \ref{pr:ml:fe} in Algorithm \ref{alg:pairing}). The verification equation looks like:
 
 \begin{equation}\label{eq:op:fx}
 F(x) \cdot c^{-q}(x) \cdot c^{q^2}(x) \cdot c^{-q^3}(x) \cdot W^w(x) = 1 + Q(x) \cdot P_{12}(x)

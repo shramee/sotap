@@ -4,14 +4,14 @@ Blockchain technology continues to mature with improving scalability and infrast
 
 \subsection{Motivation}
 
-Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{Gro16}, PLONK\cite{plnk19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{kzg10}.
+Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{EC:Groth16}, PLONK\cite{EPRINT:GabWilCio19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{AC:KatZavGol10}.
 
 However, \textbf{pairings are computationally intensive}. This creates critical bottlenecks in two important deployment contexts:
 
 \begin{enumerate}
 \item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive during peak network congestion.
 
-\item \textbf{Arithmetized computation systems} (R1CS~\cite{r1cs13}, Plonkish~\cite{plnk19}, Cairo AIR~\cite{cairo21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
+\item \textbf{Arithmetized computation systems} (R1CS~\cite{EC:GGPR13}, Plonkish~\cite{EPRINT:GabWilCio19}, Cairo AIR~\cite{EPRINT:GolPapRia21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
 \end{enumerate}
 
 In such contexts, an efficient proof system for pairing correctness can replace expensive native execution inside the constrained environment.

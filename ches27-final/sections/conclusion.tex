@@ -60,9 +60,9 @@ This work situates the same technique within gnark---the standard framework for
 field emulation in arithmetized circuits---providing a systematic benchmark against
 an industry baseline.
 
-In Table~\ref{tab:garaga_performance}, the \emph{Before} column is Garaga verifying each extension field multiplication individually via the polynomial identity testing of~\cite{FXFM23}; the \emph{After} column is Garaga using our consolidated relations. MULMOD/ADDMOD count modular field operations, COMMITS count Poseidon~\cite{poseidon} input commitments for Fiat-Shamir, and VM STEPS count CairoVM CPU cycles---together a low-level estimate of computational complexity inside the virtual machine.
+In Table~\ref{tab:garaga_performance}, the \emph{Before} column is Garaga verifying each extension field multiplication individually via the polynomial identity testing of~\cite{FXFM23}; the \emph{After} column is Garaga using our consolidated relations. MULMOD/ADDMOD count modular field operations, COMMITS count Poseidon~\cite{USENIX:GKRRS21} input commitments for Fiat-Shamir, and VM STEPS count CairoVM CPU cycles---together a low-level estimate of computational complexity inside the virtual machine.
 
-\paragraph{Our polynomial ring toolkit} implementation in gnark is benchmarked in Table~\ref{tab:main_performance}, measured via a 3-pairing product check (see below) on BN254 and BLS12--381. We compare our results against a \textbf{gnark baseline} using the upstream \texttt{emulated} package~\cite{gnark}, which represents the state-of-the-art for emulated pairings and includes the optimizations of~\cite{PR1CS22} and~\cite{OPP24}.
+\paragraph{Our polynomial ring toolkit} implementation in gnark is benchmarked in Table~\ref{tab:main_performance}, measured via a 3-pairing product check (see below) on BN254 and BLS12--381. We compare our results against a \textbf{gnark baseline} using the upstream \texttt{emulated} package~\cite{gnark}, which represents the state-of-the-art for emulated pairings and includes the optimizations of~\cite{ACNS:ElHousni23} and~\cite{EPRINT:NovEag24}.
 
 The \textbf{This Work} numbers were obtained by compiling the exact same benchmark against our fork, replacing the baseline's extension field multiplications with our new toolkit. No changes were made to the circuit definition or test harness. Both implementations exploit the sparseness of the Miller line functions (Section~\ref{sec:ops:comp-analysis}). The excess memory savings come from the commitment and deferred-check pipeline: fewer deferred checks reduce both committed values and hint data payloads.
 
@@ -129,7 +129,7 @@ Several natural extensions of this work remain open. First, our framework could
 be extended to additional curves beyond BN254 and BLS12--381, notably
 BW6--761 for recursive proof chain verification on Ethereum.
 Second, the technique could be applied to native field pairings, such
-as BLS12--377 over the BW6--761~\cite{PR1CS22} scalar field, where the
+as BLS12--377 over the BW6--761~\cite{ACNS:ElHousni23} scalar field, where the
 trade-off between batching savings and commitment costs warrants dedicated
 analysis.
 

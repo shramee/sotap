@@ -1,7 +1,7 @@
 \section{Background}
 
 \begin{algorithm}
-\caption{Optimal Ate pairing over Barreto-Naehrig curves~\cite{hsp10}}
+\caption{Optimal Ate pairing over Barreto-Naehrig curves~\cite{PAIRING:BGMORT10}}
 \begin{algorithmic}[1]
 \Require{$P \in \G_1, Q \in \G_2$}
 \Ensure{$a_{opt}(Q, P)$}
@@ -29,10 +29,10 @@
 
 \subsection{Pairing Computation}
 
-An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable. We will focus on the optimal ate pairing~\cite{hsp10} over Barreto-Naehrig (BN) curves, which is widely used due to its efficiency.
+An elliptic curve pairing is a non-degenerate bilinear map $e: \G_1 \times \G_2 \rightarrow \G_T$, where $\G_1$ and $\G_2$ are groups of points on elliptic curves over finite fields, and $\G_T$ is a multiplicative group in an extension field. For practical cryptographic applications, we require that this map be efficiently computable. We will focus on the optimal ate pairing~\cite{PAIRING:BGMORT10} over Barreto-Naehrig (BN) curves, which is widely used due to its efficiency.
 We will specifically use the Ethereum's BN254 curve, defined over a 254-bit prime field $\Fq$, with groups $\G_1, \G_2$ of order $r$ and target group $\G_T$ contained in the 12th extension field $\Fe{12}$.
 
-BN254 provides no more than 100 bits of security and BLS12--381 provides roughly 126 bits~\cite{BarDuq19,pfc}. We benchmark BLS12--381 in table~\ref{tab:main_performance}.
+BN254 provides no more than 100 bits of security and BLS12--381 provides roughly 126 bits~\cite{JC:BarDuq19,pfc}. We benchmark BLS12--381 in table~\ref{tab:main_performance}.
 
 The computation of an optimal ate pairing---the focus of our implementation---consists of two primary phases:
 
@@ -52,7 +52,7 @@ This probabilistic bound becomes negligible for cryptographically sized fields w
 
 \subsection{Computation Models}
 
-We implement and benchmark our toolkit in gnark~\cite{gnark}, the industry-standard Go library for arithmetized circuit development, targeting both SCS (Sparse Constraint System, the native Plonkish backend) and R1CS constraint systems. We map each field multiplication to a constraint (denoted by \textbf{C}) to maintain compatibility with the R1CS model used in established literature. In R1CS~\cite{Gro16}, prover complexity is dominated by multiplication gates while additions are free. To synchronize our theoretical analysis with the benchmarks provided by El Housni~\cite{PR1CS22}, we define our cost metric based on field multiplications.
+We implement and benchmark our toolkit in gnark~\cite{gnark}, the industry-standard Go library for arithmetized circuit development, targeting both SCS (Sparse Constraint System, the native Plonkish backend) and R1CS constraint systems. We map each field multiplication to a constraint (denoted by \textbf{C}) to maintain compatibility with the R1CS model used in established literature. In R1CS~\cite{EC:Groth16}, prover complexity is dominated by multiplication gates while additions are free. To synchronize our theoretical analysis with the benchmarks provided by El Housni~\cite{ACNS:ElHousni23}, we define our cost metric based on field multiplications.
 
 \subsubsection{R1CS Cost Model}
 
@@ -71,4 +71,4 @@ We measure computational cost in terms of \textit{constraints} (denoted by \text
 
 Operations that are traditionally expensive (inversions, divisions) become cheap in constraint systems when computed via witnesses. This inverts traditional optimization priorities: we can afford inversions to save multiplications, enabling affine coordinate systems and other techniques impractical in native implementations.
 
-Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems}~\cite{PR1CS22} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
+Recognizing and exploiting these unique computational properties is essential for unlocking hidden performance potential. Youssef El Housni's pioneering work \textbf{Pairings in Rank-1 Constraint Systems}~\cite{ACNS:ElHousni23} represents, to our knowledge, the first systematic exploration of these optimization opportunities, providing a breakthrough in the practicality of recursive proving by thoughtfully leveraging the distinctive cost model inherent to constraint-based systems.
