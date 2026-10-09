@@ -1,0 +1,31 @@
+\section{Introduction}
+
+Blockchain technology continues to mature with improving scalability and infrastructure. However, privacy remains a significant barrier to entry for many users and applications. Zero-knowledge proofs (ZKPs) have emerged as a powerful solution to this challenge.
+
+\subsection{Motivation}
+
+Elliptic curve pairings represent fundamental building blocks for numerous cryptographic systems including Groth16\cite{EC:Groth16}, PLONK\cite{EPRINT:GabWilCio19}, BLS signature schemes\cite{bls05}, and KZG polynomial commitment schemes\cite{AC:KatZavGol10}.
+
+However, \textbf{pairings are computationally intensive}. This creates critical bottlenecks in two important deployment contexts:
+
+\begin{enumerate}
+\item \textbf{Resource-constrained virtual machines} (Ethereum VM, BitVM, ZKVMs): Computation is metered — each operation incurs gas costs. A single pairing verification requiring thousands of field operations becomes economically prohibitive during peak network congestion.
+
+\item \textbf{Arithmetized computation systems} (R1CS~\cite{EC:GGPR13}, Plonkish~\cite{EPRINT:GabWilCio19}, Cairo AIR~\cite{EPRINT:GolPapRia21}): Each operation must be represented algebraically, adding significant prover overhead beyond native execution costs.
+\end{enumerate}
+
+In such contexts, an efficient proof system for pairing correctness can replace expensive native execution inside the constrained environment.
+
+\subsection{Our Contribution}
+
+We present a public-coin interactive proof system for verifying pairing computations that consolidates verification into unified polynomial relationships under the Schwartz-Zippel lemma. By treating complete Miller loop iterations as single polynomial relationships rather than sequences of individual extension field operations~\cite{FXFM23}, our approach achieves:
+
+\begin{itemize}
+\item \textbf{35\% reduction} in SCS constraints (1,592,440~$\to$~1,035,550 for a 3-pairing BN254 Groth16 verification check; 33\% on BLS12--381)
+\item \textbf{53\% reduction} in committed elements (571,125~$\to$~269,616; 54.5\% on BLS12--381)
+\item up to $\sim$\textbf{39\% reduction} in compile-time memory and up to \textbf{48\%} in solver memory
+\end{itemize}
+
+Our key insight is that instead of verifying individual field operations separately, we can verify entire Miller loop iterations as single polynomial identities. This consolidation dramatically reduces both the number of modular operations required and the communication overhead from intermediate variable commitment.
+
+As a reusable artefact of independent interest, we also contribute a \textbf{polynomial ring toolkit} for gnark's emulated arithmetic package. The toolkit packages the two-round interactive proof system into a clean API---a single \texttt{NewPolyRingCheck} call registers a modulus, \texttt{MulPolyRings} submits multiplications with deferred verification, and \texttt{performDeferredRingChecks} closes the circuit with two \texttt{api.Commit} challenges. Atop this, the \texttt{PolyRingAccumulator} provides a higher-level interface for building product chains: factors are enqueued via \texttt{Mul}, squarings via \texttt{Sqr}, and the accumulated product is evaluated lazily through \texttt{Eval}, with optional automatic degree-bounding to keep intermediate products manageable.

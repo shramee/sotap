@@ -1,7 +1,4 @@
-\documentclass[journal=tches,submission]{iacrtrans}
-%%%% NOTES:
-% - Change "submission" to "final" for camera-ready version
-% - Add "spthm" for LNCS-like theorems if needed
+\documentclass[journal=tches,final]{iacrtrans}
 
 %%%% 2. PACKAGES %%%%
 \usepackage{amsmath,amssymb,amsthm}
@@ -9,7 +6,6 @@
 \usepackage{url}
 \usepackage[table]{xcolor}
 \usepackage{alltt}
-\input{revision/revision-markup}
 
 \usepackage{algorithm}
 \usepackage{algorithmicx, algpseudocode}
@@ -56,18 +52,13 @@
 }
 
 %%%% 3. AUTHOR, INSTITUTE %%%%
-\author{Shramee Srivastav\inst{1}}
+\author{Shramee Srivastav}
 \institute{
   MIST.cash, Singapore, Singapore, \email{shramee@proton.me}
 }
-%%%% NOTES:
-% - ORCID can be added in camera-ready version if needed
-% - City name is required for indexation
 
 %%%% 4. TITLE %%%%
 \title{Pairing Proofs and Polynomial Ring Toolkit}
-%%%% NOTES:
-% - If title is too long, provide running title: \title[Short]{Long}
 
 \emergencystretch=1em
 
@@ -93,8 +84,5 @@
 %%%% 8. BIBLIOGRAPHY %%%%
 \bibliographystyle{alpha}
 \bibliography{references}
-%%%% NOTES
-% - Consider using abbrev3.bib and crypto.bib from https://cryptobib.di.ens.fr/
-% - Ensure all references are complete and properly formatted
 
 \end{document}

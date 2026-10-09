@@ -1,0 +1,169 @@
+% ============================================================
+% Section: Polynomial Ring Toolkit
+% ============================================================
+
+\section{Polynomial Ring Toolkit}
+\label{sec:prt}
+
+The protocol of Section~\ref{sec:iop} is packaged as a reusable toolkit in
+the \texttt{emulated} package of gnark~\cite{gnaF}, parameterised by any
+emulated field $\Fq$ (via \texttt{FieldParams} type $T$) and any monic modulus
+polynomial $P \in \Fq[x]$. The toolkit operates in a recursive proof
+setting where the prover's computations are performed outside the circuit
+via \texttt{hints} (Section~\ref{sec:prt:hints}), while the verifier's
+checks are implemented as constraints inside the circuit.
+
+Refer to our fork at \url{https://github.com/mistcash/ppprt} for code.
+
+% ----------------------------------------------------------
+\subsection{Ring Representation}
+\label{sec:prt:rep}
+
+A ring element is essentially a coefficient slice \texttt{[]*Element[T]} in
+ascending degree order. A \texttt{nil} entry is treated as zero by
+\texttt{InnerProductNoReduce}---the term is skipped entirely---so sparse
+polynomials carry no wasted constraint variables.
+
+The optional \texttt{modEvalFn} of type
+$\texttt{EvalFnType[T]} = ([\texttt{*Element[T]}]) \to \texttt{*Element[T]}$
+allows handling small-integer coefficients efficiently by multiplying by the small positive
+integer first and negating afterwards, rather than multiplying by the
+full-width field representative $q - c$.
+
+\subsubsection*{Example: BN254 $\Fe{12}$}
+\label{sec:prt:rep:sparse}
+
+$P_{12}(x) = x^{12} - 18x^6 + 82$ has nine zero coefficients (stored as
+\texttt{nil}) and two small non-zero ones. The \texttt{modEvalFn} computes
+$P_{12}(\alpha) = \texttt{MulConst}(\alpha^0, 82) + \texttt{Neg}(\texttt{MulConst}(\alpha^6, 18)) + \alpha^{12}$,
+keeping intermediate values small instead of multiplying by $q - 18$.
+
+% ----------------------------------------------------------
+\subsection{Hint Functions}
+\label{sec:prt:hints}
+
+Hints allow defining computations outside of a circuit. A hint defines an
+annotated function in the circuit at compile time. Inputs and outputs are
+injected at the solving time. We define these two hints to implement the 
+prover's steps in the two-round protocol of Section~\ref{sec:iop:interactive}.
+
+\textbf{\texttt{polyRingMulHint}} implements \textsc{PolyMulDiv}: it multiplies the input polynomials, divides
+by $P$ to obtain $(Q, R)$.
+
+\textbf{\texttt{quotientsRLCHint}} computes the accumulated quotient
+$Q_{\mathrm{acc}} = \sum_{i} z^i \cdot Q_i \bmod q$ coefficient-wise,
+corresponding to the prover's step in Algorithm~\ref{alg:2r:prover}.
+
+% ----------------------------------------------------------
+\subsection{Algorithms and Implementation}
+\label{sec:prt:api}
+
+\subsubsection{API Reference}
+
+Five functions cover the full lifecycle of a ring group: registration, per-operation multiplication, chained accumulation, extra commitment inputs, and finalisation. The three subsections below trace how a concrete circuit, BN254 pairing verification, calls these: one shared skeleton, prover work running inline within it, verifier work deferred to its end.
+
+\paragraph{\texttt{NewPolyRingCheck(mod, modEvalFn)}}
+Registers a \emph{ring group}: a monic modulus polynomial $P$ paired with an optional
+small-coefficient evaluator \texttt{modEvalFn}.  Returns a
+\texttt{*PolyRingGroupChecks} handle shared by every multiplication under that
+modulus; multiple groups with different moduli may coexist in the same circuit.
+
+\paragraph{\texttt{MulPolyRings(group, $A_1,\ldots,A_k$)}}
+Computes $R = (\prod_j A_j) \bmod P$ outside the circuit via
+\texttt{polyRingMulHint} (prover), range-checks $R$'s limbs inside the circuit
+(verifier), and enqueues the tuple $(A_j; R; Q)$ in the group's deferred check
+list.  Returns $R$ immediately so callers can continue building the circuit.
+
+\paragraph{\texttt{PolyRingAccumulator}}
+A helper that accumulates a product chain $\prod_i F_i$ and flushes to
+\texttt{MulPolyRings} automatically when the accumulated degree would exceed a
+configurable bound \texttt{targetDeg}, avoiding excessive hint call overhead.
+\texttt{Mul} enqueues one factor; \texttt{Sqr} enqueues the current state
+twice; \texttt{Eval} forces an immediate flush and returns the remainder.
+
+\paragraph{\texttt{ToCommit($e_1,\ldots$)}}
+Adds extra elements to the first commitment (the one that derives challenge
+$z$).  Required for hinted values—such as the residue witness $c$ in pairing
+checks—whose correctness is asserted \emph{inside} the polynomial identity
+protocol itself, so they must be absorbed before $z$ is sampled.
+
+\paragraph{\texttt{performDeferredRingChecks} (internal)}
+Called once by the gnark backend at circuit finalisation.  Implements 
+Equation~\eqref{eq:iop-batched} via two sequential \texttt{api.Commit} calls
+(Section~\ref{sec:iop:fs:gnark}), producing $z$ then $x$, followed by one
+\texttt{AssertIsEqual} per group.  No in-circuit multiplications over ring
+elements occur before this point beyond the remainder range-checks.
+
+\subsubsection{Shared Circuit Skeleton}
+Algorithms~\ref{alg:2r:prover} and~\ref{alg:2r:verifier} walk the identical Miller loop structure, differing only in what happens at each step: the prover computes $(Q_i, R_i)$, the verifier checks them. The implementation exploits this by using a single circuit function per curve, \texttt{sw\_bn254/pairing.go} and \texttt{sw\_bls12381/pairing.go}, that traces this shared skeleton once. At every step the code calls \texttt{MulPolyRings} (via \texttt{PolyRingAccumulator}) with the same operands both algorithms process. Prover's work is performed during the witness generation phase, while the verifier's work is performed by the circuit's constraints and commitment API (Section~\ref{sec:iop:fs:gnark}).
+
+\subsubsection{Prover's and Verifier's Work}
+Each \texttt{MulPolyRings} call triggers \texttt{polyRingMulHint} to prepare $Q_i$, $R_i$ and queue the deferred check. This is Algorithm~\ref{alg:2r:prover}'s work, executed inline during witness generation. The remainder $R_i$ is returned to the caller so the circuit can continue building. Then \texttt{performDeferredRingChecks} calls \texttt{api.Commit} with all $R_i$ to obtain the challenge $z$. Then it calls \texttt{quotientsRLCHint} to get $Q_\text{acc}$. After $Q_\text{acc}$, second commit absorbs $z$ and $Q_\text{acc}$ to produce $x$.
+Now verifiers work starts as described in Algorithm~\ref{alg:2r:verifier}, Polynomials $R_i$ and $Q_\text{acc}$ are evaluated at $x$, and Equation~\eqref{eq:iop-batched} is verified using the Schwartz Zippel lemma with one \texttt{AssertIsEqual} call.
+
+% ----------------------------------------------------------
+
+\subsection{Usage}
+\label{sec:prt:usage}
+
+\begin{alltt}
+\gText{// Register the ring group once at initialisation}
+fp, _ := emulated.NewField[emulated.BN254Fp](api)
+modPoly := fp.MakePoly(82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0, 1)
+ring := fp.NewPolyRingCheck(modPoly, nil)
+\gText{// Operations on ring elements A, B, C}
+res, _ = fp.MulPolyRings(ring, A, B, C) \gText{// compute (A·B·C)}
+\gText{// Accumulate a product chain}
+acc := f.NewPolyRingAccumulator(ring, targetDeg)
+acc.Mul(A).Mul(B).Sqr()  \gText{// enqueue (A·B)² without multiplying yet}
+rem := acc.Eval()        \gText{// multiply and return the remainder}
+\end{alltt}
+
+% ----------------------------------------------------------
+\subsection{Implementation Details and Performance}
+\label{sec:prt:performance}
+
+\subsubsection{Schoolbook vs Horner's Method for Polynomial Evaluation}
+\label{sec:emulated:flat}
+
+Horner's method for evaluations in \texttt{EvalPoly} across emulated elements causes a linear increase in the limbs size and count per coefficient.
+This necessitates reductions after each multiplication.
+Instead, we cache powers of the evaluation point $x$ in $\mathcal{X} = (x^0, x^1, \ldots, x^d)$ and evaluate each polynomial as an inner product of $\mathcal{X}$ and the coefficient array $\mathbf{F}$:
+$$\mathcal{X} \cdot \mathbf{F} = \mathcal{X}_0 \cdot F_0 + \mathcal{X}_1 \cdot F_1 + \cdots + \mathcal{X}_d \cdot F_d$$
+
+In the emulated field context, Horner's method evaluations are replaced by this inner product with $\mathcal{X}$. This allows us to use the inner product optimization described below.
+
+\subsubsection{Native field operations for inner products}
+
+Modular reductions can be deferred or entirely elided for operations expressible as inner products, such as polynomial evaluations and random linear combinations. This optimization leverages the capacity headroom provided by representing small emulated limbs (e.g., 64-bit limbs) within a significantly larger native field element.
+
+\textbf{Deferred Reduction:} Intermediate scalars are permitted to grow over the integers $\mathbb{Z}$ during limb-wise multiplications and linear accumulations.
+
+\textbf{Preservation of Identity:} Algebraic identities are strictly preserved provided the maximum accumulated limb magnitude remains bounded below the native characteristic $p$.
+
+\textbf{Handling Asymmetry:} In circuits with asymmetric multiplicative depths, operands may accumulate as disparate polynomial multiples of the emulated characteristic $p_{\text{emul}}$. Consequently, a terminal single-element reduction suffices for equivalence testing, bypassing the constraint overhead of intermediate normalization.
+
+\begin{lemma}[Overflow safety for deferred reduction]\label{lem:overflow}
+Let $\Fq$ be emulated with limbs of width $b$ bits inside a native field $\F_p$.
+Consider evaluating a degree-$d$ polynomial via an inner product over the cached
+power vector $\mathcal{X}$.
+Since limbs are accumulated independently, each result-limb is a sum of $d+1$
+products of two $b$-bit values, so its magnitude is bounded by $2^{\beta}$ with $\beta = 2b + \lceil\log_2(d+1)\rceil$.
+
+The deferred single-element reduction is safe whenever $\beta < \log_2 p$.
+\end{lemma}
+
+\begin{corollary}[BN254 pairing instantiation]\label{cor:overflow-bn254}
+For BN254 pairing verification: $b=64$, $d \leq 256$, and $p \approx 2^{254}$.
+Then
+\[
+  \beta \;=\; 2 \cdot 64 + \lceil\log_2 257\rceil \;=\; 128 + 9 \;=\; 137 \;<\; 254,
+\]
+so the deferred reduction is safe.
+\end{corollary}
+
+Beyond this static bound, the implementation tracks each element's overflow at
+compile time and \texttt{InnerProductNoReduce} inserts a reduction whenever an
+accumulation would exceed the native capacity, so Lemma~\ref{lem:overflow} is
+also enforced dynamically for rings and degrees other than the BN254
+instantiation above.

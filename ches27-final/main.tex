@@ -1,0 +1,116 @@
+%%%% IACR Transactions TEMPLATE %%%%
+% This file shows how to use the iacrtrans class to write a paper.
+% Written by Gaetan Leurent gaetan.leurent@inria.fr (2020)
+% Public Domain (CC0)
+
+
+%%%% 1. DOCUMENTCLASS %%%%
+\documentclass[journal=tches,final]{iacrtrans}
+%%%% NOTES:
+% - Change "journal=tosc" to "journal=tches" if needed
+% - Change "submission" to "final" for final version
+% - Add "spthm" for LNCS-like theorems
+
+
+%%%% 2. PACKAGES %%%%
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[table]{xcolor}
+\usepackage{alltt}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx, algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% Custom commands for common notation
+\newcommand{\F}{\ensuremath{\mathbb{F}} }
+\newcommand{\Fq}{\ensuremath{\F_q} }
+\newcommand{\Fe}[1]{\ensuremath{\F_{q^{#1}}} } % Field extension
+\newcommand{\G}{\ensuremath{\mathbb{G}} }
+\newcommand{\gComm}[1]{\color{gray}\Comment{#1}\color{black}}
+\newcommand{\gText}[1]{\color{gray}#1\color{black}}
+
+\newcommand{\IOP}[4]{\vspace{0.5cm}\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{
+\begin{center}
+    \begin{tikzpicture}[node distance=11cm, every node/.style={font=\footnotesize},>-{>[length=9pt, width=10pt,line width=2pt]}]
+    \node (L)[draw,font=\large,rectangle] {#2};\node (R)[draw,font=\large,rectangle, right of=L] {#3};
+    #4
+    \end{tikzpicture}
+    #1
+\end{center}
+}}
+}
+
+\newcommand{\TikzArrow}[4]{
+    \draw[gray,>-{>[length=7pt, width=8pt]},line width=1.5pt] ([yshift=-{#4}cm]#1.east) -- ([yshift=-{#4}cm]#2.west) node[midway, above, black] {#3};
+}
+
+\newcommand{\LDoes}[2]{\node[draw,rectangle,above=1pt,right,align=left] at ([yshift=-{#2}cm]L.west) {#1};}
+\newcommand{\RDoes}[2]{\node[draw,rectangle,above=1pt,left,align=right] at ([yshift=-{#2}cm]R.east) {#1};}
+\newcommand{\RtoL}[2]{
+    \usetikzlibrary {arrows.meta}
+    \draw[gray,>-{>},line width=1.5pt] ([yshift=-{#2}cm]R.east) -- ([yshift=-{#2}cm]L.west) node[midway, above, black] {#1};
+}
+\newcommand{\LtoR}[2]{
+    \usetikzlibrary {arrows.meta}
+    \draw[gray,>-{>[length=9pt, width=10pt,line width=2pt]},line width=1.5pt] ([yshift=-{#2}cm]L.west) -- ([yshift=-{#2}cm]R.east) node[midway, above, black] {#1};
+}
+
+\emergencystretch=1em
+
+%%%% 3. AUTHOR, INSTITUTE %%%%
+\author{Shramee Srivastav}
+\institute{
+  MIST.cash, Singapore, Singapore, \email{shramee@proton.me}
+}
+%%%% NOTES:
+% - We need a city name for indexation purpose, even if it is redundant
+%   (eg: University of Atlantis, Atlantis, Atlantis)
+% - \inst{} can be omitted if there is a single institute,
+%   or exactly one institute per author
+
+
+%%%% 4. TITLE %%%%
+\title{Pairing Proofs and Polynomial Ring Toolkit}
+%%%% NOTES:
+% - If the title is too long, or includes special macro, please
+%   provide a "running title" as optional argument: \title[Short]{Long}
+% - You can provide an optional subtitle with \subtitle.
+
+\begin{document}
+
+\maketitle
+
+
+%%%% 5. KEYWORDS %%%%
+\keywords{Elliptic curve pairings \and Zero-knowledge proofs \and Polynomial identity testing \and Blockchain verification \and Recursive proofs.}
+
+
+%%%% 6. ABSTRACT %%%%
+\input{sections/0-abstract.tex}
+
+%%%% 7. PAPER CONTENT %%%%
+\input{sections/1-introduction.tex}
+\input{sections/2-background.tex}
+\input{sections/3-related-work.tex}
+\input{sections/4-ops-polynomials.tex}
+\input{sections/5-proof-batched.tex}
+\input{sections/6-polyring-toolkit.tex}
+\input{sections/conclusion.tex}
+
+%%%% 8. BILBIOGRAPHY %%%%
+\bibliographystyle{alpha}
+\bibliography{abbrev3,crypto,biblio}
+%%%% NOTES
+% - Download abbrev3.bib and crypto.bib from https://cryptobib.di.ens.fr/
+% - Use biblio.bib for additional references not in the cryptobib database.
+%   If possible, take them from DBLP.
+
+\end{document}
